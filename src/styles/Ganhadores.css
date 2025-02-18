@@ -1,0 +1,52 @@
+.ganhadores-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    color: white;
+}
+
+.fale-conosco {
+    background-color: #9147ff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.banner {
+    background-color: #222;
+    padding: 20px;
+    text-align: center;
+    font-weight: bold;
+    margin: 20px 0;
+    color: white;
+    border-radius: 5px;
+}
+
+.historico-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #111;
+    color: white;
+}
+
+    .historico-tabela th, .historico-tabela td {
+        border: 1px solid #444;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .historico-tabela th {
+        background-color: #9147ff;
+    }
+
+.banner-row {
+    background-color: #222;
+    font-weight: bold;
+    color: white;
+}

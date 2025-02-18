@@ -1,0 +1,141 @@
+.lista-sorteio {
+    background-color: #18181b; /* Cor escura estilo Twitch */
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+    max-width: 600px;
+    margin: 20px auto;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilização da seção do vencedor */
+.vencedor-info {
+    background: linear-gradient(135deg, #2a2a2e, #1f1f23);
+    border: 2px solid #9147ff; /* Roxo Twitch */
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 15px;
+    box-shadow: 0 0 8px rgba(145, 71, 255, 0.5);
+    transition: transform 0.2s ease-in-out;
+}
+
+    .vencedor-info:hover {
+        transform: scale(1.02);
+    }
+
+    .vencedor-info h3 {
+        color: #ffcc00; /* Dourado para destacar */
+        margin-bottom: 8px;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .vencedor-info p {
+        color: white;
+        margin: 5px 0;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+/* Estilização do botão "Como Participar" */
+.como-participar-btn {
+    background: #9147ff;
+    color: white;
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 10px auto;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+}
+
+    .como-participar-btn:hover {
+        background: #772ce8;
+        transform: scale(1.05);
+    }
+
+/* Caixa de instruções */
+.instrucoes {
+    background: #222;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px auto;
+    color: white;
+    text-align: left;
+    font-size: 14px;
+    max-width: 500px;
+    line-height: 1.6;
+    border: 2px solid #9147ff;
+    box-shadow: 0 0 10px rgba(145, 71, 255, 0.4);
+}
+
+    /* Ícones e espaçamento nas instruções */
+    .instrucoes p {
+        margin: 5px 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+/* Estilização do formulário */
+.formulario {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+input {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    width: 200px;
+    background-color: #222;
+    color: white;
+}
+
+button {
+    background-color: #9147ff;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+    button:hover {
+        background-color: #772ce8;
+    }
+
+    button:disabled {
+        background-color: #555;
+        cursor: not-allowed;
+    }
+
+/* Estilização da tabela */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #444;
+}
+
+th {
+    background-color: #28282c;
+    color: #ffcc00; /* Cor destaque para títulos */
+}

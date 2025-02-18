@@ -1,0 +1,29 @@
+.header {
+    background-color: #9147ff; /* Roxo estilo Twitch */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.menu a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+}
+
+    .menu a:hover {
+        text-decoration: underline;
+    }

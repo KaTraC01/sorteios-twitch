@@ -1,0 +1,13 @@
+.timer {
+    background-color: #222; /* Fundo escuro */
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    position: fixed;
+    top: 50px; /* Fica logo abaixo do cabeçalho */
+    left: 0;
+    width: 100%;
+    z-index: 999;
+}
