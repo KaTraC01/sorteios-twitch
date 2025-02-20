@@ -5,19 +5,19 @@ import "./ListaSorteio.css"; // Importando o CSS
 function ListaSorteio({ onReiniciarLista }) {
     const [participantes, setParticipantes] = useState([]);
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "" });
-    const [tempoEspera, setTempoEspera] = useState(localStorage.getItem("tempoEspera") || 0);
+    const [tempoEspera, setTempoEspera] = useState(parseInt(localStorage.getItem("tempoEspera")) || 0);
     const [listaCongelada, setListaCongelada] = useState(false);
     const [sorteioRealizado, setSorteioRealizado] = useState(false);
     const [ultimoVencedor, setUltimoVencedor] = useState(null);
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
 
-    // 🔄 **Carregar os participantes do Supabase quando a página for carregada**
+    // 🔄 **Carregar os participantes do Supabase ao iniciar**
     useEffect(() => {
         const fetchParticipantes = async () => {
             const { data, error } = await supabase
                 .from("participantes_ativos")
                 .select("*")
-                .order("created_at", { ascending: true }); // Agora os mais antigos aparecem primeiro
+                .order("created_at", { ascending: true }); // Mantém a ordem correta
 
             if (error) {
                 console.error("Erro ao buscar participantes:", error);
@@ -27,14 +27,24 @@ function ListaSorteio({ onReiniciarLista }) {
         };
 
         fetchParticipantes();
+
+        // Configuração para atualizar em tempo real
+        const subscription = supabase
+            .channel("participantes_ativos")
+            .on("postgres_changes", { event: "*", schema: "public", table: "participantes_ativos" }, fetchParticipantes)
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
     }, []);
 
-    // ⏳ Atualiza o temporizador a cada segundo e salva no localStorage
+    // ⏳ **Atualiza o temporizador de espera**
     useEffect(() => {
         if (tempoEspera > 0) {
             localStorage.setItem("tempoEspera", tempoEspera);
             const timer = setTimeout(() => {
-                setTempoEspera(prevTempo => {
+                setTempoEspera((prevTempo) => {
                     const novoTempo = prevTempo - 1;
                     if (novoTempo <= 0) {
                         localStorage.removeItem("tempoEspera");
@@ -46,7 +56,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     }, [tempoEspera]);
 
-    // ⏰ **Verifica o horário para congelar a lista e realizar o sorteio**
+    // ⏰ **Verifica horários para congelar a lista e sortear**
     useEffect(() => {
         const verificarHorario = () => {
             const agora = new Date();
@@ -72,7 +82,7 @@ function ListaSorteio({ onReiniciarLista }) {
     }, [participantes, sorteioRealizado]);
 
     // 🎲 **Função para realizar o sorteio**
-    const realizarSorteio = () => {
+    const realizarSorteio = async () => {
         if (participantes.length === 0) {
             alert("Nenhum participante na lista. O sorteio foi cancelado.");
             return;
@@ -89,6 +99,16 @@ function ListaSorteio({ onReiniciarLista }) {
         });
 
         setSorteioRealizado(true);
+
+        // 🔹 **Salva o resultado no Supabase**
+        await supabase.from("sorteios").insert([
+            {
+                data: new Date().toISOString(),
+                numero: vencedorIndex + 1,
+                nome: vencedor.nome_twitch,
+                streamer: vencedor.streamer_escolhido,
+            },
+        ]);
     };
 
     // 🔄 **Função para resetar a lista às 21h05**
@@ -108,7 +128,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // ➕ **Função para adicionar um participante ao Supabase**
+    // ➕ **Função para adicionar participante**
     const adicionarParticipante = async () => {
         if (listaCongelada) {
             alert("A lista foi congelada! Você não pode mais adicionar nomes.");
@@ -121,16 +141,14 @@ function ListaSorteio({ onReiniciarLista }) {
         }
 
         if (novoParticipante.nome && novoParticipante.streamer) {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from("participantes_ativos")
-                .insert([{ nome_twitch: novoParticipante.nome, streamer_escolhido: novoParticipante.streamer }])
-                .select();
+                .insert([{ nome_twitch: novoParticipante.nome, streamer_escolhido: novoParticipante.streamer }]);
 
             if (error) {
                 console.error("Erro ao adicionar participante:", error);
                 alert("Erro ao adicionar. Tente novamente.");
             } else {
-                setParticipantes([...participantes, data[0]]); // Agora o participante é adicionado ao final da lista
                 setNovoParticipante({ nome: "", streamer: "" });
                 setTempoEspera(10);
                 localStorage.setItem("tempoEspera", 10); // Salva o tempo de espera
@@ -182,25 +200,6 @@ function ListaSorteio({ onReiniciarLista }) {
                     {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
                 </button>
             </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Nome na Twitch</th>
-                        <th>Streamer</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {participantes.map((p, index) => (
-                        <tr key={p.id}>
-                            <td>{index + 1}</td>
-                            <td>{p.nome_twitch}</td>
-                            <td>{p.streamer_escolhido}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
         </div>
     );
 }
