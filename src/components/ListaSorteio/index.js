@@ -11,24 +11,24 @@ function ListaSorteio({ onReiniciarLista }) {
     const [ultimoVencedor, setUltimoVencedor] = useState(null);
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
 
-    // 🔄 **Carregar os participantes do Supabase ao iniciar**
+    // 🔄 **Função para buscar participantes no Supabase**
+    const fetchParticipantes = async () => {
+        const { data, error } = await supabase
+            .from("participantes_ativos")
+            .select("*")
+            .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("Erro ao buscar participantes:", error);
+        } else {
+            setParticipantes(data);
+        }
+    };
+
     useEffect(() => {
-        const fetchParticipantes = async () => {
-            const { data, error } = await supabase
-                .from("participantes_ativos")
-                .select("*")
-                .order("created_at", { ascending: true }); // Mantém a ordem correta
-
-            if (error) {
-                console.error("Erro ao buscar participantes:", error);
-            } else {
-                setParticipantes(data);
-            }
-        };
-
         fetchParticipantes();
 
-        // Configuração para atualizar em tempo real
+        // 🔄 **Atualização em tempo real com Supabase**
         const subscription = supabase
             .channel("participantes_ativos")
             .on("postgres_changes", { event: "*", schema: "public", table: "participantes_ativos" }, fetchParticipantes)
@@ -149,9 +149,10 @@ function ListaSorteio({ onReiniciarLista }) {
                 console.error("Erro ao adicionar participante:", error);
                 alert("Erro ao adicionar. Tente novamente.");
             } else {
+                fetchParticipantes(); // Atualiza a lista imediatamente após a inserção
                 setNovoParticipante({ nome: "", streamer: "" });
                 setTempoEspera(10);
-                localStorage.setItem("tempoEspera", 10); // Salva o tempo de espera
+                localStorage.setItem("tempoEspera", 10);
             }
         }
     };
