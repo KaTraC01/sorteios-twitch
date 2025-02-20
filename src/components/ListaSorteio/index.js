@@ -5,7 +5,7 @@ import "./ListaSorteio.css"; // Importando o CSS
 function ListaSorteio({ onReiniciarLista }) {
     const [participantes, setParticipantes] = useState([]);
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "" });
-    const [tempoEspera, setTempoEspera] = useState(0);
+    const [tempoEspera, setTempoEspera] = useState(localStorage.getItem("tempoEspera") || 0);
     const [listaCongelada, setListaCongelada] = useState(false);
     const [sorteioRealizado, setSorteioRealizado] = useState(false);
     const [ultimoVencedor, setUltimoVencedor] = useState(null);
@@ -17,7 +17,7 @@ function ListaSorteio({ onReiniciarLista }) {
             const { data, error } = await supabase
                 .from("participantes_ativos")
                 .select("*")
-                .order("created_at", { ascending: false });
+                .order("created_at", { ascending: true }); // Agora os mais antigos aparecem primeiro
 
             if (error) {
                 console.error("Erro ao buscar participantes:", error);
@@ -29,10 +29,19 @@ function ListaSorteio({ onReiniciarLista }) {
         fetchParticipantes();
     }, []);
 
-    // ⏳ Atualiza o temporizador a cada segundo
+    // ⏳ Atualiza o temporizador a cada segundo e salva no localStorage
     useEffect(() => {
         if (tempoEspera > 0) {
-            const timer = setTimeout(() => setTempoEspera(tempoEspera - 1), 1000);
+            localStorage.setItem("tempoEspera", tempoEspera);
+            const timer = setTimeout(() => {
+                setTempoEspera(prevTempo => {
+                    const novoTempo = prevTempo - 1;
+                    if (novoTempo <= 0) {
+                        localStorage.removeItem("tempoEspera");
+                    }
+                    return novoTempo;
+                });
+            }, 1000);
             return () => clearTimeout(timer);
         }
     }, [tempoEspera]);
@@ -121,9 +130,10 @@ function ListaSorteio({ onReiniciarLista }) {
                 console.error("Erro ao adicionar participante:", error);
                 alert("Erro ao adicionar. Tente novamente.");
             } else {
-                setParticipantes([data[0], ...participantes]); // Adiciona o novo participante na lista sem precisar recarregar
+                setParticipantes([...participantes, data[0]]); // Agora o participante é adicionado ao final da lista
                 setNovoParticipante({ nome: "", streamer: "" });
                 setTempoEspera(10);
+                localStorage.setItem("tempoEspera", 10); // Salva o tempo de espera
             }
         }
     };
