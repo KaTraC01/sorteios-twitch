@@ -1,17 +1,34 @@
 ﻿import React, { useState, useEffect } from "react";
+import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "./ListaSorteio.css"; // Importando o CSS
 
 function ListaSorteio({ onReiniciarLista }) {
-    // Estado para armazenar os participantes
     const [participantes, setParticipantes] = useState([]);
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "" });
     const [tempoEspera, setTempoEspera] = useState(0);
     const [listaCongelada, setListaCongelada] = useState(false);
     const [sorteioRealizado, setSorteioRealizado] = useState(false);
-    const [ultimoVencedor, setUltimoVencedor] = useState(null); // Novo estado para o vencedor
-    const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false); // Estado para exibir as instruções
+    const [ultimoVencedor, setUltimoVencedor] = useState(null);
+    const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
 
-    // Atualiza o temporizador a cada segundo
+    // 🔄 **Carregar os participantes do Supabase quando a página for carregada**
+    useEffect(() => {
+        const fetchParticipantes = async () => {
+            const { data, error } = await supabase
+                .from("participantes_ativos")
+                .select("*");
+
+            if (error) {
+                console.error("Erro ao buscar participantes:", error);
+            } else {
+                setParticipantes(data);
+            }
+        };
+
+        fetchParticipantes();
+    }, []);
+
+    // ⏳ Atualiza o temporizador a cada segundo
     useEffect(() => {
         if (tempoEspera > 0) {
             const timer = setTimeout(() => setTempoEspera(tempoEspera - 1), 1000);
@@ -19,24 +36,21 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     }, [tempoEspera]);
 
-    // Verifica a hora atual para congelar a lista e realizar o sorteio
+    // ⏰ **Verifica o horário para congelar a lista e realizar o sorteio**
     useEffect(() => {
         const verificarHorario = () => {
             const agora = new Date();
             const horas = agora.getHours();
             const minutos = agora.getMinutes();
 
-            // **Congela a lista às 20h50**
             if (horas === 20 && minutos >= 50) {
                 setListaCongelada(true);
             }
 
-            // **Realiza o sorteio às 21h00**
             if (horas === 21 && minutos === 0 && !sorteioRealizado) {
                 realizarSorteio();
             }
 
-            // **Reseta a lista automaticamente às 21h05**
             if (horas === 21 && minutos === 5 && sorteioRealizado) {
                 resetarLista();
             }
@@ -47,7 +61,7 @@ function ListaSorteio({ onReiniciarLista }) {
         return () => clearInterval(intervalo);
     }, [participantes, sorteioRealizado]);
 
-    // Função para realizar o sorteio
+    // 🎲 **Função para realizar o sorteio**
     const realizarSorteio = () => {
         if (participantes.length === 0) {
             alert("Nenhum participante na lista. O sorteio foi cancelado.");
@@ -57,10 +71,9 @@ function ListaSorteio({ onReiniciarLista }) {
         const vencedorIndex = Math.floor(Math.random() * participantes.length);
         const vencedor = participantes[vencedorIndex];
 
-        // Atualiza o estado com o vencedor para exibir na interface
         setUltimoVencedor({
-            nome: vencedor.nome,
-            streamer: vencedor.streamer,
+            nome: vencedor.nome_twitch,
+            streamer: vencedor.streamer_escolhido,
             numero: vencedorIndex + 1,
             data: new Date().toLocaleDateString()
         });
@@ -68,19 +81,26 @@ function ListaSorteio({ onReiniciarLista }) {
         setSorteioRealizado(true);
     };
 
-    // Função para resetar a lista às 21h05
-    const resetarLista = () => {
+    // 🔄 **Função para resetar a lista às 21h05**
+    const resetarLista = async () => {
         setParticipantes([]);
         setListaCongelada(false);
         setSorteioRealizado(false);
 
+        // 🛠 Apaga os participantes do Supabase para um novo dia
+        const { error } = await supabase.from("participantes_ativos").delete().neq("id", "");
+
+        if (error) {
+            console.error("Erro ao limpar a lista:", error);
+        }
+
         if (onReiniciarLista) {
-            onReiniciarLista(); // Notifica o Timer que a lista foi reiniciada
+            onReiniciarLista();
         }
     };
 
-    // Função para adicionar participante
-    const adicionarParticipante = () => {
+    // ➕ **Função para adicionar um participante ao Supabase**
+    const adicionarParticipante = async () => {
         if (listaCongelada) {
             alert("A lista foi congelada! Você não pode mais adicionar nomes.");
             return;
@@ -92,15 +112,23 @@ function ListaSorteio({ onReiniciarLista }) {
         }
 
         if (novoParticipante.nome && novoParticipante.streamer) {
-            setParticipantes([...participantes, novoParticipante]);
-            setNovoParticipante({ nome: "", streamer: "" });
-            setTempoEspera(10); // Define tempo de espera de 10 segundos
+            const { data, error } = await supabase
+                .from("participantes_ativos")
+                .insert([{ nome_twitch: novoParticipante.nome, streamer_escolhido: novoParticipante.streamer }]);
+
+            if (error) {
+                console.error("Erro ao adicionar participante:", error);
+                alert("Erro ao adicionar. Tente novamente.");
+            } else {
+                setParticipantes([...participantes, data[0]]);
+                setNovoParticipante({ nome: "", streamer: "" });
+                setTempoEspera(10);
+            }
         }
     };
 
     return (
         <div className="lista-sorteio">
-            {/* Exibição do Último Vencedor */}
             {ultimoVencedor && (
                 <div className="vencedor-info">
                     <h3>🏆 Último Vencedor: {ultimoVencedor.nome}</h3>
@@ -110,29 +138,20 @@ function ListaSorteio({ onReiniciarLista }) {
                 </div>
             )}
 
-            {/* Botão "Como Participar" */}
             <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
                 {mostrarInstrucoes ? "Fechar Instruções" : "Como Participar"}
             </button>
 
-            {/* Instruções de participação */}
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    <p>
-                        📝 **Escreva seu nickname da Twitch** no campo indicado e o **nome do Streamer** que deseja que receba seu Sub.
-                    </p>
-                    <p>
-                        🔄 Você **pode participar mais de uma vez** e escolher **diferentes streamers**.
-                    </p>
-                    <p>
-                        ⏳ Os sorteios acontecem **às 21h**, mas **a lista é encerrada 10 minutos antes**. **Não perca tempo!**
-                    </p>
+                    <p>📝 **Escreva seu nickname da Twitch** e o **nome do Streamer** que deseja apoiar.</p>
+                    <p>🔄 Você **pode participar várias vezes**, escolhendo **diferentes streamers**.</p>
+                    <p>⏳ Os sorteios acontecem **às 21h**, mas **a lista é congelada 10 minutos antes**.</p>
                 </div>
             )}
 
-            <h2>Lista de Participantes {listaCongelada && "(❄️ Lista Congelada Aguardando Sorteio ❄️)"}</h2>
+            <h2>Lista de Participantes {listaCongelada && "(❄️ Lista Congelada ❄️)"}</h2>
 
-            {/* Campos para inserir o nome e o streamer */}
             <div className="formulario">
                 <input
                     type="text"
@@ -153,7 +172,6 @@ function ListaSorteio({ onReiniciarLista }) {
                 </button>
             </div>
 
-            {/* Exibição da lista */}
             <table>
                 <thead>
                     <tr>
@@ -164,10 +182,10 @@ function ListaSorteio({ onReiniciarLista }) {
                 </thead>
                 <tbody>
                     {participantes.map((p, index) => (
-                        <tr key={index}>
+                        <tr key={p.id}>
                             <td>{index + 1}</td>
-                            <td>{p.nome}</td>
-                            <td>{p.streamer}</td>
+                            <td>{p.nome_twitch}</td>
+                            <td>{p.streamer_escolhido}</td>
                         </tr>
                     ))}
                 </tbody>
