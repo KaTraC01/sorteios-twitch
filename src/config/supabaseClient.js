@@ -1,5 +1,3 @@
-Funciona
-
 import { createClient } from "@supabase/supabase-js";
 
 // 🔍 Log para depuração: Verifica se as variáveis de ambiente estão sendo lidas
