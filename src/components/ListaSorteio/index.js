@@ -201,6 +201,14 @@ function ListaSorteio({ onReiniciarLista }) {
                     {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
                 </button>
             </div>
+
+            <ul>
+                {participantes.map((participante, index) => (
+                    <li key={index}>
+                        {participante.nome_twitch} - {participante.streamer_escolhido}
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
