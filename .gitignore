@@ -1,4 +1,34 @@
-node_modules/ 
+# Dependências
+node_modules/
+/.pnp
+.pnp.js
 
+# Ambiente
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.txt
+
+# Build
+/build
+/dist
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editores
+.idea/
+.vscode/
+*.swp
+*.swo
+.vs/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Vercel
 .vercel

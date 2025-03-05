@@ -1,9 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App"; // Importa��o correta
+import App from "./App";
+import "./styles/global.css"; // Importação do CSS global (será criado em seguida)
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+// Renderiza o aplicativo
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
     <React.StrictMode>
         <App />
     </React.StrictMode>
 );
+
+// Se você quiser implementar service workers para PWA no futuro
+// serviceWorkerRegistration.register();

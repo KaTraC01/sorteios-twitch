@@ -1,0 +1,91 @@
+/* Estilos globais para o Site de Sorteios */
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f7f7f8;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Cores inspiradas na Twitch */
+:root {
+  --primary: #6441a5;
+  --primary-dark: #4b367c;
+  --secondary: #9146ff;
+  --accent: #b9a3e3;
+  --text-light: #efeff1;
+  --text-dark: #1f1f23;
+  --background: #f7f7f8;
+  --background-dark: #0e0e10;
+  --success: #00b5ad;
+  --error: #f43f5e;
+  --warning: #ffaa15;
+}
+
+/* Estilos de botões */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estilos de links */
+a {
+  color: var(--secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary);
+}
+
+/* Estilos de formulários */
+input, select, textarea {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.2);
+}
+
+/* Estilos de containers */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 10px;
+  }
+} 
