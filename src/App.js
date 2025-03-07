@@ -25,12 +25,12 @@ function App() {
                 <Timer listaReiniciada={listaReiniciada} />
 
                 <main style={{ 
-                    marginTop: "100px", 
+                    marginTop: "120px", /* Aumentando para acomodar o header e o timer */
                     padding: "20px", 
                     textAlign: "center", 
                     backgroundColor: "#0a0a0a", 
                     color: "white",
-                    minHeight: "calc(100vh - 100px)" 
+                    minHeight: "calc(100vh - 120px)" 
                 }}>
                     <Routes>
                         {/* Rota para a Lista de Sorteios */}

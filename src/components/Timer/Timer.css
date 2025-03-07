@@ -1,11 +1,13 @@
 .timer {
-    background-color: #2d2d2d; /* Tom de cinza escuro da imagem de referência */
+    background-color: #2d2d2d; /* Tom de cinza escuro */
     color: white;
     text-align: center;
     padding: 10px;
     font-size: 18px;
     font-weight: bold;
-    position: relative; /* Mudando para relative em vez de fixed */
+    position: fixed; /* Voltando para fixed para garantir que fique abaixo do header */
+    top: 60px; /* Posição abaixo do header */
+    left: 0;
     width: 100%;
     z-index: 999;
     border-bottom: 2px solid #19b5a5; /* Borda com a cor de identidade */
