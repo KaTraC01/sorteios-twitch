@@ -48,11 +48,11 @@
 
 /* Estilização do botão "Como Participar" */
 .como-participar-btn {
-    background: #2d2d2d; /* Tom de cinza escuro */
+    background: #19b5a5; /* Cor de identidade */
     color: white;
     font-size: 16px;
     padding: 10px 20px;
-    border: 1px solid #444;
+    border: none;
     border-radius: 5px;
     cursor: pointer;
     display: block;
@@ -61,7 +61,7 @@
 }
 
 .como-participar-btn:hover {
-    background: #3a3a3a; /* Tom um pouco mais claro ao passar o mouse */
+    background: #14968a; /* Versão mais escura da cor de identidade */
     transform: scale(1.05);
 }
 
@@ -88,12 +88,21 @@
         gap: 6px;
     }
 
+/* Adicionar estilo para o título da lista */
+h2 {
+    margin-bottom: 25px; /* Espaçamento maior abaixo do título */
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+}
+
 /* Estilização do formulário */
 .formulario {
     display: flex;
     gap: 10px;
     justify-content: center;
     margin-bottom: 20px;
+    margin-top: 20px; /* Adicionar espaço acima do formulário */
 }
 
 input {
@@ -106,17 +115,17 @@ input {
 }
 
 button {
-    background-color: #2d2d2d; /* Tom de cinza escuro */
+    background-color: #19b5a5; /* Cor de identidade */
     color: white;
     padding: 8px 15px;
-    border: 1px solid #444;
+    border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background 0.3s ease-in-out;
 }
 
     button:hover {
-        background-color: #3a3a3a; /* Tom um pouco mais claro ao passar o mouse */
+        background-color: #14968a; /* Versão mais escura da cor de identidade */
     }
 
     button:disabled {
