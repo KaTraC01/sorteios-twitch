@@ -1,5 +1,5 @@
 .lista-sorteio {
-    background-color: #1a1a1a; /* Tom de preto mais claro da imagem de referência */
+    background-color: #2d2d2d; /* Tom de cinza escuro */
     color: white;
     padding: 25px;
     text-align: center;
@@ -7,7 +7,7 @@
     max-width: 800px;
     margin: 20px auto;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
+    border: 1px solid #444;
 }
 
 /* Estilização da seção do vencedor */
@@ -48,11 +48,11 @@
 
 /* Estilização do botão "Como Participar" */
 .como-participar-btn {
-    background: #19b5a5; /* Nova cor de identidade */
+    background: #2d2d2d; /* Tom de cinza escuro */
     color: white;
     font-size: 16px;
     padding: 10px 20px;
-    border: none;
+    border: 1px solid #444;
     border-radius: 5px;
     cursor: pointer;
     display: block;
@@ -60,10 +60,10 @@
     transition: background 0.3s ease-in-out, transform 0.2s;
 }
 
-    .como-participar-btn:hover {
-        background: #14968a; /* Versão mais escura da nova cor */
-        transform: scale(1.05);
-    }
+.como-participar-btn:hover {
+    background: #3a3a3a; /* Tom um pouco mais claro ao passar o mouse */
+    transform: scale(1.05);
+}
 
 /* Caixa de instruções */
 .instrucoes {
@@ -99,24 +99,24 @@
 input {
     padding: 8px;
     border-radius: 5px;
-    border: none;
+    border: 1px solid #444;
     width: 200px;
-    background-color: #1a1a1a; /* Cinza escuro para modo escuro */
+    background-color: #1a1a1a; /* Tom de preto mais claro */
     color: white;
 }
 
 button {
-    background-color: #19b5a5; /* Nova cor de identidade */
+    background-color: #2d2d2d; /* Tom de cinza escuro */
     color: white;
     padding: 8px 15px;
-    border: none;
+    border: 1px solid #444;
     border-radius: 5px;
     cursor: pointer;
     transition: background 0.3s ease-in-out;
 }
 
     button:hover {
-        background-color: #14968a; /* Versão mais escura da nova cor */
+        background-color: #3a3a3a; /* Tom um pouco mais claro ao passar o mouse */
     }
 
     button:disabled {
@@ -130,10 +130,10 @@ table {
     border-collapse: collapse;
     margin-top: 15px;
     border: 1px solid #444;
-    background-color: #2d2d2d; /* Tom de cinza escuro da imagem de referência */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra mais pronunciada */
+    background-color: #2d2d2d; /* Tom de cinza escuro */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     border-radius: 5px;
-    overflow: hidden; /* Garante que a borda arredondada funcione com a tabela */
+    overflow: hidden;
 }
 
 th, td {
@@ -144,7 +144,7 @@ th, td {
 
 th {
     background-color: #1a1a1a; /* Fundo mais escuro para o cabeçalho */
-    color: #19b5a5; /* Cor de identidade */
+    color: #19b5a5; /* Apenas o texto mantém a cor de identidade */
     font-weight: bold;
     text-transform: uppercase;
     font-size: 14px;
