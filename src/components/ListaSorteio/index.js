@@ -104,7 +104,7 @@ function ListaSorteio({ onReiniciarLista }) {
     // 🎲 **Função para realizar o sorteio**
     const realizarSorteio = async () => {
         if (participantes.length === 0) {
-            alert("Nenhum participante na lista. O sorteio foi cancelado.");
+            mostrarFeedback("Nenhum participante na lista. O sorteio foi cancelado.", "erro");
             return;
         }
 
@@ -240,6 +240,12 @@ function ListaSorteio({ onReiniciarLista }) {
                     {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
                 </button>
             </div>
+
+            {feedback.visivel && (
+                <div className={`feedback-mensagem ${feedback.tipo}`}>
+                    {feedback.mensagem}
+                </div>
+            )}
 
             <table>
                 <thead>

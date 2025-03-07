@@ -1,5 +1,5 @@
 .lista-sorteio {
-    background-color: #18181b; /* Cor escura estilo Twitch */
+    background-color: #121212; /* Fundo preto para modo escuro */
     color: white;
     padding: 20px;
     text-align: center;
@@ -11,13 +11,13 @@
 
 /* Estilização da seção do vencedor */
 .vencedor-info {
-    background: linear-gradient(135deg, #2a2a2e, #1f1f23);
-    border: 2px solid #9147ff; /* Roxo Twitch */
+    background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
+    border: 2px solid #19b5a5; /* Nova cor de identidade */
     padding: 15px;
     border-radius: 10px;
     text-align: center;
     margin-bottom: 15px;
-    box-shadow: 0 0 8px rgba(145, 71, 255, 0.5);
+    box-shadow: 0 0 8px rgba(25, 181, 165, 0.5);
     transition: transform 0.2s ease-in-out;
 }
 
@@ -26,7 +26,7 @@
     }
 
     .vencedor-info h3 {
-        color: #ffcc00; /* Dourado para destacar */
+        color: #19b5a5; /* Nova cor de identidade */
         margin-bottom: 8px;
         font-size: 18px;
         display: flex;
@@ -47,7 +47,7 @@
 
 /* Estilização do botão "Como Participar" */
 .como-participar-btn {
-    background: #9147ff;
+    background: #19b5a5; /* Nova cor de identidade */
     color: white;
     font-size: 16px;
     padding: 10px 20px;
@@ -60,13 +60,13 @@
 }
 
     .como-participar-btn:hover {
-        background: #772ce8;
+        background: #14968a; /* Versão mais escura da nova cor */
         transform: scale(1.05);
     }
 
 /* Caixa de instruções */
 .instrucoes {
-    background: #222;
+    background: #1a1a1a; /* Cinza escuro para modo escuro */
     padding: 15px;
     border-radius: 8px;
     margin: 10px auto;
@@ -75,8 +75,8 @@
     font-size: 14px;
     max-width: 500px;
     line-height: 1.6;
-    border: 2px solid #9147ff;
-    box-shadow: 0 0 10px rgba(145, 71, 255, 0.4);
+    border: 2px solid #19b5a5; /* Nova cor de identidade */
+    box-shadow: 0 0 10px rgba(25, 181, 165, 0.4);
 }
 
     /* Ícones e espaçamento nas instruções */
@@ -100,12 +100,12 @@ input {
     border-radius: 5px;
     border: none;
     width: 200px;
-    background-color: #222;
+    background-color: #1a1a1a; /* Cinza escuro para modo escuro */
     color: white;
 }
 
 button {
-    background-color: #9147ff;
+    background-color: #19b5a5; /* Nova cor de identidade */
     color: white;
     padding: 8px 15px;
     border: none;
@@ -115,7 +115,7 @@ button {
 }
 
     button:hover {
-        background-color: #772ce8;
+        background-color: #14968a; /* Versão mais escura da nova cor */
     }
 
     button:disabled {
@@ -128,23 +128,23 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
-    border: 2px solid #9147ff; /* Borda roxa do Twitch */
+    border: 2px solid #19b5a5; /* Nova cor de identidade */
 }
 
 th, td {
     padding: 10px;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #333;
     text-align: center;
 }
 
 th {
-    background-color: #28282c;
-    color: #ffcc00; /* Cor destaque para títulos */
+    background-color: #1a1a1a; /* Cinza escuro para modo escuro */
+    color: #19b5a5; /* Nova cor de identidade */
     font-weight: bold;
 }
 
 tbody tr:hover {
-    background-color: #2a2a2e;
+    background-color: #1f1f1f; /* Cinza um pouco mais claro ao passar o mouse */
 }
 
 /* Estilização do feedback */
@@ -154,16 +154,20 @@ tbody tr:hover {
     margin: 10px auto;
     font-weight: 500;
     text-align: center;
-    animation: fadeInOut 0.5s ease-in-out;
-    position: relative;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
     max-width: 90%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeInOut 3s ease-in-out forwards;
 }
 
 .feedback-mensagem.sucesso {
-    background-color: rgba(46, 204, 113, 0.9);
+    background-color: rgba(25, 181, 165, 0.9); /* Nova cor de identidade */
     color: white;
-    border-left: 4px solid #27ae60;
+    border-left: 4px solid #14968a; /* Versão mais escura da nova cor */
 }
 
 .feedback-mensagem.erro {
@@ -179,8 +183,8 @@ tbody tr:hover {
 }
 
 @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(-20px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-20px); }
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    90% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
 }
