@@ -1,12 +1,13 @@
 .lista-sorteio {
-    background-color: #121212; /* Fundo preto para modo escuro */
+    background-color: #1a1a1a; /* Tom de preto mais claro da imagem de referência */
     color: white;
-    padding: 20px;
+    padding: 25px;
     text-align: center;
     border-radius: 10px;
-    max-width: 600px;
+    max-width: 800px;
     margin: 20px auto;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
 }
 
 /* Estilização da seção do vencedor */
@@ -127,24 +128,40 @@ button {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
-    border: 2px solid #19b5a5; /* Nova cor de identidade */
+    margin-top: 15px;
+    border: 1px solid #444;
+    background-color: #2d2d2d; /* Tom de cinza escuro da imagem de referência */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra mais pronunciada */
+    border-radius: 5px;
+    overflow: hidden; /* Garante que a borda arredondada funcione com a tabela */
 }
 
 th, td {
-    padding: 10px;
-    border-bottom: 1px solid #333;
+    padding: 12px;
+    border-bottom: 1px solid #444;
     text-align: center;
 }
 
 th {
-    background-color: #1a1a1a; /* Cinza escuro para modo escuro */
-    color: #19b5a5; /* Nova cor de identidade */
+    background-color: #1a1a1a; /* Fundo mais escuro para o cabeçalho */
+    color: #19b5a5; /* Cor de identidade */
     font-weight: bold;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+tbody tr {
+    transition: background-color 0.2s ease;
 }
 
 tbody tr:hover {
-    background-color: #1f1f1f; /* Cinza um pouco mais claro ao passar o mouse */
+    background-color: #3a3a3a; /* Tom um pouco mais claro ao passar o mouse */
+}
+
+/* Estilo zebrado para melhorar a legibilidade */
+tbody tr:nth-child(even) {
+    background-color: #333333;
 }
 
 /* Estilização do feedback */

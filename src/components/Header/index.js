@@ -5,7 +5,9 @@ import { Link } from "react-router-dom";
 function Header() {
     return (
         <header className="header">
-            <div className="logo">🎲 Sorteio</div>
+            <div className="logo">
+                <span>🎲</span> Sorteio
+            </div>
             <nav className="menu">
                 <Link to="/">Lista</Link>
                 <Link to="/ganhadores">Ganhadores</Link>

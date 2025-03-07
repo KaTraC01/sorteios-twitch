@@ -1,5 +1,5 @@
 .timer {
-    background-color: #1a1a1a; /* Fundo escuro mais claro que o fundo principal */
+    background-color: #2d2d2d; /* Tom de cinza escuro da imagem de referência */
     color: white;
     text-align: center;
     padding: 10px;
@@ -10,5 +10,6 @@
     left: 0;
     width: 100%;
     z-index: 999;
-    border-bottom: 2px solid #19b5a5; /* Borda com a nova cor de identidade */
+    border-bottom: 2px solid #19b5a5; /* Borda com a cor de identidade */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil para dar profundidade */
 }

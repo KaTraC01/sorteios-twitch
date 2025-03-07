@@ -9,22 +9,23 @@
 
 body {
   font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #121212; /* Fundo escuro */
+  background-color: #0a0a0a; /* Tom de preto mais escuro da imagem de referência */
   color: #f7f7f8; /* Texto claro para contraste */
   line-height: 1.6;
 }
 
 /* Cores do tema */
 :root {
-  --primary: #19b5a5; /* Nova cor de identidade */
-  --primary-dark: #14968a; /* Versão mais escura da nova cor */
-  --secondary: #19b5a5; /* Nova cor de identidade */
-  --accent: #7fdfd5; /* Versão mais clara da nova cor */
+  --primary: #19b5a5; /* Cor de identidade */
+  --primary-dark: #14968a; /* Versão mais escura da cor de identidade */
+  --secondary: #19b5a5; /* Cor de identidade */
+  --accent: #7fdfd5; /* Versão mais clara da cor de identidade */
   --text-light: #efeff1;
   --text-dark: #1f1f23;
-  --background: #121212; /* Fundo escuro */
+  --background: #0a0a0a; /* Tom de preto da imagem de referência */
+  --background-secondary: #2d2d2d; /* Tom de cinza da imagem de referência */
   --background-dark: #0e0e10;
-  --success: #19b5a5; /* Nova cor de identidade */
+  --success: #19b5a5; /* Cor de identidade */
   --error: #f43f5e;
   --warning: #ffaa15;
 }

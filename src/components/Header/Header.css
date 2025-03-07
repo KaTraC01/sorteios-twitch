@@ -1,32 +1,64 @@
 .header {
-    background-color: #19b5a5; /* Nova cor de identidade */
+    background-color: #1a1a1a; /* Tom de preto da imagem de referência */
     color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
+    padding: 15px 30px;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    border-bottom: 3px solid #19b5a5; /* Borda com a cor de identidade */
 }
 
 .logo {
     font-size: 24px;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    color: #fff;
+}
+
+.logo span {
+    color: #19b5a5; /* Cor de identidade */
+    margin-right: 5px;
+}
+
+.menu {
+    display: flex;
+    gap: 20px;
 }
 
 .menu a {
     color: white;
     text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
-    transition: all 0.2s ease;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .menu a:hover {
-    text-decoration: none;
-    opacity: 0.8;
+    background-color: rgba(25, 181, 165, 0.1); /* Cor de identidade com transparência */
+}
+
+.menu a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background-color: #19b5a5; /* Cor de identidade */
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.menu a:hover::after {
+    width: 80%;
 }
