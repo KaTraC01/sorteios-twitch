@@ -9,7 +9,7 @@
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* EstilizaÁ„o da seÁ„o do vencedor */
+/* Estiliza√ß√£o da se√ß√£o do vencedor */
 .vencedor-info {
     background: linear-gradient(135deg, #2a2a2e, #1f1f23);
     border: 2px solid #9147ff; /* Roxo Twitch */
@@ -45,7 +45,7 @@
         gap: 6px;
     }
 
-/* EstilizaÁ„o do bot„o "Como Participar" */
+/* Estiliza√ß√£o do bot√£o "Como Participar" */
 .como-participar-btn {
     background: #9147ff;
     color: white;
@@ -64,7 +64,7 @@
         transform: scale(1.05);
     }
 
-/* Caixa de instruÁıes */
+/* Caixa de instru√ß√µes */
 .instrucoes {
     background: #222;
     padding: 15px;
@@ -79,7 +79,7 @@
     box-shadow: 0 0 10px rgba(145, 71, 255, 0.4);
 }
 
-    /* Õcones e espaÁamento nas instruÁıes */
+    /* √çcones e espa√ßamento nas instru√ß√µes */
     .instrucoes p {
         margin: 5px 0;
         display: flex;
@@ -87,7 +87,7 @@
         gap: 6px;
     }
 
-/* EstilizaÁ„o do formul·rio */
+/* Estiliza√ß√£o do formul√°rio */
 .formulario {
     display: flex;
     gap: 10px;
@@ -123,19 +123,26 @@ button {
         cursor: not-allowed;
     }
 
-/* EstilizaÁ„o da tabela */
+/* Estiliza√ß√£o da tabela */
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
+    border: 2px solid #9147ff; /* Borda roxa do Twitch */
 }
 
 th, td {
     padding: 10px;
     border-bottom: 1px solid #444;
+    text-align: center;
 }
 
 th {
     background-color: #28282c;
-    color: #ffcc00; /* Cor destaque para tÌtulos */
+    color: #ffcc00; /* Cor destaque para t√≠tulos */
+    font-weight: bold;
+}
+
+tbody tr:hover {
+    background-color: #2a2a2e;
 }

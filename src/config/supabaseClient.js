@@ -7,6 +7,9 @@ const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY || "eyJhbGciOi
 // Verificar se as variáveis estão definidas
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.error("Erro: Variáveis de ambiente do Supabase não carregadas!");
+} else {
+    console.log("Supabase URL:", SUPABASE_URL);
+    console.log("Supabase Key:", SUPABASE_ANON_KEY.substring(0, 10) + "...");
 }
 
 // Criando o cliente Supabase

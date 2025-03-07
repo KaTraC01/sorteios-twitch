@@ -21,12 +21,31 @@ function ListaSorteio({ onReiniciarLista }) {
         if (error) {
             console.error("Erro ao buscar participantes:", error);
         } else {
+            console.log("Participantes recebidos:", data);
             setParticipantes(data);
         }
     };
 
     useEffect(() => {
         fetchParticipantes();
+        
+        // Verificar a estrutura da tabela
+        const verificarEstrutura = async () => {
+            const { data, error } = await supabase
+                .from('participantes_ativos')
+                .select('*')
+                .limit(1);
+            
+            if (error) {
+                console.error("Erro ao verificar estrutura:", error);
+            } else if (data && data.length > 0) {
+                console.log("Estrutura da tabela:", Object.keys(data[0]));
+            } else {
+                console.log("Tabela vazia ou não existe");
+            }
+        };
+        
+        verificarEstrutura();
 
         // 🔄 **Atualização em tempo real com Supabase**
         const subscription = supabase
@@ -212,13 +231,20 @@ function ListaSorteio({ onReiniciarLista }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {participantes.map((participante, index) => (
-                        <tr key={index}>
-                            <td>{index + 1}</td>
-                            <td>{participante.nome_twitch}</td>
-                            <td>{participante.streamer_escolhido}</td>
+                    {console.log("Renderizando participantes:", participantes)}
+                    {participantes && participantes.length > 0 ? (
+                        participantes.map((participante, index) => (
+                            <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{participante.nome_twitch}</td>
+                                <td>{participante.streamer_escolhido}</td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan="3">Nenhum participante encontrado</td>
                         </tr>
-                    ))}
+                    )}
                 </tbody>
             </table>
         </div>
