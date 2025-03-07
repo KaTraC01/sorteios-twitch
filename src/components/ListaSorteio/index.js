@@ -153,6 +153,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 setNovoParticipante({ nome: "", streamer: "" });
                 setTempoEspera(10);
                 localStorage.setItem("tempoEspera", 10);
+                alert("Participante adicionado com sucesso!");
             }
         }
     };
@@ -202,13 +203,24 @@ function ListaSorteio({ onReiniciarLista }) {
                 </button>
             </div>
 
-            <ul>
-                {participantes.map((participante, index) => (
-                    <li key={index}>
-                        {participante.nome_twitch} - {participante.streamer_escolhido}
-                    </li>
-                ))}
-            </ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nome na Twitch</th>
+                        <th>Streamer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {participantes.map((participante, index) => (
+                        <tr key={index}>
+                            <td>{index + 1}</td>
+                            <td>{participante.nome_twitch}</td>
+                            <td>{participante.streamer_escolhido}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
