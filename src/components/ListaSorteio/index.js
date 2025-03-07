@@ -10,6 +10,7 @@ function ListaSorteio({ onReiniciarLista }) {
     const [sorteioRealizado, setSorteioRealizado] = useState(false);
     const [ultimoVencedor, setUltimoVencedor] = useState(null);
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
+    const [feedback, setFeedback] = useState({ mensagem: "", tipo: "", visivel: false });
 
     // 🔄 **Função para buscar participantes no Supabase**
     const fetchParticipantes = async () => {
@@ -150,12 +151,12 @@ function ListaSorteio({ onReiniciarLista }) {
     // ➕ **Função para adicionar participante**
     const adicionarParticipante = async () => {
         if (listaCongelada) {
-            alert("A lista foi congelada! Você não pode mais adicionar nomes.");
+            mostrarFeedback("A lista foi congelada! Você não pode mais adicionar nomes.", "erro");
             return;
         }
 
         if (tempoEspera > 0) {
-            alert(`Aguarde ${tempoEspera} segundos antes de adicionar outro nome.`);
+            mostrarFeedback(`Aguarde ${tempoEspera} segundos antes de adicionar outro nome.`, "aviso");
             return;
         }
 
@@ -166,19 +167,37 @@ function ListaSorteio({ onReiniciarLista }) {
 
             if (error) {
                 console.error("Erro ao adicionar participante:", error);
-                alert("Erro ao adicionar. Tente novamente.");
+                mostrarFeedback("Erro ao adicionar. Tente novamente.", "erro");
             } else {
                 fetchParticipantes(); // Atualiza a lista imediatamente após a inserção
                 setNovoParticipante({ nome: "", streamer: "" });
                 setTempoEspera(10);
                 localStorage.setItem("tempoEspera", 10);
-                alert("Participante adicionado com sucesso!");
+                mostrarFeedback("Participante adicionado com sucesso!", "sucesso");
             }
+        } else {
+            mostrarFeedback("Preencha todos os campos!", "aviso");
         }
+    };
+
+    // Função para mostrar feedback
+    const mostrarFeedback = (mensagem, tipo) => {
+        setFeedback({ mensagem, tipo, visivel: true });
+        
+        // Esconder o feedback após 3 segundos
+        setTimeout(() => {
+            setFeedback(prev => ({ ...prev, visivel: false }));
+        }, 3000);
     };
 
     return (
         <div className="lista-sorteio">
+            {feedback.visivel && (
+                <div className={`feedback-mensagem ${feedback.tipo}`}>
+                    {feedback.mensagem}
+                </div>
+            )}
+            
             {ultimoVencedor && (
                 <div className="vencedor-info">
                     <h3>🏆 Último Vencedor: {ultimoVencedor.nome}</h3>

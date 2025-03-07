@@ -146,3 +146,41 @@ th {
 tbody tr:hover {
     background-color: #2a2a2e;
 }
+
+/* Estilização do feedback */
+.feedback-mensagem {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 10px auto;
+    font-weight: 500;
+    text-align: center;
+    animation: fadeInOut 0.5s ease-in-out;
+    position: relative;
+    max-width: 90%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.feedback-mensagem.sucesso {
+    background-color: rgba(46, 204, 113, 0.9);
+    color: white;
+    border-left: 4px solid #27ae60;
+}
+
+.feedback-mensagem.erro {
+    background-color: rgba(231, 76, 60, 0.9);
+    color: white;
+    border-left: 4px solid #c0392b;
+}
+
+.feedback-mensagem.aviso {
+    background-color: rgba(241, 196, 15, 0.9);
+    color: #333;
+    border-left: 4px solid #f39c12;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-20px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
