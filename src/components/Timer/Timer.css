@@ -1,13 +1,14 @@
 .timer {
-    background-color: #222; /* Fundo escuro */
+    background-color: #1a1a1a; /* Fundo escuro mais claro que o fundo principal */
     color: white;
     text-align: center;
     padding: 10px;
     font-size: 18px;
     font-weight: bold;
     position: fixed;
-    top: 50px; /* Fica logo abaixo do cabeçalho */
+    top: 50px; /* Fica logo abaixo do cabeÃ§alho */
     left: 0;
     width: 100%;
     z-index: 999;
+    border-bottom: 2px solid #19b5a5; /* Borda com a nova cor de identidade */
 }

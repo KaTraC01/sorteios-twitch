@@ -24,7 +24,7 @@ function App() {
                 {/* Timer fixo abaixo do cabeçalho */}
                 <Timer listaReiniciada={listaReiniciada} />
 
-                <main style={{ marginTop: "100px", padding: "20px", textAlign: "center" }}>
+                <main style={{ marginTop: "100px", padding: "20px", textAlign: "center", backgroundColor: "#121212", color: "white" }}>
                     <Routes>
                         {/* Rota para a Lista de Sorteios */}
                         <Route path="/" element={

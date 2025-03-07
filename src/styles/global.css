@@ -9,22 +9,22 @@
 
 body {
   font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f7f7f8;
-  color: #333;
+  background-color: #121212; /* Fundo escuro */
+  color: #f7f7f8; /* Texto claro para contraste */
   line-height: 1.6;
 }
 
-/* Cores inspiradas na Twitch */
+/* Cores do tema */
 :root {
-  --primary: #6441a5;
-  --primary-dark: #4b367c;
-  --secondary: #9146ff;
-  --accent: #b9a3e3;
+  --primary: #19b5a5; /* Nova cor de identidade */
+  --primary-dark: #14968a; /* Versão mais escura da nova cor */
+  --secondary: #19b5a5; /* Nova cor de identidade */
+  --accent: #7fdfd5; /* Versão mais clara da nova cor */
   --text-light: #efeff1;
   --text-dark: #1f1f23;
-  --background: #f7f7f8;
+  --background: #121212; /* Fundo escuro */
   --background-dark: #0e0e10;
-  --success: #00b5ad;
+  --success: #19b5a5; /* Nova cor de identidade */
   --error: #f43f5e;
   --warning: #ffaa15;
 }
@@ -56,23 +56,25 @@ a {
 }
 
 a:hover {
-  color: var(--primary);
+  color: var(--accent);
 }
 
 /* Estilos de formulários */
 input, select, textarea {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #333;
   border-radius: 4px;
   font-size: 16px;
   width: 100%;
   margin-bottom: 10px;
+  background-color: #1a1a1a; /* Fundo escuro para inputs */
+  color: #f7f7f8; /* Texto claro */
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--secondary);
-  box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(25, 181, 165, 0.2);
 }
 
 /* Estilos de containers */

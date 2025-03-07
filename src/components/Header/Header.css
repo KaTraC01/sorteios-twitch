@@ -1,5 +1,5 @@
 .header {
-    background-color: #9147ff; /* Roxo estilo Twitch */
+    background-color: #19b5a5; /* Nova cor de identidade */
     color: white;
     display: flex;
     justify-content: space-between;
@@ -10,6 +10,7 @@
     left: 0;
     width: 100%;
     z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .logo {
@@ -22,8 +23,10 @@
     text-decoration: none;
     margin: 0 15px;
     font-weight: bold;
+    transition: all 0.2s ease;
 }
 
-    .menu a:hover {
-        text-decoration: underline;
-    }
+.menu a:hover {
+    text-decoration: none;
+    opacity: 0.8;
+}
