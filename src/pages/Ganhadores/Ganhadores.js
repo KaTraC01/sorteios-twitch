@@ -6,6 +6,7 @@ function Ganhadores() {
     const [historico, setHistorico] = useState([]);
     const [emailVisivel, setEmailVisivel] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
 
     // 🔄 **Carrega o histórico dos sorteios do Supabase**
     useEffect(() => {
@@ -29,7 +30,20 @@ function Ganhadores() {
 
     return (
         <div className="ganhadores-container">
-            <h2>Ganhadores Anteriores</h2>
+            <h2>🏆 Ganhadores Anteriores</h2>
+
+            {/* Botão para instruções */}
+            <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
+                {mostrarInstrucoes ? "Fechar Instruções" : "Como Funcionam os Sorteios"}
+            </button>
+
+            {mostrarInstrucoes && (
+                <div className="instrucoes">
+                    <p>📝 Os sorteios acontecem <strong>todos os dias às 21h</strong>.</p>
+                    <p>🔄 A lista de participantes é <strong>congelada 10 minutos antes</strong> do sorteio.</p>
+                    <p>⏳ O histórico completo de todos os sorteios é mantido nesta página.</p>
+                </div>
+            )}
 
             {/* Botão "Fale Conosco" */}
             <button className="fale-conosco" onClick={() => setEmailVisivel(!emailVisivel)}>
@@ -40,7 +54,14 @@ function Ganhadores() {
 
             {/* Exibe "Carregando..." enquanto busca os dados */}
             {loading ? (
-                <p>🔄 Carregando sorteios...</p>
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>🔄 Carregando histórico de sorteios...</p>
+                </div>
+            ) : historico.length === 0 ? (
+                <div className="no-data">
+                    <p>Nenhum sorteio realizado até o momento.</p>
+                </div>
             ) : (
                 <table className="historico-tabela">
                     <thead>
@@ -54,14 +75,14 @@ function Ganhadores() {
                     </thead>
                     <tbody>
                         {historico.map((sorteio, index) => (
-                            <React.Fragment key={sorteio.id}>
+                            <React.Fragment key={sorteio.id || index}>
                                 <tr>
                                     <td>{new Date(sorteio.data).toLocaleDateString()}</td>
                                     <td>{sorteio.numero}</td>
                                     <td>{sorteio.nome}</td>
                                     <td>{sorteio.streamer}</td>
                                     <td>
-                                        <button onClick={() => alert(`Abrindo lista do sorteio ${sorteio.data}`)}>
+                                        <button onClick={() => alert(`Abrindo lista do sorteio ${new Date(sorteio.data).toLocaleDateString()}`)}>
                                             📜 Ver Lista
                                         </button>
                                     </td>
@@ -78,6 +99,11 @@ function Ganhadores() {
                     </tbody>
                 </table>
             )}
+            
+            <div className="footer-info">
+                <p>Todos os sorteios são realizados de forma transparente e automática.</p>
+                <p>© {new Date().getFullYear()} Sistema de Sorteio - Todos os direitos reservados</p>
+            </div>
         </div>
     );
 }
