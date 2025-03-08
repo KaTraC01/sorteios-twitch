@@ -190,3 +190,130 @@
 .footer-info p {
     margin: 5px 0;
 }
+
+/* Estilos para o modal de lista de participantes */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background-color: #222;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid #444;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #444;
+    background-color: #333;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #19b5a5;
+    font-size: 20px;
+}
+
+.fechar-modal {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.fechar-modal:hover {
+    color: #19b5a5;
+}
+
+.lista-participantes-container {
+    padding: 20px;
+}
+
+.total-participantes {
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #19b5a5;
+}
+
+.participantes-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.participantes-tabela th,
+.participantes-tabela td {
+    border: 1px solid #444;
+    padding: 10px;
+    text-align: center;
+}
+
+.participantes-tabela th {
+    background-color: #19b5a5;
+    color: white;
+}
+
+.participantes-tabela tr:nth-child(even) {
+    background-color: rgba(50, 50, 50, 0.7);
+}
+
+.participantes-tabela tr:hover {
+    background-color: rgba(70, 70, 70, 0.8);
+}
+
+.vencedor-row {
+    background-color: rgba(25, 181, 165, 0.2) !important;
+    font-weight: bold;
+}
+
+.vencedor-row td {
+    border-color: #19b5a5;
+}
+
+/* Responsividade para o modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+    }
+    
+    .participantes-tabela th,
+    .participantes-tabela td {
+        padding: 8px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .participantes-tabela th,
+    .participantes-tabela td {
+        padding: 6px;
+        font-size: 12px;
+    }
+}

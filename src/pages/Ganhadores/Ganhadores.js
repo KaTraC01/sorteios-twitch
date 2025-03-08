@@ -7,6 +7,9 @@ function Ganhadores() {
     const [emailVisivel, setEmailVisivel] = useState(false);
     const [loading, setLoading] = useState(true);
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
+    const [listaParticipantes, setListaParticipantes] = useState([]);
+    const [sorteioSelecionado, setSorteioSelecionado] = useState(null);
+    const [loadingLista, setLoadingLista] = useState(false);
 
     // 🔄 **Carrega o histórico dos sorteios do Supabase**
     useEffect(() => {
@@ -27,6 +30,36 @@ function Ganhadores() {
 
         fetchHistorico();
     }, []);
+
+    // Função para buscar a lista de participantes de um sorteio específico
+    const buscarParticipantesSorteio = async (sorteioId, sorteioData) => {
+        setLoadingLista(true);
+        setSorteioSelecionado({
+            id: sorteioId,
+            data: sorteioData
+        });
+        
+        const { data, error } = await supabase
+            .from("historico_participantes")
+            .select("*")
+            .eq("sorteio_id", sorteioId)
+            .order("created_at", { ascending: true });
+            
+        if (error) {
+            console.error("Erro ao buscar participantes do sorteio:", error);
+            setListaParticipantes([]);
+        } else {
+            setListaParticipantes(data || []);
+        }
+        
+        setLoadingLista(false);
+    };
+    
+    // Função para fechar o modal da lista de participantes
+    const fecharListaParticipantes = () => {
+        setSorteioSelecionado(null);
+        setListaParticipantes([]);
+    };
 
     return (
         <div className="ganhadores-container">
@@ -77,12 +110,17 @@ function Ganhadores() {
                         {historico.map((sorteio, index) => (
                             <React.Fragment key={sorteio.id || index}>
                                 <tr>
-                                    <td>{new Date(sorteio.data).toLocaleDateString()}</td>
+                                    <td>{new Date(sorteio.data).toLocaleDateString('pt-BR', {
+                                        timeZone: 'America/Sao_Paulo',
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
+                                    })}</td>
                                     <td>{sorteio.numero}</td>
                                     <td>{sorteio.nome}</td>
                                     <td>{sorteio.streamer}</td>
                                     <td>
-                                        <button onClick={() => alert(`Abrindo lista do sorteio ${new Date(sorteio.data).toLocaleDateString()}`)}>
+                                        <button onClick={() => buscarParticipantesSorteio(sorteio.id, sorteio.data)}>
                                             📜 Ver Lista
                                         </button>
                                     </td>
@@ -98,6 +136,56 @@ function Ganhadores() {
                         ))}
                     </tbody>
                 </table>
+            )}
+            
+            {/* Modal para exibir a lista de participantes */}
+            {sorteioSelecionado && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h3>Lista de Participantes - Sorteio {new Date(sorteioSelecionado.data).toLocaleDateString('pt-BR', {
+                                timeZone: 'America/Sao_Paulo',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            })}</h3>
+                            <button className="fechar-modal" onClick={fecharListaParticipantes}>×</button>
+                        </div>
+                        
+                        {loadingLista ? (
+                            <div className="loading-container">
+                                <div className="loading-spinner"></div>
+                                <p>Carregando lista de participantes...</p>
+                            </div>
+                        ) : listaParticipantes.length === 0 ? (
+                            <div className="no-data">
+                                <p>Nenhum registro de participantes encontrado para este sorteio.</p>
+                            </div>
+                        ) : (
+                            <div className="lista-participantes-container">
+                                <p className="total-participantes">Total de participantes: {listaParticipantes.length}</p>
+                                <table className="participantes-tabela">
+                                    <thead>
+                                        <tr>
+                                            <th>Nº</th>
+                                            <th>Nome Twitch</th>
+                                            <th>Streamer Escolhido</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {listaParticipantes.map((participante, index) => (
+                                            <tr key={participante.id || index} className={participante.nome_twitch === historico.find(s => s.id === sorteioSelecionado.id)?.nome ? "vencedor-row" : ""}>
+                                                <td>{index + 1}</td>
+                                                <td>{participante.nome_twitch}</td>
+                                                <td>{participante.streamer_escolhido}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
             )}
             
             <div className="footer-info">

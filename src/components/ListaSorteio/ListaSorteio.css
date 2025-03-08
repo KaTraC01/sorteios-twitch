@@ -10,41 +10,91 @@
     border: 1px solid #444;
 }
 
-/* Estilização da seção do vencedor */
+/* Estilização da seção do vencedor - Versão mais limpa e elegante */
 .vencedor-info {
-    background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
-    border: 2px solid #19b5a5; /* Nova cor de identidade */
-    padding: 15px;
-    border-radius: 10px;
+    background-color: #222;
+    border: 2px solid #19b5a5;
+    padding: 15px 20px;
+    border-radius: 8px;
     text-align: center;
-    margin-bottom: 15px;
-    box-shadow: 0 0 8px rgba(25, 181, 165, 0.5);
-    transition: transform 0.2s ease-in-out;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-    .vencedor-info:hover {
-        transform: scale(1.02);
-    }
+.vencedor-info h3 {
+    color: #19b5a5;
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
 
-    .vencedor-info h3 {
-        color: #19b5a5; /* Nova cor de identidade */
-        margin-bottom: 8px;
-        font-size: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
+.vencedor-info h3 .icon-trophy {
+    font-size: 24px;
+    color: gold;
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5));
+}
 
-    .vencedor-info p {
-        color: white;
-        margin: 5px 0;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
+.vencedor-info .vencedor-detalhes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.vencedor-info .detalhe {
+    background-color: #2a2a2a;
+    padding: 8px 10px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.vencedor-info .detalhe:hover {
+    transform: translateY(-2px);
+    background-color: #333;
+}
+
+.vencedor-info .detalhe-label {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.vencedor-info .detalhe-valor {
+    font-size: 15px;
+    color: white;
+    font-weight: bold;
+}
+
+.vencedor-info .icon-streamer {
+    color: #9147ff;
+}
+
+.vencedor-info .icon-number {
+    color: #19b5a5;
+}
+
+.vencedor-info .icon-date {
+    color: #4a90e2;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+    .vencedor-info .vencedor-detalhes {
+        grid-template-columns: 1fr;
     }
+}
 
 /* Estilização do botão "Como Participar" */
 .como-participar-btn {

@@ -27,8 +27,44 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
+    // 🏆 **Função para buscar o último vencedor do Supabase**
+    const fetchUltimoVencedor = async () => {
+        const { data, error } = await supabase
+            .from("sorteios")
+            .select("*")
+            .order("data", { ascending: false })
+            .limit(1);
+
+        if (error) {
+            console.error("Erro ao buscar último vencedor:", error);
+        } else if (data && data.length > 0) {
+            const vencedor = data[0];
+            setUltimoVencedor({
+                nome: vencedor.nome,
+                streamer: vencedor.streamer,
+                numero: vencedor.numero,
+                data: new Date(vencedor.data).toLocaleDateString('pt-BR')
+            });
+            
+            // Salva no localStorage também como backup
+            localStorage.setItem("ultimoVencedor", JSON.stringify({
+                nome: vencedor.nome,
+                streamer: vencedor.streamer,
+                numero: vencedor.numero,
+                data: new Date(vencedor.data).toLocaleDateString('pt-BR')
+            }));
+        } else {
+            // Tenta carregar do localStorage se não encontrar no Supabase
+            const vencedorSalvo = localStorage.getItem("ultimoVencedor");
+            if (vencedorSalvo) {
+                setUltimoVencedor(JSON.parse(vencedorSalvo));
+            }
+        }
+    };
+
     useEffect(() => {
         fetchParticipantes();
+        fetchUltimoVencedor(); // Carrega o último vencedor ao iniciar
         
         // Verificar a estrutura da tabela
         const verificarEstrutura = async () => {
@@ -54,8 +90,15 @@ function ListaSorteio({ onReiniciarLista }) {
             .on("postgres_changes", { event: "*", schema: "public", table: "participantes_ativos" }, fetchParticipantes)
             .subscribe();
 
+        // Também escuta por mudanças na tabela de sorteios para atualizar o último vencedor
+        const sorteiosSubscription = supabase
+            .channel("sorteios")
+            .on("postgres_changes", { event: "INSERT", schema: "public", table: "sorteios" }, fetchUltimoVencedor)
+            .subscribe();
+
         return () => {
             supabase.removeChannel(subscription);
+            supabase.removeChannel(sorteiosSubscription);
         };
     }, []);
 
@@ -110,25 +153,73 @@ function ListaSorteio({ onReiniciarLista }) {
 
         const vencedorIndex = Math.floor(Math.random() * participantes.length);
         const vencedor = participantes[vencedorIndex];
-
-        setUltimoVencedor({
+        
+        // Obter a data atual no formato correto
+        const dataAtual = new Date();
+        const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
+        
+        const dadosVencedor = {
             nome: vencedor.nome_twitch,
             streamer: vencedor.streamer_escolhido,
             numero: vencedorIndex + 1,
-            data: new Date().toLocaleDateString()
-        });
+            data: dataFormatada
+        };
+        
+        // Atualiza o estado e salva no localStorage
+        setUltimoVencedor(dadosVencedor);
+        localStorage.setItem("ultimoVencedor", JSON.stringify(dadosVencedor));
 
         setSorteioRealizado(true);
 
-        // 🔹 **Salva o resultado no Supabase**
-        await supabase.from("sorteios").insert([
+        // Ajustar a data para o fuso horário local antes de salvar
+        const dataHoraBrasil = new Date();
+        // Garantir que a data seja salva com o fuso horário correto
+        const dataISO = new Date(
+            dataHoraBrasil.getFullYear(),
+            dataHoraBrasil.getMonth(),
+            dataHoraBrasil.getDate(),
+            21, // Hora do sorteio (21h)
+            0,  // Minutos
+            0   // Segundos
+        ).toISOString();
+
+        // 🔹 **Salva o resultado do sorteio no Supabase**
+        const { data: sorteioSalvo, error: erroSorteio } = await supabase.from("sorteios").insert([
             {
-                data: new Date().toISOString(),
+                data: dataISO,
                 numero: vencedorIndex + 1,
                 nome: vencedor.nome_twitch,
                 streamer: vencedor.streamer_escolhido,
             },
-        ]);
+        ]).select();
+
+        if (erroSorteio) {
+            console.error("Erro ao salvar o sorteio:", erroSorteio);
+            return;
+        }
+
+        // 🔹 **Salva a lista completa de participantes no histórico**
+        if (sorteioSalvo && sorteioSalvo.length > 0) {
+            const sorteioId = sorteioSalvo[0].id;
+            
+            // Prepara os dados dos participantes para inserção no histórico
+            const participantesHistorico = participantes.map(participante => ({
+                sorteio_id: sorteioId,
+                nome_twitch: participante.nome_twitch,
+                streamer_escolhido: participante.streamer_escolhido
+            }));
+            
+            // Insere todos os participantes no histórico
+            const { error: erroHistorico } = await supabase
+                .from("historico_participantes")
+                .insert(participantesHistorico);
+                
+            if (erroHistorico) {
+                console.error("Erro ao salvar histórico de participantes:", erroHistorico);
+            } else {
+                console.log("Histórico de participantes salvo com sucesso!");
+            }
+        }
     };
 
     // 🔄 **Função para resetar a lista às 21h05**
@@ -136,6 +227,8 @@ function ListaSorteio({ onReiniciarLista }) {
         setParticipantes([]);
         setListaCongelada(false);
         setSorteioRealizado(false);
+        
+        // Não limpa o ultimoVencedor para manter a exibição do último vencedor
 
         const { error } = await supabase.from("participantes_ativos").delete().neq("id", "");
 
@@ -146,6 +239,9 @@ function ListaSorteio({ onReiniciarLista }) {
         if (onReiniciarLista) {
             onReiniciarLista();
         }
+        
+        // Exibe mensagem informando que a lista foi resetada
+        mostrarFeedback("Lista resetada para o próximo sorteio! O último vencedor continua visível.", "sucesso");
     };
 
     // ➕ **Função para adicionar participante**
@@ -200,10 +296,21 @@ function ListaSorteio({ onReiniciarLista }) {
             
             {ultimoVencedor && (
                 <div className="vencedor-info">
-                    <h3>🏆 Último Vencedor: {ultimoVencedor.nome}</h3>
-                    <p>🎥 Escolheu: {ultimoVencedor.streamer}</p>
-                    <p>🔢 N° Sorteado: {ultimoVencedor.numero}</p>
-                    <p>📅 Data: {ultimoVencedor.data}</p>
+                    <h3><span className="icon-trophy">🏆</span> Último Vencedor: {ultimoVencedor.nome}</h3>
+                    <div className="vencedor-detalhes">
+                        <div className="detalhe">
+                            <div className="detalhe-label"><span className="icon-streamer">🎥</span> Streamer</div>
+                            <div className="detalhe-valor">{ultimoVencedor.streamer}</div>
+                        </div>
+                        <div className="detalhe">
+                            <div className="detalhe-label"><span className="icon-number">🔢</span> Número Sorteado</div>
+                            <div className="detalhe-valor">{ultimoVencedor.numero}</div>
+                        </div>
+                        <div className="detalhe">
+                            <div className="detalhe-label"><span className="icon-date">📅</span> Data</div>
+                            <div className="detalhe-valor">{ultimoVencedor.data}</div>
+                        </div>
+                    </div>
                 </div>
             )}
 

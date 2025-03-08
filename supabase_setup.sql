@@ -71,4 +71,26 @@ EXECUTE FUNCTION update_updated_at_column();
 
 -- 8. Comentários para documentação
 COMMENT ON TABLE participantes_ativos IS 'Armazena os participantes ativos para o sorteio atual';
-COMMENT ON TABLE sorteios IS 'Armazena o histórico de todos os sorteios realizados'; 
+COMMENT ON TABLE sorteios IS 'Armazena o histórico de todos os sorteios realizados';
+
+-- Criar tabela para histórico de participantes de cada sorteio
+CREATE TABLE IF NOT EXISTS historico_participantes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sorteio_id UUID REFERENCES sorteios(id),
+    nome_twitch TEXT NOT NULL,
+    streamer_escolhido TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Habilitar RLS para a tabela de histórico
+ALTER TABLE historico_participantes ENABLE ROW LEVEL SECURITY;
+
+-- Criar políticas para a tabela de histórico
+CREATE POLICY "Permitir leitura para todos" ON historico_participantes
+    FOR SELECT USING (true);
+
+-- Criar índices para melhorar performance
+CREATE INDEX IF NOT EXISTS idx_historico_sorteio_id ON historico_participantes (sorteio_id);
+
+-- Adicionar comentários
+COMMENT ON TABLE historico_participantes IS 'Armazena o histórico de participantes de cada sorteio'; 
