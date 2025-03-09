@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 
-export async function GET(req) {
+export default async function handler(req, res) {
   try {
     // Verificar se é uma requisição autorizada
-    const authHeader = req.headers.get('Authorization');
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse(JSON.stringify({ error: 'Não autorizado' }), { status: 401 });
+      return res.status(401).json({ error: 'Não autorizado' });
     }
     
     const token = authHeader.split(' ')[1];
     if (token !== process.env.CRON_SECRET) {
-      return new NextResponse(JSON.stringify({ error: 'Token inválido' }), { status: 401 });
+      return res.status(401).json({ error: 'Token inválido' });
     }
 
     // Verificar a hora atual para determinar qual ação executar
@@ -54,13 +53,13 @@ export async function GET(req) {
         throw new Error(`Erro ao executar ação ${action}: ${errorData.error}`);
       }
 
-      return NextResponse.json({ success: true, message });
+      return res.status(200).json({ success: true, message });
     }
 
     // Se não for hora de executar nenhuma ação
-    return NextResponse.json({ success: true, message: 'Nenhuma ação necessária no momento' });
+    return res.status(200).json({ success: true, message: 'Nenhuma ação necessária no momento' });
   } catch (error) {
     console.error('Erro na execução do cron job:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor', details: error.message }, { status: 500 });
+    return res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 } 
