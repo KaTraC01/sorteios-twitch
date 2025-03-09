@@ -126,27 +126,38 @@ function ListaSorteio({ onReiniciarLista }) {
             const horas = agora.getHours();
             const minutos = agora.getMinutes();
 
+            // Adicionando logs para depuração
+            console.log(`Verificando horário: ${horas}:${minutos}`);
+            console.log(`Estado atual - Lista congelada: ${listaCongelada}, Sorteio realizado: ${sorteioRealizado}`);
+
             if (horas === 20 && minutos >= 50) {
+                console.log("Congelando a lista de participantes");
                 setListaCongelada(true);
             }
 
             if (horas === 21 && minutos === 0 && !sorteioRealizado) {
+                console.log("Iniciando o sorteio");
                 realizarSorteio();
             }
 
             if (horas === 21 && minutos === 5 && sorteioRealizado) {
+                console.log("Resetando a lista para o próximo dia");
                 resetarLista();
             }
         };
 
         verificarHorario();
-        const intervalo = setInterval(verificarHorario, 1000);
+        const intervalo = setInterval(verificarHorario, 60000); // Alterado para verificar a cada minuto em vez de a cada segundo
         return () => clearInterval(intervalo);
     }, [participantes, sorteioRealizado]);
 
     // 🎲 **Função para realizar o sorteio**
     const realizarSorteio = async () => {
+        console.log("Função realizarSorteio iniciada");
+        console.log(`Número de participantes: ${participantes.length}`);
+        
         if (participantes.length === 0) {
+            console.log("Lista vazia, sorteio cancelado");
             mostrarFeedback("Nenhum participante na lista. O sorteio foi cancelado.", "erro");
             return;
         }
@@ -287,98 +298,125 @@ function ListaSorteio({ onReiniciarLista }) {
     };
 
     return (
-        <div className="lista-sorteio">
-            {feedback.visivel && (
-                <div className={`feedback-mensagem ${feedback.tipo}`}>
-                    {feedback.mensagem}
-                </div>
-            )}
-            
-            {ultimoVencedor && (
-                <div className="vencedor-info">
-                    <h3><span className="icon-trophy">🏆</span> Último Vencedor: {ultimoVencedor.nome}</h3>
-                    <div className="vencedor-detalhes">
-                        <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-streamer">🎥</span> Streamer</div>
-                            <div className="detalhe-valor">{ultimoVencedor.streamer}</div>
-                        </div>
-                        <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-number">🔢</span> Número Sorteado</div>
-                            <div className="detalhe-valor">{ultimoVencedor.numero}</div>
-                        </div>
-                        <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-date">📅</span> Data</div>
-                            <div className="detalhe-valor">{ultimoVencedor.data}</div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
-                {mostrarInstrucoes ? "Fechar Instruções" : "Como Participar"}
-            </button>
-
-            {mostrarInstrucoes && (
-                <div className="instrucoes">
-                    <p>📝 **Escreva seu nickname da Twitch** e o **nome do Streamer** que deseja apoiar.</p>
-                    <p>🔄 Você **pode participar várias vezes**, escolhendo **diferentes streamers**.</p>
-                    <p>⏳ Os sorteios acontecem **às 21h**, mas **a lista é congelada 10 minutos antes**.</p>
-                </div>
-            )}
-
-            <h2>Lista de Participantes {listaCongelada && "(❄️ Lista Congelada ❄️)"}</h2>
-
-            <div className="formulario">
-                <input
-                    type="text"
-                    placeholder="Seu nickname da Twitch"
-                    value={novoParticipante.nome}
-                    onChange={(e) => setNovoParticipante({ ...novoParticipante, nome: e.target.value })}
-                    disabled={listaCongelada}
-                />
-                <input
-                    type="text"
-                    placeholder="Nome do Streamer"
-                    value={novoParticipante.streamer}
-                    onChange={(e) => setNovoParticipante({ ...novoParticipante, streamer: e.target.value })}
-                    disabled={listaCongelada}
-                />
-                <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
-                    {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
-                </button>
+        <div className="lista-sorteio-container">
+            <div className="lista-header">
+                <h2>Lista de Participantes</h2>
+                {listaCongelada && <span className="lista-congelada">Lista Congelada</span>}
+                {tempoEspera > 0 && <span className="tempo-espera">Aguarde {tempoEspera}s para participar novamente</span>}
             </div>
 
-            {feedback.visivel && (
-                <div className={`feedback-mensagem ${feedback.tipo}`}>
-                    {feedback.mensagem}
-                </div>
-            )}
+            {/* Botões de administração */}
+            <div className="admin-controls">
+                <button 
+                    className="admin-button"
+                    onClick={() => realizarSorteio()}
+                    disabled={participantes.length === 0 || sorteioRealizado}
+                >
+                    Realizar Sorteio Manual
+                </button>
+                <button 
+                    className="admin-button"
+                    onClick={() => resetarLista()}
+                    disabled={!sorteioRealizado}
+                >
+                    Resetar Lista Manualmente
+                </button>
+            </div>
+            
+            {/* Formulário para adicionar participante */}
+            <div className="lista-sorteio">
+                {feedback.visivel && (
+                    <div className={`feedback-mensagem ${feedback.tipo}`}>
+                        {feedback.mensagem}
+                    </div>
+                )}
+                
+                {ultimoVencedor && (
+                    <div className="vencedor-info">
+                        <h3><span className="icon-trophy">🏆</span> Último Vencedor: {ultimoVencedor.nome}</h3>
+                        <div className="vencedor-detalhes">
+                            <div className="detalhe">
+                                <div className="detalhe-label"><span className="icon-streamer">🎥</span> Streamer</div>
+                                <div className="detalhe-valor">{ultimoVencedor.streamer}</div>
+                            </div>
+                            <div className="detalhe">
+                                <div className="detalhe-label"><span className="icon-number">🔢</span> Número Sorteado</div>
+                                <div className="detalhe-valor">{ultimoVencedor.numero}</div>
+                            </div>
+                            <div className="detalhe">
+                                <div className="detalhe-label"><span className="icon-date">📅</span> Data</div>
+                                <div className="detalhe-valor">{ultimoVencedor.data}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Nome na Twitch</th>
-                        <th>Streamer</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {console.log("Renderizando participantes:", participantes)}
-                    {participantes && participantes.length > 0 ? (
-                        participantes.map((participante, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>{participante.nome_twitch}</td>
-                                <td>{participante.streamer_escolhido}</td>
-                            </tr>
-                        ))
-                    ) : (
+                <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
+                    {mostrarInstrucoes ? "Fechar Instruções" : "Como Participar"}
+                </button>
+
+                {mostrarInstrucoes && (
+                    <div className="instrucoes">
+                        <p>📝 **Escreva seu nickname da Twitch** e o **nome do Streamer** que deseja apoiar.</p>
+                        <p>🔄 Você **pode participar várias vezes**, escolhendo **diferentes streamers**.</p>
+                        <p>⏳ Os sorteios acontecem **às 21h**, mas **a lista é congelada 10 minutos antes**.</p>
+                    </div>
+                )}
+
+                <h2>Lista de Participantes {listaCongelada && "(❄️ Lista Congelada ❄️)"}</h2>
+
+                <div className="formulario">
+                    <input
+                        type="text"
+                        placeholder="Seu nickname da Twitch"
+                        value={novoParticipante.nome}
+                        onChange={(e) => setNovoParticipante({ ...novoParticipante, nome: e.target.value })}
+                        disabled={listaCongelada}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Nome do Streamer"
+                        value={novoParticipante.streamer}
+                        onChange={(e) => setNovoParticipante({ ...novoParticipante, streamer: e.target.value })}
+                        disabled={listaCongelada}
+                    />
+                    <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
+                        {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
+                    </button>
+                </div>
+
+                {feedback.visivel && (
+                    <div className={`feedback-mensagem ${feedback.tipo}`}>
+                        {feedback.mensagem}
+                    </div>
+                )}
+
+                <table>
+                    <thead>
                         <tr>
-                            <td colSpan="3">Nenhum participante encontrado</td>
+                            <th>#</th>
+                            <th>Nome na Twitch</th>
+                            <th>Streamer</th>
                         </tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {console.log("Renderizando participantes:", participantes)}
+                        {participantes && participantes.length > 0 ? (
+                            participantes.map((participante, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td>{participante.nome_twitch}</td>
+                                    <td>{participante.streamer_escolhido}</td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="3">Nenhum participante encontrado</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
