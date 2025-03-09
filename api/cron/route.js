@@ -38,8 +38,9 @@ export default async function handler(req, res) {
     }
 
     if (action) {
-      // Chamar a API de sorteio
-      const response = await fetch(`${process.env.VERCEL_URL || 'https://seu-site.vercel.app'}/api/sorteio`, {
+      // Chamar a API de sorteio usando a URL base configurada
+      const baseUrl = process.env.BASE_URL || 'https://sorteios-twitch.vercel.app';
+      const response = await fetch(`${baseUrl}/api/sorteio`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
