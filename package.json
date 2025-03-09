@@ -21,7 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "2.48.1",
-    "node-fetch": "2.6.9",
+    "node-fetch": "^2.6.9",
     "nth-check": "2.1.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -32,8 +32,8 @@
     "@testing-library/jest-dom": "5.17.0",
     "@testing-library/react": "14.0.0",
     "@testing-library/user-event": "14.4.3",
-    "svgo": "3.3.2",
-    "postcss": "8.4.31"
+    "postcss": "8.4.31",
+    "svgo": "3.3.2"
   },
   "browserslist": {
     "production": [
