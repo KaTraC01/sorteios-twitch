@@ -93,4 +93,46 @@ CREATE POLICY "Permitir leitura para todos" ON historico_participantes
 CREATE INDEX IF NOT EXISTS idx_historico_sorteio_id ON historico_participantes (sorteio_id);
 
 -- Adicionar comentários
-COMMENT ON TABLE historico_participantes IS 'Armazena o histórico de participantes de cada sorteio'; 
+COMMENT ON TABLE historico_participantes IS 'Armazena o histórico de participantes de cada sorteio';
+
+-- Tabela para armazenar configurações do sistema
+CREATE TABLE IF NOT EXISTS configuracoes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    chave TEXT NOT NULL UNIQUE,
+    valor TEXT NOT NULL,
+    atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Habilitar RLS (Row Level Security)
+ALTER TABLE configuracoes ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para configuracoes
+CREATE POLICY IF NOT EXISTS "Permitir leitura pública de configuracoes" 
+    ON configuracoes FOR SELECT 
+    USING (true);
+
+CREATE POLICY IF NOT EXISTS "Permitir inserção e atualização em configuracoes via API" 
+    ON configuracoes FOR ALL
+    USING (true)
+    WITH CHECK (true);
+
+-- Inserir configurações iniciais
+INSERT INTO configuracoes (chave, valor) 
+VALUES ('lista_congelada', 'false')
+ON CONFLICT (chave) DO UPDATE SET valor = 'false', atualizado_em = NOW();
+
+-- Função para limpar a tabela de participantes_ativos às 21:05
+CREATE OR REPLACE FUNCTION reset_participantes_ativos()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM participantes_ativos;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para resetar a lista após um sorteio
+DROP TRIGGER IF EXISTS trigger_reset_participantes_ativos ON sorteios;
+CREATE TRIGGER trigger_reset_participantes_ativos
+AFTER INSERT ON sorteios
+FOR EACH ROW
+EXECUTE FUNCTION reset_participantes_ativos(); 

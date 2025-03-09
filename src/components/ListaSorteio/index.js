@@ -53,52 +53,64 @@ function ListaSorteio({ onReiniciarLista }) {
                 numero: vencedor.numero,
                 data: new Date(vencedor.data).toLocaleDateString('pt-BR')
             }));
-        } else {
-            // Tenta carregar do localStorage se não encontrar no Supabase
-            const vencedorSalvo = localStorage.getItem("ultimoVencedor");
-            if (vencedorSalvo) {
-                setUltimoVencedor(JSON.parse(vencedorSalvo));
-            }
         }
     };
 
+    // 🔒 **Função para verificar se a lista está congelada**
+    const verificarListaCongelada = async () => {
+        const { data, error } = await supabase
+            .from("configuracoes")
+            .select("*")
+            .eq("chave", "lista_congelada")
+            .single();
+
+        if (error) {
+            console.error("Erro ao verificar estado da lista:", error);
+        } else if (data) {
+            setListaCongelada(data.valor === "true");
+        }
+    };
+
+    // 🔄 **Efeito para carregar dados iniciais**
     useEffect(() => {
         fetchParticipantes();
-        fetchUltimoVencedor(); // Carrega o último vencedor ao iniciar
-        
-        // Verificar a estrutura da tabela
-        const verificarEstrutura = async () => {
-            const { data, error } = await supabase
-                .from('participantes_ativos')
-                .select('*')
-                .limit(1);
-            
-            if (error) {
-                console.error("Erro ao verificar estrutura:", error);
-            } else if (data && data.length > 0) {
-                console.log("Estrutura da tabela:", Object.keys(data[0]));
-            } else {
-                console.log("Tabela vazia ou não existe");
-            }
-        };
-        
-        verificarEstrutura();
+        fetchUltimoVencedor();
+        verificarListaCongelada();
 
-        // 🔄 **Atualização em tempo real com Supabase**
+        // Recupera o último vencedor do localStorage como backup
+        const vencedorSalvo = localStorage.getItem("ultimoVencedor");
+        if (vencedorSalvo && !ultimoVencedor) {
+            setUltimoVencedor(JSON.parse(vencedorSalvo));
+        }
+
+        // Configura inscrições em tempo real para atualizações
         const subscription = supabase
-            .channel("participantes_ativos")
-            .on("postgres_changes", { event: "*", schema: "public", table: "participantes_ativos" }, fetchParticipantes)
+            .channel('participantes_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'participantes_ativos' }, () => {
+                fetchParticipantes();
+            })
             .subscribe();
 
-        // Também escuta por mudanças na tabela de sorteios para atualizar o último vencedor
         const sorteiosSubscription = supabase
-            .channel("sorteios")
-            .on("postgres_changes", { event: "INSERT", schema: "public", table: "sorteios" }, fetchUltimoVencedor)
+            .channel('sorteios_changes')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sorteios' }, () => {
+                fetchUltimoVencedor();
+                setSorteioRealizado(true);
+            })
             .subscribe();
 
+        const configuracoesSubscription = supabase
+            .channel('configuracoes_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracoes' }, () => {
+                verificarListaCongelada();
+            })
+            .subscribe();
+
+        // Limpa as inscrições quando o componente é desmontado
         return () => {
             supabase.removeChannel(subscription);
             supabase.removeChannel(sorteiosSubscription);
+            supabase.removeChannel(configuracoesSubscription);
         };
     }, []);
 
