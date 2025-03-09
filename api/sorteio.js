@@ -74,24 +74,16 @@ async function realizarSorteio() {
   const vencedorIndex = Math.floor(Math.random() * participantes.length);
   const vencedor = participantes[vencedorIndex];
   
-  // Obter a data atual no formato ISO
-  const dataHoraBrasil = new Date();
-  // Garantir que a data seja salva com o fuso horário correto
-  const dataISO = new Date(
-    dataHoraBrasil.getFullYear(),
-    dataHoraBrasil.getMonth(),
-    dataHoraBrasil.getDate(),
-    21, // Hora do sorteio (21h)
-    0,  // Minutos
-    0   // Segundos
-  ).toISOString();
+  // Obter a data atual no fuso horário de Brasília
+  const dataAtual = new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" });
+  const dataHoraBrasil = new Date(dataAtual);
 
   // Salvar o resultado do sorteio no Supabase
   const { data: sorteioSalvo, error: erroSorteio } = await supabase
     .from("sorteios")
     .insert([
       {
-        data: dataISO,
+        data: dataHoraBrasil.toISOString(),
         numero: vencedorIndex + 1,
         nome: vencedor.nome_twitch,
         streamer: vencedor.streamer_escolhido,
