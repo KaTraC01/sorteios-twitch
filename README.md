@@ -1,4 +1,8 @@
 Site de Sorteios - Twitch
+===================
+
+![Status](https://img.shields.io/badge/status-online-brightgreen) ![Vercel](https://img.shields.io/badge/vercel-deployed-blue)
+
 Este é um site de sorteios dinâmico, inspirado na Twitch, onde usuários podem cadastrar suas participações, acompanhar vencedores anteriores e interagir de forma transparente. O sistema é baseado em React.js, utilizando Supabase para armazenamento e gerenciamento de dados, além de ser hospedado na Vercel para um desempenho otimizado.
 
  Visão Geral do Projeto
@@ -115,5 +119,6 @@ Para mais detalhes sobre a implementação da solução serverless, consulte o a
 - Configuração das variáveis de ambiente na Vercel
 - Segurança e autenticação
 - Testes e solução de problemas
+. para deploy
 
 
