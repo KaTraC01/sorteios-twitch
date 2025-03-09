@@ -2,31 +2,12 @@
   "version": 2,
   "buildCommand": "CI=false npm run build",
   "outputDirectory": "build",
-  "framework": "create-react-app",
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "*/5 20-21 * * *"
-    }
-  ],
-  "env": {
-    "SUPABASE_URL": "@supabase_url",
-    "SUPABASE_SERVICE_KEY": "@supabase_service_key",
-    "API_SECRET_KEY": "@api_secret_key",
-    "CRON_SECRET": "@cron_secret",
-    "BASE_URL": "@base_url"
-  }
+    { "path": "/api/cron", "schedule": "*/5 20-21 * * *" }
+  ]
 } 
