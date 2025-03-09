@@ -43,12 +43,20 @@ O nome do vencedor, o número sorteado e o streamer escolhido são salvos.
 O usuário pode visualizar sorteios passados.
 Cada sorteio é armazenado no Supabase para acesso futuro.
 
+ Funções Serverless para Sorteios Automáticos
+O sistema agora conta com funções serverless que garantem que os sorteios ocorram automaticamente, mesmo que ninguém esteja com o site aberto:
+
+Cron jobs na Vercel executam as funções em horários específicos (20:50, 21:00 e 21:05).
+A lista é congelada, o sorteio é realizado e a lista é resetada de forma totalmente automatizada.
+O frontend se mantém sincronizado através das inscrições em tempo real do Supabase.
+Toda a lógica de sorteio é executada no servidor, garantindo segurança e confiabilidade.
+
 Gerenciamento de Variáveis de Ambiente na Vercel
 Para manter as credenciais seguras, o projeto usa variáveis de ambiente na Vercel:
 
 Supabase URL e API Key são armazenadas na Vercel e não expostas no código.
 O sistema carrega as credenciais via process.env.NEXT_PUBLIC_SUPABASE_URL.
-
+Chaves secretas para autenticação das funções serverless são armazenadas de forma segura.
 
  Conclusão
 Com essa estrutura detalhada, o projeto oferece um sistema de sorteios automatizado, interativo e seguro, garantindo que os usuários possam participar facilmente e acompanhar os vencedores de forma transparente. 🚀🔥
@@ -58,6 +66,7 @@ Caso precise de mais alguma personalização, só avisar!
 
 Tecnologias Utilizadas
 Frontend: React.js
+Backend: Funções Serverless (Vercel)
 Banco de Dados: Supabase
 Hospedagem: Vercel
 Gerenciamento de Pacotes: npm
@@ -96,5 +105,15 @@ O site apenas carregará os dados sob demanda, buscando os arquivos conforme nec
  Possível migração futura para serviços de armazenamento externo se necessário.
 
 Dessa forma, garantimos um sistema leve, eficiente e escalável! 
+
+## Configuração da Solução Serverless
+
+Para mais detalhes sobre a implementação da solução serverless, consulte o arquivo [SERVERLESS_SETUP.md](./SERVERLESS_SETUP.md) que contém instruções detalhadas sobre:
+
+- Componentes principais da solução
+- Fluxo de execução dos cron jobs
+- Configuração das variáveis de ambiente na Vercel
+- Segurança e autenticação
+- Testes e solução de problemas
 
 
