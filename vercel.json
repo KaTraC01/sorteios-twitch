@@ -2,6 +2,12 @@
   "version": 2,
   "buildCommand": "CI=false npm run build",
   "outputDirectory": "build",
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "handle": "filesystem" },
