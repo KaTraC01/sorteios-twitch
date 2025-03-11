@@ -119,6 +119,6 @@ Para mais detalhes sobre a implementação da solução serverless, consulte o a
 - Configuração das variáveis de ambiente na Vercel
 - Segurança e autenticação
 - Testes e solução de problemas
-. para deploy2
+. para deploy3
 
 
