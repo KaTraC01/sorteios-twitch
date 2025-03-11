@@ -11,8 +11,8 @@
   "lastOpened": null,
   "mcpServers": {
     "supabase": {
-      "command": "wsl",
-      "args": ["npx", "-y", "@modelcontextprotocol/server-postgres", "postgresql://postgres.nsqiytflqwlyqhdmueki:xzXiA63wHP5BE@aws-0-sa-east-1.pooler.supabase.com:5432/postgres"]
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://postgres.nsqiytflqwlyqhdmueki:xzXiA63wHP5BE@aws-0-sa-east-1.pooler.supabase.com:5432/postgres"]
     }
   }
 }
