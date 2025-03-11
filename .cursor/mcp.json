@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "settings": {
+    "theme": "dark",
+    "language": "pt-BR",
+    "autoSave": true,
+    "formatOnSave": true
+  },
+  "extensions": [],
+  "recentProjects": [],
+  "lastOpened": null,
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", " postgresql://postgres.nsqiytflqwlyqhdmueki:[xzXiA63@wHP5BE$]@aws-0-sa-east-1.pooler.supabase.com:5432/postgres"]
+    }
+  }
+}
