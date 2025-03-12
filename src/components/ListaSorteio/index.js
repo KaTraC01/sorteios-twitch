@@ -11,6 +11,7 @@ function ListaSorteio({ onReiniciarLista }) {
     const [ultimoVencedor, setUltimoVencedor] = useState(null);
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
     const [feedback, setFeedback] = useState({ mensagem: "", tipo: "", visivel: false });
+    const [ultimaAtualizacao, setUltimaAtualizacao] = useState(Date.now());
 
     // 🔄 **Função para buscar participantes no Supabase**
     const fetchParticipantes = async () => {
@@ -71,48 +72,38 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // 🔄 **Efeito para carregar dados iniciais**
+    // 🔄 **Carrega os dados iniciais e configura atualizações periódicas**
     useEffect(() => {
+        // Carregar dados iniciais
         fetchParticipantes();
         fetchUltimoVencedor();
         verificarListaCongelada();
 
-        // Recupera o último vencedor do localStorage como backup
+        // Configurar atualizações periódicas
+        const intervalo = setInterval(() => {
+            fetchParticipantes();
+            verificarListaCongelada();
+            setUltimaAtualizacao(Date.now()); // Força a atualização do componente
+        }, 30000); // Atualiza a cada 30 segundos
+
+        return () => clearInterval(intervalo);
+    }, []);
+
+    // 🔄 **Atualiza quando o último vencedor muda**
+    useEffect(() => {
+        // Verificar se há um último vencedor no localStorage
         const vencedorSalvo = localStorage.getItem("ultimoVencedor");
         if (vencedorSalvo && !ultimoVencedor) {
             setUltimoVencedor(JSON.parse(vencedorSalvo));
         }
-
-        // Configura inscrições em tempo real para atualizações
-        const subscription = supabase
-            .channel('participantes_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'participantes_ativos' }, () => {
-                fetchParticipantes();
-            })
-            .subscribe();
-
-        const sorteiosSubscription = supabase
-            .channel('sorteios_changes')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sorteios' }, () => {
-                fetchUltimoVencedor();
-                setSorteioRealizado(true);
-            })
-            .subscribe();
-
-        const configuracoesSubscription = supabase
-            .channel('configuracoes_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracoes' }, () => {
-                verificarListaCongelada();
-            })
-            .subscribe();
-
-        // Limpa as inscrições quando o componente é desmontado
-        return () => {
-            supabase.removeChannel(subscription);
-            supabase.removeChannel(sorteiosSubscription);
-            supabase.removeChannel(configuracoesSubscription);
-        };
-    }, []);
+        
+        // Buscar o último vencedor do Supabase a cada 2 minutos
+        const intervaloVencedor = setInterval(() => {
+            fetchUltimoVencedor();
+        }, 120000); // 2 minutos
+        
+        return () => clearInterval(intervaloVencedor);
+    }, [ultimoVencedor]);
 
     // ⏳ **Atualiza o temporizador de espera**
     useEffect(() => {
@@ -146,7 +137,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 realizarSorteio();
             }
 
-            if (horas === 21 && minutos === 5 && sorteioRealizado) {
+            if (horas === 21 && minutos >= 5 && sorteioRealizado) {
                 resetarLista();
             }
         };
@@ -154,7 +145,7 @@ function ListaSorteio({ onReiniciarLista }) {
         verificarHorario();
         const intervalo = setInterval(verificarHorario, 1000);
         return () => clearInterval(intervalo);
-    }, [participantes, sorteioRealizado]);
+    }, [participantes, sorteioRealizado, ultimaAtualizacao]);
 
     // 🎲 **Função para realizar o sorteio**
     const realizarSorteio = async () => {
@@ -246,6 +237,18 @@ function ListaSorteio({ onReiniciarLista }) {
 
         if (error) {
             console.error("Erro ao limpar a lista:", error);
+        } else {
+            console.log("Lista resetada com sucesso!");
+            // Atualizar a configuração para indicar que a lista não está mais congelada
+            await supabase
+                .from("configuracoes")
+                .upsert([
+                    {
+                        chave: "lista_congelada",
+                        valor: "false",
+                        atualizado_em: new Date().toISOString()
+                    }
+                ]);
         }
 
         if (onReiniciarLista) {
@@ -254,6 +257,12 @@ function ListaSorteio({ onReiniciarLista }) {
         
         // Exibe mensagem informando que a lista foi resetada
         mostrarFeedback("Lista resetada para o próximo sorteio! O último vencedor continua visível.", "sucesso");
+        
+        // Força uma atualização dos dados
+        fetchParticipantes();
+        fetchUltimoVencedor();
+        verificarListaCongelada();
+        setUltimaAtualizacao(Date.now());
     };
 
     // ➕ **Função para adicionar participante**
