@@ -19,12 +19,22 @@
     font-weight: bold;
     display: flex;
     align-items: center;
-    color: #fff;
 }
 
 .logo span {
     color: #19b5a5; /* Cor de identidade */
     margin-right: 5px;
+}
+
+.sorteio-link {
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.sorteio-link:hover {
+    opacity: 0.8;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 .menu {

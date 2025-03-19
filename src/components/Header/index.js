@@ -6,10 +6,9 @@ function Header() {
     return (
         <header className="header">
             <div className="logo">
-                <span>🎲</span> Sorteio
+                <Link to="/" className="sorteio-link">🎲 Sorteio</Link>
             </div>
             <nav className="menu">
-                <Link to="/">Lista</Link>
                 <Link to="/ganhadores">Ganhadores</Link>
             </nav>
         </header>
