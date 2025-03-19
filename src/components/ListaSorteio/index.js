@@ -305,6 +305,20 @@ function ListaSorteio({ onReiniciarLista }) {
     const mostrarFeedback = (mensagem, tipo) => {
         setFeedback({ mensagem, tipo, visivel: true });
         
+        // Se for uma mensagem de sucesso para participante adicionado, mostrar notificação centralizada
+        if (tipo === 'sucesso' && mensagem.includes('Participante adicionado')) {
+            const notificacao = document.getElementById('notificacao-sucesso');
+            if (notificacao) {
+                notificacao.textContent = mensagem;
+                notificacao.style.display = 'block';
+                
+                // Esconder após 3 segundos
+                setTimeout(() => {
+                    notificacao.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
         // Esconder o feedback após 3 segundos
         setTimeout(() => {
             setFeedback(prev => ({ ...prev, visivel: false }));
@@ -351,9 +365,18 @@ function ListaSorteio({ onReiniciarLista }) {
                 </tr>
             );
             
-            // A cada 10 participantes, adicionar uma linha de propaganda
-            // Ignoramos a primeira propaganda pois já temos um espaço antes da tabela
-            if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
+            // Adicionar anúncio específico entre as linhas 10 e 11
+            if (index === 9) {
+                linhasTabela.push(
+                    <tr key="propaganda-linha-10-11" className="linha-propaganda">
+                        <td colSpan="3" className="anuncio-entre-linhas">
+                            <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
+                        </td>
+                    </tr>
+                );
+            }
+            // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda
+            else if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
                 const tiposAnuncios = ['video', 'quadrado', 'cursos'];
                 const tipoAleatorio = tiposAnuncios[Math.floor(Math.random() * tiposAnuncios.length)];
                 

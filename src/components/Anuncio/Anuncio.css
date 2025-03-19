@@ -197,6 +197,186 @@
     font-weight: 500;
 }
 
+/* Anúncio fixo inferior (tipo Superbet da imagem) */
+.anuncio-fixo-inferior {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ff0000;
+    color: white;
+    padding: 5px 15px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.anuncio-tag-pequena {
+    font-size: 10px;
+    color: #fff;
+    opacity: 0.7;
+    text-transform: uppercase;
+    margin: 2px 0;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-align: left;
+}
+
+.anuncio-fixo-conteudo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.anuncio-fixo-logo {
+    background-color: #fff;
+    color: #f00;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.anuncio-fixo-texto {
+    flex-grow: 1;
+    text-align: center;
+}
+
+.anuncio-fixo-texto p {
+    font-size: 12px;
+    margin: 0;
+    font-weight: bold;
+}
+
+.anuncio-fixo-texto h2 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.anuncio-fixo-icone {
+    font-size: 24px;
+    animation: pulse 1.5s infinite;
+    margin-left: 10px;
+}
+
+.anuncio-fixo-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+    font-size: 10px;
+}
+
+.anuncio-aviso-pequeno {
+    font-size: 9px;
+    opacity: 0.9;
+}
+
+.anuncio-fechar-grande {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    z-index: 10;
+}
+
+.anuncio-fechar-grande:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* Anúncio lateral */
+.anuncio-lateral {
+    position: fixed;
+    background-color: #222;
+    color: white;
+    border-radius: 8px;
+    padding: 15px;
+    width: 200px;
+    text-align: center;
+    z-index: 900;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 150px;
+}
+
+.anuncio-lateral.esquerda {
+    left: 10px;
+}
+
+.anuncio-lateral.direita {
+    right: 10px;
+}
+
+.anuncio-lateral-conteudo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    flex-grow: 1;
+}
+
+.anuncio-lateral-conteudo p {
+    font-size: 18px;
+    margin: 15px 0;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.anuncio-lateral .anuncio-tag {
+    align-self: flex-start;
+    color: #ccc;
+    font-size: 10px;
+    margin-bottom: 10px;
+}
+
+.anuncio-lateral .anuncio-button {
+    font-size: 14px;
+    padding: 8px 20px;
+    margin-top: auto;
+    background-color: white;
+    color: #222;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.anuncio-lateral .anuncio-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Anúncio entre linhas */
+.anuncio-entre-linhas {
+    margin: 5px 0;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
+    padding: 5px 0;
+    background-color: #1a1a1a;
+}
+
 /* Anúncio padrão (espaço reservado) */
 .anuncio-padrao {
     position: relative;
@@ -242,6 +422,21 @@
     max-width: 300px;
 }
 
+/* Conteúdo com laterais (para acomodar anúncios laterais) */
+.conteudo-com-laterais {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+}
+
+.area-central {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 240px;
+}
+
 /* Animações */
 @keyframes pulse {
     0% { transform: scale(1); }
@@ -250,6 +445,16 @@
 }
 
 /* Responsividade para mobile */
+@media (max-width: 1200px) {
+    .anuncio-lateral {
+        display: none;
+    }
+    
+    .area-central {
+        padding: 0 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .anuncio-banner p {
         font-size: 16px;
@@ -262,4 +467,75 @@
     .anuncio-cursos h4 {
         font-size: 14px;
     }
+    
+    .anuncio-fixo-texto h2 {
+        font-size: 20px;
+    }
+}
+
+/* Notificação de sucesso centralizada */
+.notificacao-centralizada {
+    position: fixed;
+    top: 70px; /* Posicionado abaixo do cabeçalho */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #22af4c;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    z-index: 1100;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    display: none; /* Oculto por padrão, será mostrado via JavaScript */
+    animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    15% { opacity: 1; transform: translate(-50%, 0); }
+    85% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+
+/* Botão para mostrar publicidade quando fechado */
+.anuncio-fixo-botao {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #222;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.anuncio-fixo-botao:hover {
+    background-color: #444;
+    transform: scale(1.05);
+}
+
+/* Organização das colunas laterais */
+.coluna-lateral {
+    position: fixed;
+    z-index: 900;
+    top: 0;
+    bottom: 0;
+    width: 220px; /* Largura suficiente para o anúncio + margem */
+    pointer-events: none; /* Para não interferir nos clicks da página */
+}
+
+.coluna-lateral.esquerda {
+    left: 0;
+}
+
+.coluna-lateral.direita {
+    right: 0;
+}
+
+.coluna-lateral .anuncio-lateral {
+    pointer-events: auto; /* Permitir interações com o anúncio */
 } 

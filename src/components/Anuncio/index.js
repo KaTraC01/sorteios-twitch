@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Anuncio.css';
 
 // Componente de anúncio que pode ser usado em diferentes formatos e locais
 function Anuncio({ tipo, posicao, mostrarFechar = false }) {
     const [fechado, setFechado] = useState(false);
+    
+    // Efeito para reabrir o anúncio após 30 segundos caso seja fechado
+    useEffect(() => {
+        let timer;
+        if (fechado) {
+            timer = setTimeout(() => {
+                setFechado(false);
+            }, 30000); // 30 segundos
+        }
+        
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [fechado]);
 
     // Se o anúncio foi fechado pelo usuário, não exibe nada
     if (fechado) {
@@ -83,6 +97,51 @@ function Anuncio({ tipo, posicao, mostrarFechar = false }) {
                         <h3>Fez ENEM nos últimos 10 anos?</h3>
                         <h4>Aproveite descontos nos cursos presenciais!</h4>
                         <div className="anuncio-button">Saiba mais!</div>
+                    </div>
+                    {mostrarFechar && (
+                        <button className="anuncio-fechar" onClick={() => setFechado(true)}>
+                            ✖
+                        </button>
+                    )}
+                </div>
+            );
+            break;
+        
+        case 'fixo-inferior':
+            conteudoAnuncio = (
+                <div className={`anuncio-fixo-inferior ${posicao}`}>
+                    <div className="anuncio-tag-pequena">#PROPAGANDA</div>
+                    <div className="anuncio-fixo-conteudo">
+                        <div className="anuncio-fixo-logo">V</div>
+                        <div className="anuncio-fixo-texto">
+                            <p>SEU PRÓXIMO CLICK É PATROCINADO PELA</p>
+                            <h2>SUPERBET</h2>
+                        </div>
+                        <div className="anuncio-fixo-icone">
+                            <span>👆</span>
+                        </div>
+                    </div>
+                    <div className="anuncio-fixo-info">
+                        <span className="anuncio-idade">+18</span>
+                        <span className="anuncio-aviso-pequeno">PROIBIDO PARA MENORES DE 18 ANOS</span>
+                        <span className="anuncio-aviso-pequeno">JOGUE COM RESPONSABILIDADE</span>
+                    </div>
+                    {mostrarFechar && (
+                        <button className="anuncio-fechar-grande" onClick={() => setFechado(true)}>
+                            ✖
+                        </button>
+                    )}
+                </div>
+            );
+            break;
+            
+        case 'lateral':
+            conteudoAnuncio = (
+                <div className={`anuncio-lateral ${posicao}`}>
+                    <div className="anuncio-tag">PUBLICIDADE</div>
+                    <div className="anuncio-lateral-conteudo">
+                        <p>ANÚNCIO LATERAL</p>
+                        <div className="anuncio-button">Clique Aqui</div>
                     </div>
                     {mostrarFechar && (
                         <button className="anuncio-fechar" onClick={() => setFechado(true)}>
