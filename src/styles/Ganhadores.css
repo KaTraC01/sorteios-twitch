@@ -32,17 +32,6 @@
     background-color: #14a090;
 }
 
-.banner {
-    background-color: #222;
-    padding: 15px;
-    text-align: center;
-    font-weight: bold;
-    margin: 20px 0;
-    color: #19b5a5;
-    border-radius: 5px;
-    border: 1px solid #444;
-}
-
 .historico-tabela {
     width: 100%;
     border-collapse: collapse;
@@ -75,9 +64,13 @@
 }
 
 .banner-row {
-    background-color: #222 !important;
-    color: #19b5a5;
-    font-weight: bold;
+    background-color: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.banner-row td {
+    padding: 5px !important;
 }
 
 /* Botão Ver Lista */

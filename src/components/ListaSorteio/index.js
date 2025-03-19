@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "./ListaSorteio.css"; // Importando o CSS
+import Anuncio from "../Anuncio"; // Importando o componente de anúncio
 
 function ListaSorteio({ onReiniciarLista }) {
     const [participantes, setParticipantes] = useState([]);
@@ -353,12 +354,13 @@ function ListaSorteio({ onReiniciarLista }) {
             // A cada 10 participantes, adicionar uma linha de propaganda
             // Ignoramos a primeira propaganda pois já temos um espaço antes da tabela
             if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
+                const tiposAnuncios = ['video', 'quadrado', 'cursos'];
+                const tipoAleatorio = tiposAnuncios[Math.floor(Math.random() * tiposAnuncios.length)];
+                
                 linhasTabela.push(
                     <tr key={`propaganda-${index}`} className="linha-propaganda">
                         <td colSpan="3">
-                            <div className="espaco-propaganda-tabela">
-                                <p>Espaço reservado para propaganda</p>
-                            </div>
+                            <Anuncio tipo={tipoAleatorio} posicao="na-tabela" mostrarFechar={true} />
                         </td>
                     </tr>
                 );
@@ -370,6 +372,9 @@ function ListaSorteio({ onReiniciarLista }) {
 
     return (
         <div className="lista-sorteio">
+            {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
+            <Anuncio tipo="banner" posicao="topo" mostrarFechar={true} />
+
             {feedback.visivel && (
                 <div className={`feedback-mensagem ${feedback.tipo}`}>
                     {feedback.mensagem}
@@ -438,10 +443,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 </div>
             )}
 
-            {/* Espaço para propaganda principal antes da tabela */}
-            <div className="espaco-propaganda">
-                <p>Espaço reservado para propaganda</p>
-            </div>
+            {/* Espaço para propaganda principal - estilo cursos antes da tabela */}
+            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} />
 
             <table>
                 <thead>
@@ -461,6 +464,9 @@ function ListaSorteio({ onReiniciarLista }) {
                     {temMaisParticipantes ? "Mostrar Mais" : "Mostrar Menos"}
                 </button>
             )}
+
+            {/* Anúncio de vídeo no final da lista */}
+            <Anuncio tipo="video" posicao="rodape" mostrarFechar={true} />
         </div>
     );
 }

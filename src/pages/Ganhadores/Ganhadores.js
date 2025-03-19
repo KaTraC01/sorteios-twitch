@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "../../styles/Ganhadores.css"; // Caminho do CSS
+import Anuncio from "../../components/Anuncio"; // Importando o componente de anúncio
 
 function Ganhadores() {
     const [historico, setHistorico] = useState([]);
@@ -63,6 +64,9 @@ function Ganhadores() {
 
     return (
         <div className="ganhadores-container">
+            {/* Banner superior da SuperBet */}
+            <Anuncio tipo="banner" posicao="topo" mostrarFechar={true} />
+
             <h2>🏆 Ganhadores Anteriores</h2>
 
             {/* Botão para instruções */}
@@ -83,7 +87,8 @@ function Ganhadores() {
                 {emailVisivel ? "emaildecontato@contato.com" : "Fale Conosco"}
             </button>
 
-            <div className="banner">🚀 Publicidade 🚀</div>
+            {/* Anúncio de cursos no topo da tabela */}
+            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} />
 
             {/* Exibe "Carregando..." enquanto busca os dados */}
             {loading ? (
@@ -126,10 +131,16 @@ function Ganhadores() {
                                     </td>
                                 </tr>
 
-                                {/* Adiciona banner de propaganda a cada 5 linhas */}
+                                {/* Adiciona anúncios a cada 5 linhas */}
                                 {(index + 1) % 5 === 0 && (
                                     <tr>
-                                        <td colSpan="5" className="banner-row">🔥 Anúncio 🔥</td>
+                                        <td colSpan="5" className="banner-row">
+                                            <Anuncio 
+                                                tipo={(index % 2 === 0) ? "video" : "quadrado"} 
+                                                posicao="na-tabela" 
+                                                mostrarFechar={true} 
+                                            />
+                                        </td>
                                     </tr>
                                 )}
                             </React.Fragment>
@@ -151,6 +162,9 @@ function Ganhadores() {
                             })}</h3>
                             <button className="fechar-modal" onClick={fecharListaParticipantes}>×</button>
                         </div>
+                        
+                        {/* Anúncio dentro do modal */}
+                        <Anuncio tipo="quadrado" posicao="topo" mostrarFechar={true} />
                         
                         {loadingLista ? (
                             <div className="loading-container">
@@ -187,6 +201,9 @@ function Ganhadores() {
                     </div>
                 </div>
             )}
+            
+            {/* Anúncio de vídeo no final da página */}
+            <Anuncio tipo="video" posicao="rodape" mostrarFechar={true} />
             
             <div className="footer-info">
                 <p>Todos os sorteios são realizados de forma transparente e automática.</p>
