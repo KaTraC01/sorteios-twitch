@@ -356,6 +356,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     value={novoParticipante.nome}
                     onChange={(e) => setNovoParticipante({ ...novoParticipante, nome: e.target.value })}
                     disabled={listaCongelada}
+                    maxLength={25}
                 />
                 <input
                     type="text"
@@ -363,6 +364,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     value={novoParticipante.streamer}
                     onChange={(e) => setNovoParticipante({ ...novoParticipante, streamer: e.target.value })}
                     disabled={listaCongelada}
+                    maxLength={25}
                 />
                 <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
                     {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
