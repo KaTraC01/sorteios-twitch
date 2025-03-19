@@ -264,3 +264,67 @@ tbody tr:nth-child(even) {
     90% { opacity: 1; transform: translate(-50%, 0); }
     100% { opacity: 0; transform: translate(-50%, -20px); }
 }
+
+/* Estilo para o espaço de propaganda */
+.espaco-propaganda {
+    background-color: #1a1a1a;
+    border: 2px dashed #555;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.espaco-propaganda p {
+    margin: 0;
+    font-size: 16px;
+}
+
+/* Estilo para o espaço de propaganda dentro da tabela */
+.linha-propaganda {
+    background-color: #1a1a1a !important;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
+}
+
+.espaco-propaganda-tabela {
+    padding: 15px;
+    margin: 5px 0;
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    border: 2px dashed #444;
+    border-radius: 5px;
+}
+
+.espaco-propaganda-tabela p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Estilo para o botão "Mostrar Mais" */
+.botao-mostrar-mais {
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    border: 2px solid #19b5a5;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.botao-mostrar-mais:hover {
+    background-color: #19b5a5;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(25, 181, 165, 0.3);
+}

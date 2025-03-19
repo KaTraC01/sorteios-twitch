@@ -12,6 +12,9 @@ function ListaSorteio({ onReiniciarLista }) {
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
     const [feedback, setFeedback] = useState({ mensagem: "", tipo: "", visivel: false });
     const [ultimaAtualizacao, setUltimaAtualizacao] = useState(Date.now());
+    // Estados para controlar a paginação
+    const [paginaAtual, setPaginaAtual] = useState(1);
+    const [itensPorPagina, setItensPorPagina] = useState(10);
 
     // 🔄 **Função para buscar participantes no Supabase**
     const fetchParticipantes = async () => {
@@ -307,6 +310,64 @@ function ListaSorteio({ onReiniciarLista }) {
         }, 3000);
     };
 
+    // Função para carregar mais participantes ou retrair a lista
+    const alternarMostrarMais = () => {
+        if (paginaAtual * itensPorPagina >= participantes.length) {
+            // Se já estamos mostrando todos, voltar para a primeira página
+            setPaginaAtual(1);
+        } else {
+            // Caso contrário, avançar para a próxima página
+            setPaginaAtual(paginaAtual + 1);
+        }
+    };
+
+    // Calcular quais participantes mostrar na página atual
+    const participantesPaginados = participantes.slice(0, paginaAtual * itensPorPagina);
+    
+    // Verificar se há mais participantes para mostrar
+    const temMaisParticipantes = participantes.length > paginaAtual * itensPorPagina;
+
+    // Função para renderizar os participantes com espaços para propaganda
+    const renderizarParticipantesComPropaganda = () => {
+        if (!participantesPaginados || participantesPaginados.length === 0) {
+            return (
+                <tr>
+                    <td colSpan="3">Nenhum participante encontrado</td>
+                </tr>
+            );
+        }
+
+        // Criar um array com os participantes e propagandas intercaladas
+        const linhasTabela = [];
+        
+        participantesPaginados.forEach((participante, index) => {
+            // Adicionar o participante
+            linhasTabela.push(
+                <tr key={`participante-${index}`}>
+                    <td>{index + 1}</td>
+                    <td>{participante.nome_twitch}</td>
+                    <td>{participante.streamer_escolhido}</td>
+                </tr>
+            );
+            
+            // A cada 10 participantes, adicionar uma linha de propaganda
+            // Ignoramos a primeira propaganda pois já temos um espaço antes da tabela
+            if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
+                linhasTabela.push(
+                    <tr key={`propaganda-${index}`} className="linha-propaganda">
+                        <td colSpan="3">
+                            <div className="espaco-propaganda-tabela">
+                                <p>Espaço reservado para propaganda</p>
+                            </div>
+                        </td>
+                    </tr>
+                );
+            }
+        });
+        
+        return linhasTabela;
+    };
+
     return (
         <div className="lista-sorteio">
             {feedback.visivel && (
@@ -377,6 +438,11 @@ function ListaSorteio({ onReiniciarLista }) {
                 </div>
             )}
 
+            {/* Espaço para propaganda principal antes da tabela */}
+            <div className="espaco-propaganda">
+                <p>Espaço reservado para propaganda</p>
+            </div>
+
             <table>
                 <thead>
                     <tr>
@@ -386,22 +452,15 @@ function ListaSorteio({ onReiniciarLista }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {console.log("Renderizando participantes:", participantes)}
-                    {participantes && participantes.length > 0 ? (
-                        participantes.map((participante, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>{participante.nome_twitch}</td>
-                                <td>{participante.streamer_escolhido}</td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="3">Nenhum participante encontrado</td>
-                        </tr>
-                    )}
+                    {renderizarParticipantesComPropaganda()}
                 </tbody>
             </table>
+
+            {participantes.length > 10 && (
+                <button className="botao-mostrar-mais" onClick={alternarMostrarMais}>
+                    {temMaisParticipantes ? "Mostrar Mais" : "Mostrar Menos"}
+                </button>
+            )}
         </div>
     );
 }
