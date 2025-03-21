@@ -40,6 +40,8 @@ function Ganhadores() {
             data: sorteioData
         });
         
+        console.log("Buscando participantes para o sorteio:", sorteioId);
+        
         const { data, error } = await supabase
             .from("historico_participantes")
             .select("*")
@@ -50,6 +52,7 @@ function Ganhadores() {
             console.error("Erro ao buscar participantes do sorteio:", error);
             setListaParticipantes([]);
         } else {
+            console.log("Participantes encontrados:", data ? data.length : 0);
             setListaParticipantes(data || []);
         }
         

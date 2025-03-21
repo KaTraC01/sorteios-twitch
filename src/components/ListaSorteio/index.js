@@ -133,23 +133,33 @@ function ListaSorteio({ onReiniciarLista }) {
             const horas = agora.getHours();
             const minutos = agora.getMinutes();
 
-            if (horas === 20 && minutos >= 50) {
+            // Congelar a lista às 20:50
+            if (horas === 20 && minutos >= 50 && !listaCongelada) {
+                console.log("Congelando lista para sorteio das 21h");
                 setListaCongelada(true);
+                // Atualizar também no banco de dados
+                supabase
+                    .from("configuracoes")
+                    .upsert([
+                        {
+                            chave: "lista_congelada",
+                            valor: "true",
+                            atualizado_em: new Date().toISOString()
+                        }
+                    ]);
             }
 
-            if (horas === 21 && minutos === 0 && !sorteioRealizado) {
+            // Realizar sorteio às 21:00 se não foi realizado ainda
+            if (horas === 21 && minutos === 0 && !sorteioRealizado && listaCongelada) {
+                console.log("Horário do sorteio atingido, realizando sorteio automático");
                 realizarSorteio();
-            }
-
-            if (horas === 21 && minutos >= 5 && sorteioRealizado) {
-                resetarLista();
             }
         };
 
         verificarHorario();
-        const intervalo = setInterval(verificarHorario, 1000);
+        const intervalo = setInterval(verificarHorario, 60000); // Verifica a cada minuto
         return () => clearInterval(intervalo);
-    }, [participantes, sorteioRealizado, ultimaAtualizacao]);
+    }, [listaCongelada, sorteioRealizado]);
 
     // 🎲 **Função para realizar o sorteio**
     const realizarSorteio = async () => {
@@ -190,53 +200,62 @@ function ListaSorteio({ onReiniciarLista }) {
             0   // Segundos
         ).toISOString();
 
-        // 🔹 **Salva o resultado do sorteio no Supabase**
-        const { data: sorteioSalvo, error: erroSorteio } = await supabase.from("sorteios").insert([
-            {
-                data: dataISO,
-                numero: vencedorIndex + 1,
-                nome: vencedor.nome_twitch,
-                streamer: vencedor.streamer_escolhido,
-            },
-        ]).select();
+        try {
+            // 🔹 **Salva o resultado do sorteio no Supabase**
+            const { data: sorteioSalvo, error: erroSorteio } = await supabase.from("sorteios").insert([
+                {
+                    data: dataISO,
+                    numero: vencedorIndex + 1,
+                    nome: vencedor.nome_twitch,
+                    streamer: vencedor.streamer_escolhido,
+                },
+            ]).select();
 
-        if (erroSorteio) {
-            console.error("Erro ao salvar o sorteio:", erroSorteio);
-            return;
-        }
-
-        // 🔹 **Salva a lista completa de participantes no histórico**
-        if (sorteioSalvo && sorteioSalvo.length > 0) {
-            const sorteioId = sorteioSalvo[0].id;
-            
-            // Prepara os dados dos participantes para inserção no histórico
-            const participantesHistorico = participantes.map(participante => ({
-                sorteio_id: sorteioId,
-                nome_twitch: participante.nome_twitch,
-                streamer_escolhido: participante.streamer_escolhido
-            }));
-            
-            // Insere todos os participantes no histórico
-            const { error: erroHistorico } = await supabase
-                .from("historico_participantes")
-                .insert(participantesHistorico);
-                
-            if (erroHistorico) {
-                console.error("Erro ao salvar histórico de participantes:", erroHistorico);
-            } else {
-                console.log("Histórico de participantes salvo com sucesso!");
+            if (erroSorteio) {
+                console.error("Erro ao salvar o sorteio:", erroSorteio);
+                return;
             }
+
+            // 🔹 **Salva a lista completa de participantes no histórico**
+            if (sorteioSalvo && sorteioSalvo.length > 0) {
+                const sorteioId = sorteioSalvo[0].id;
+                
+                // Prepara os dados dos participantes para inserção no histórico
+                const participantesHistorico = participantes.map(participante => ({
+                    sorteio_id: sorteioId,
+                    nome_twitch: participante.nome_twitch,
+                    streamer_escolhido: participante.streamer_escolhido
+                }));
+                
+                // Insere todos os participantes no histórico
+                const { error: erroHistorico } = await supabase
+                    .from("historico_participantes")
+                    .insert(participantesHistorico);
+                    
+                if (erroHistorico) {
+                    console.error("Erro ao salvar histórico de participantes:", erroHistorico);
+                } else {
+                    console.log("Histórico de participantes salvo com sucesso!");
+                }
+                
+                // Resetar a lista imediatamente após salvar o histórico
+                await resetarLista();
+            }
+        } catch (err) {
+            console.error("Erro durante o processo de sorteio:", err);
         }
     };
 
-    // 🔄 **Função para resetar a lista às 21h05**
+    // 🔄 **Função para resetar a lista após o sorteio**
     const resetarLista = async () => {
+        // Limpar os participantes do estado
         setParticipantes([]);
         setListaCongelada(false);
         setSorteioRealizado(false);
         
         // Não limpa o ultimoVencedor para manter a exibição do último vencedor
 
+        // Limpar todos os participantes da tabela no banco de dados
         const { error } = await supabase.from("participantes_ativos").delete().neq("id", "");
 
         if (error) {
