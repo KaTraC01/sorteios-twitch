@@ -19,14 +19,15 @@
   "author": "Seu Nome",
   "license": "ISC",
   "dependencies": {
+    "@modelcontextprotocol/server-postgres": "^0.6.2",
     "@supabase/supabase-js": "2.48.1",
     "node-fetch": "2.6.9",
     "nth-check": "2.1.1",
+    "postcss": "8.4.31",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "6.22.1",
-    "react-scripts": "5.0.1",
-    "postcss": "8.4.31"
+    "react-scripts": "5.0.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "5.17.0",

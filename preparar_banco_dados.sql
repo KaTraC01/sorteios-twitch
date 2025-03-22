@@ -1,47 +1,75 @@
--- SCRIPT DE DIAGNÓSTICO E CORREÇÃO DO SISTEMA DE SORTEIO
--- Execute este script para identificar e resolver problemas no sorteio automático
+-- SCRIPT DE PREPARAÇÃO E CORREÇÃO DO BANCO DE DADOS
+-- Execute este script para garantir que todas as tabelas e funções necessárias existam
 
 -- =============================================
--- 1. DIAGNÓSTICO DO SISTEMA
+-- 1. TABELAS PRINCIPAIS
 -- =============================================
 
--- Verificar logs recentes
-SELECT id, descricao, data_hora 
-FROM logs 
-ORDER BY data_hora DESC 
-LIMIT 20;
+-- Tabela de participantes ativos (lista atual)
+CREATE TABLE IF NOT EXISTS participantes_ativos (
+    id SERIAL PRIMARY KEY,
+    nome_twitch TEXT NOT NULL,
+    streamer_escolhido TEXT NOT NULL,
+    data_inscricao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
--- Verificar sorteios recentes
-SELECT id, nome, streamer, numero, data 
-FROM sorteios 
-ORDER BY data DESC 
-LIMIT 5;
+-- Tabela de sorteios realizados
+CREATE TABLE IF NOT EXISTS sorteios (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nome TEXT NOT NULL,
+    streamer TEXT NOT NULL,
+    numero INTEGER NOT NULL,
+    data TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
--- Verificar status da configuração
-SELECT * FROM configuracoes WHERE chave IN ('lista_congelada', 'hora_sorteio');
+-- Tabela de histórico de participantes por sorteio
+CREATE TABLE IF NOT EXISTS historico_participantes (
+    id SERIAL PRIMARY KEY,
+    sorteio_id UUID REFERENCES sorteios(id),
+    nome_twitch TEXT NOT NULL,
+    streamer_escolhido TEXT NOT NULL,
+    data_registro TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
--- Verificar total de participantes ativos
-SELECT COUNT(*) AS total_participantes_ativos FROM participantes_ativos;
+-- Tabela de configurações
+CREATE TABLE IF NOT EXISTS configuracoes (
+    id SERIAL PRIMARY KEY,
+    chave TEXT UNIQUE NOT NULL,
+    valor TEXT NOT NULL,
+    atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de logs
+CREATE TABLE IF NOT EXISTS logs (
+    id SERIAL PRIMARY KEY,
+    descricao TEXT NOT NULL,
+    data_hora TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
 -- =============================================
--- 2. VERIFICAÇÃO DAS FUNÇÕES E TRIGGERS
+-- 2. ÍNDICES
 -- =============================================
 
--- Verificar existência da função de sorteio automático
-SELECT proname, prosrc 
-FROM pg_proc 
-WHERE proname = 'realizar_sorteio_automatico';
-
--- Verificar se o trigger de reset está funcionando corretamente
-SELECT trigger_name, event_manipulation, action_statement
-FROM information_schema.triggers
-WHERE event_object_table = 'sorteios';
+-- Índices para melhorar performance
+CREATE INDEX IF NOT EXISTS idx_sorteios_data ON sorteios(data);
+CREATE INDEX IF NOT EXISTS idx_historico_sorteio_id ON historico_participantes(sorteio_id);
+CREATE INDEX IF NOT EXISTS idx_logs_data_hora ON logs(data_hora);
 
 -- =============================================
--- 3. CORREÇÃO DO SISTEMA
+-- 3. CONFIGURAÇÕES INICIAIS
 -- =============================================
 
--- 3.1 Corrigir a função de sorteio automático se necessário
+-- Inserir configurações se não existirem
+INSERT INTO configuracoes (chave, valor)
+VALUES 
+    ('lista_congelada', 'false'),
+    ('hora_sorteio', '21:00')
+ON CONFLICT (chave) DO NOTHING;
+
+-- =============================================
+-- 4. FUNÇÃO DE SORTEIO AUTOMÁTICO
+-- =============================================
+
 CREATE OR REPLACE FUNCTION realizar_sorteio_automatico()
 RETURNS jsonb AS $$
 DECLARE
@@ -141,7 +169,10 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 3.2 Corrigir o trigger de reset 
+-- =============================================
+-- 5. TRIGGER PARA RESET APÓS SORTEIO
+-- =============================================
+
 CREATE OR REPLACE FUNCTION reset_participantes_ativos()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -192,34 +223,28 @@ FOR EACH ROW
 EXECUTE FUNCTION reset_participantes_ativos();
 
 -- =============================================
--- 4. TESTE MANUAL DO SORTEIO
+-- 6. RELATÓRIO DE VERIFICAÇÃO
 -- =============================================
 
--- Para testar o sorteio manualmente, descomente e execute o comando abaixo:
--- SELECT * FROM realizar_sorteio_automatico();
+SELECT 'VERIFICAÇÃO DE ESTRUTURA DO BANCO DE DADOS' AS "INFO";
 
--- =============================================
--- 5. INSTRUÇÕES ADICIONAIS
--- =============================================
+-- Verificar se todas as tabelas existem
+SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'participantes_ativos') AS "Tabela participantes_ativos existe";
+SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'sorteios') AS "Tabela sorteios existe";
+SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'historico_participantes') AS "Tabela historico_participantes existe";
+SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'configuracoes') AS "Tabela configuracoes existe";
+SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'logs') AS "Tabela logs existe";
 
-SELECT 'INSTRUÇÕES PARA RESOLVER PROBLEMAS COMUNS' AS "AJUDA";
+-- Verificar se as funções existem
+SELECT EXISTS (SELECT FROM pg_proc WHERE proname = 'realizar_sorteio_automatico') AS "Função realizar_sorteio_automatico existe";
+SELECT EXISTS (SELECT FROM pg_proc WHERE proname = 'reset_participantes_ativos') AS "Função reset_participantes_ativos existe";
 
-SELECT '1. Se o sorteio não estiver sendo realizado automaticamente:
-- Verifique se o cron job está configurado corretamente no arquivo vercel.json
-- Confirme que a variável CRON_SECRET está definida no painel da Vercel
-- Verifique se o arquivo api/cron.js existe e está configurado para chamar a função de sorteio
+-- Verificar se o trigger existe
+SELECT EXISTS (
+    SELECT FROM information_schema.triggers 
+    WHERE trigger_name = 'trigger_reset_participantes_ativos'
+) AS "Trigger reset_participantes_ativos existe";
 
-2. Se o sorteio está sendo realizado, mas não está limpando a lista:
-- O trigger reset_participantes_ativos pode não estar funcionando
-- Use a correção automática acima para restaurar o trigger
-
-3. Se não há participantes para o sorteio:
-- Verifique se os participantes estão sendo registrados corretamente
-- Confirme se não há sorteios anteriores que deixaram a lista vazia
-
-4. Para testar todo o sistema manualmente:
-- Execute "SELECT * FROM realizar_sorteio_automatico();"' AS "INSTRUÇÕES";
-
--- =============================================
--- FIM DO SCRIPT
--- ============================================= 
+-- Mostrar configurações atuais
+SELECT 'CONFIGURAÇÕES ATUAIS DO SISTEMA' AS "INFO";
+SELECT * FROM configuracoes; 

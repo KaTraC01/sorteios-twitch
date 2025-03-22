@@ -121,4 +121,117 @@ Para mais detalhes sobre a implementação da solução serverless, consulte o a
 - Testes e solução de problemas
 . para deploy3
 
+# Sistema de Sorteio Automático
+
+Este sistema realiza sorteios diários automaticamente às 21:00 (horário de Brasília).
+
+## Diagnóstico e Correção do Sistema
+
+Se o sistema de sorteio não estiver funcionando corretamente, siga estas etapas para diagnosticar e corrigir o problema.
+
+### 1. Verificar a Configuração do Cron Job
+
+O sorteio automático é executado através de um cron job na Vercel. Verifique se a configuração está correta:
+
+1. Abra o arquivo `vercel.json` e confirme que contém:
+   ```json
+   "crons": [
+     { "path": "/api/cron", "schedule": "0 21 * * *" }
+   ]
+   ```
+
+2. Verifique se a variável de ambiente `CRON_SECRET` está configurada no painel da Vercel.
+
+### 2. Verificar a Estrutura do Banco de Dados
+
+Execute o script `preparar_banco_dados.sql` para garantir que todas as tabelas e funções necessárias existam no banco de dados:
+
+```sql
+-- Conecte-se ao banco de dados e execute:
+\i preparar_banco_dados.sql
+```
+
+Este script:
+- Cria todas as tabelas necessárias (se não existirem)
+- Configura os índices para melhor performance
+- Cria/atualiza a função de sorteio automático
+- Configura o trigger que reseta a lista após o sorteio
+- Verifica e relata a estrutura atual do banco de dados
+
+### 3. Diagnosticar Problemas Específicos
+
+Execute o script `diagnostico_sorteio.sql` para identificar e corrigir problemas específicos:
+
+```sql
+-- Conecte-se ao banco de dados e execute:
+\i diagnostico_sorteio.sql
+```
+
+Este script:
+- Verifica logs recentes para identificar erros
+- Examina sorteios recentes
+- Verifica configurações atuais
+- Corrige a função de sorteio automático
+- Corrige o trigger de reset após sorteio
+
+### 4. Verificar o Endpoint do Cron Job
+
+Certifique-se de que o arquivo `api/cron.js` existe e está configurado corretamente para chamar a função `realizar_sorteio_automatico` no banco de dados.
+
+### 5. Testar o Sorteio Manualmente
+
+Para testar o sistema de sorteio manualmente, execute:
+
+```sql
+SELECT * FROM realizar_sorteio_automatico();
+```
+
+Isso tentará realizar um sorteio imediatamente, ignorando a verificação de horário, mas respeitando outras restrições (como não realizar mais de um sorteio em 15 horas).
+
+## Problemas Comuns e Soluções
+
+### O sorteio não está sendo realizado automaticamente
+
+Possíveis causas:
+- O cron job não está configurado corretamente
+- A função `realizar_sorteio_automatico` tem erros
+- Já houve um sorteio nas últimas 15 horas
+- Não há participantes na lista
+
+Solução: Verifique os logs recentes para identificar a causa específica.
+
+### O sorteio está sendo realizado, mas não está limpando a lista
+
+Possível causa: O trigger `reset_participantes_ativos` não está funcionando corretamente.
+
+Solução: Execute o script `diagnostico_sorteio.sql` para corrigir o trigger.
+
+### Como funciona o sistema
+
+1. Usuários se inscrevem na lista de participantes ativos
+2. Todos os dias às 21:00, o cron job da Vercel chama o endpoint `/api/cron`
+3. O endpoint executa a função `realizar_sorteio_automatico` no banco de dados
+4. A função verifica se é possível realizar o sorteio:
+   - Não deve ter havido sorteio nas últimas 15 horas
+   - Deve haver participantes na lista
+5. Se as condições forem atendidas, o sorteio é realizado:
+   - Um participante é escolhido aleatoriamente
+   - Um número aleatório (1-100) é gerado
+   - O resultado é registrado na tabela `sorteios`
+6. Após o sorteio, o trigger `reset_participantes_ativos` é executado automaticamente:
+   - Os participantes são salvos na tabela `historico_participantes`
+   - A tabela `participantes_ativos` é limpa
+   - A configuração `lista_congelada` é resetada para `false`
+
+## Logs e Monitoramento
+
+Para monitorar o sistema, verifique os logs recentes:
+
+```sql
+SELECT descricao, data_hora 
+FROM logs 
+ORDER BY data_hora DESC 
+LIMIT 20;
+```
+
 
