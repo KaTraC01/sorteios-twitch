@@ -27,18 +27,6 @@ BEGIN
     -- Registrar início da execução
     INSERT INTO logs (descricao) VALUES ('Iniciando sorteio automático agendado pelo banco de dados');
     
-    -- Verificar se já houve sorteio nas últimas 15 horas
-    IF EXISTS (SELECT 1 FROM sorteios WHERE data > (CURRENT_TIMESTAMP - interval '15 hours')) THEN
-        resultado := jsonb_build_object(
-            'realizado', false,
-            'mensagem', 'Já foi realizado um sorteio recentemente',
-            'ultimo_sorteio', (SELECT data FROM sorteios ORDER BY data DESC LIMIT 1)
-        );
-        
-        INSERT INTO logs (descricao) VALUES ('Sorteio não realizado: já houve sorteio recente');
-        RETURN resultado;
-    END IF;
-    
     -- Contar participantes
     SELECT COUNT(*) INTO total_participantes FROM participantes_ativos;
     

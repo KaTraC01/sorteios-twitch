@@ -26,29 +26,6 @@ export default async function handler(req, res) {
         };
       }
       
-      // Verificar se já ocorreu sorteio nas últimas 15 horas
-      const dataLimite = new Date();
-      dataLimite.setHours(dataLimite.getHours() - 15);
-      
-      const { data: sorteiosRecentes, error: erroSorteios } = await supabase
-        .from('sorteios')
-        .select('*')
-        .gt('data', dataLimite.toISOString())
-        .order('data', { ascending: false })
-        .limit(1);
-        
-      if (erroSorteios) {
-        throw new Error(`Erro ao verificar sorteios recentes: ${erroSorteios.message}`);
-      }
-      
-      if (sorteiosRecentes && sorteiosRecentes.length > 0) {
-        return {
-          realizado: false,
-          mensagem: "Já foi realizado um sorteio recentemente",
-          ultimo_sorteio: sorteiosRecentes[0].data
-        };
-      }
-      
       // Configurar status de lista congelada
       const { error: erroConfig } = await supabase
         .from('configuracoes')
