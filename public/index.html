@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +9,24 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Site de Sorteio</title>
+    <script src="%PUBLIC_URL%/env-config.js"></script>
+    <script>
+      // Script para verificar se as variáveis de ambiente estão configuradas
+      window.addEventListener('DOMContentLoaded', function() {
+        console.log('Verificando variáveis de ambiente do Supabase...');
+        console.log('NEXT_PUBLIC_SUPABASE_URL configurada:', !!window.NEXT_PUBLIC_SUPABASE_URL);
+        console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY configurada:', !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+        
+        // Adicionar as variáveis manualmente se não estiverem definidas (APENAS PARA DIAGNÓSTICO)
+        if (!window.NEXT_PUBLIC_SUPABASE_URL) {
+          console.warn('AVISO: NEXT_PUBLIC_SUPABASE_URL não está definida no ambiente.');
+        }
+        
+        if (!window.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          console.warn('AVISO: NEXT_PUBLIC_SUPABASE_ANON_KEY não está definida no ambiente.');
+        }
+      });
+    </script>
 </head>
 <body>
     <noscript>Você precisa habilitar o JavaScript para executar este aplicativo.</noscript>
