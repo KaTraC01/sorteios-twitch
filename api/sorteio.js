@@ -4,12 +4,17 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Configuração do Supabase
-const SUPABASE_URL = process.env.SUPABASE_URL || "https://nsqiytflqwlyqhdmueki.supabase.co";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+// Verificar se as variáveis necessárias estão configuradas
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('ERRO CRÍTICO: As variáveis de ambiente SUPABASE_URL e/ou SUPABASE_SERVICE_KEY não estão configuradas.');
+}
 
 // Log das configurações (reduzidas para não expor a chave completa)
-console.log(`SORTEIO-API DEBUG: Config - URL: ${SUPABASE_URL}`);
-console.log(`SORTEIO-API DEBUG: Config - KEY: ${SUPABASE_SERVICE_KEY ? 'Configurada (últimos 4 caracteres: ' + SUPABASE_SERVICE_KEY.slice(-4) + ')' : 'NÃO CONFIGURADA'}`);
+console.log(`SORTEIO-API DEBUG: Config - URL configurada: ${SUPABASE_URL ? 'Sim' : 'Não'}`);
+console.log(`SORTEIO-API DEBUG: Config - KEY configurada: ${SUPABASE_SERVICE_KEY ? 'Sim (últimos 4 caracteres: ' + (SUPABASE_SERVICE_KEY ? SUPABASE_SERVICE_KEY.slice(-4) : 'N/A') + ')' : 'NÃO CONFIGURADA'}`);
 
 // Criando o cliente Supabase com a chave de serviço para acesso total
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
