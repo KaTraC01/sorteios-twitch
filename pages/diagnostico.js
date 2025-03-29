@@ -3,11 +3,9 @@ import { useRouter } from 'next/router';
 import { supabase, testSupabaseConnection } from '../lib/supabaseClient';
 
 export default function DiagnosticoPage() {
-  const [status, setStatus] = useState({
-    carregando: true,
-    erro: null,
-    dados: null
-  });
+  const [status, setStatus] = useState('carregando');
+  const [dadosDiagnostico, setDadosDiagnostico] = useState({});
+  const [erros, setErros] = useState([]);
   const [logs, setLogs] = useState([]);
   const [configSistema, setConfigSistema] = useState({});
   const [participantes, setParticipantes] = useState([]);
@@ -28,6 +26,114 @@ export default function DiagnosticoPage() {
       alert('Senha incorreta');
     }
   };
+
+  useEffect(() => {
+    const realizarDiagnostico = async () => {
+      try {
+        setStatus('carregando');
+        const novosErros = [];
+        
+        // Verificar variáveis de ambiente no Frontend
+        const variaveisAmbiente = {
+          NEXT_PUBLIC_SUPABASE_URL: typeof window !== "undefined" ? window.NEXT_PUBLIC_SUPABASE_URL : null,
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: typeof window !== "undefined" ? window.NEXT_PUBLIC_SUPABASE_ANON_KEY : null,
+        };
+        
+        // Verificar se foi configurado via env-config.js ou variáveis reais
+        const origemVariaveis = {
+          URL_HARDCODED: variaveisAmbiente.NEXT_PUBLIC_SUPABASE_URL === 'https://nsqiytflqwlyqhdmueki.supabase.co',
+          KEY_HARDCODED: variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY && variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9')
+        };
+        
+        if (!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_URL) {
+          novosErros.push('URL do Supabase não configurada no frontend');
+        }
+        
+        if (!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          novosErros.push('Chave anônima do Supabase não configurada no frontend');
+        }
+        
+        // Testar conexão com o Supabase
+        let conexaoSupabase = false;
+        let dadosConfig = null;
+        
+        try {
+          const { data, error } = await supabase.from('configuracoes').select('*').limit(5);
+          if (error) throw error;
+          conexaoSupabase = true;
+          dadosConfig = data;
+        } catch (error) {
+          novosErros.push(`Erro na conexão com o Supabase: ${error.message}`);
+          console.error('Erro ao testar Supabase:', error);
+        }
+        
+        // Verificar se a tabela de logs existe
+        let tabelaLogsExiste = false;
+        
+        try {
+          const { data, error } = await supabase.from('logs').select('id').limit(1);
+          if (!error) {
+            tabelaLogsExiste = true;
+          }
+        } catch (error) {
+          novosErros.push('Tabela de logs não existe ou não está acessível');
+        }
+        
+        // Verificar última execução do cron job (via logs)
+        let ultimaExecucaoCron = null;
+        
+        if (tabelaLogsExiste) {
+          try {
+            const { data, error } = await supabase
+              .from('logs')
+              .select('*')
+              .ilike('descricao', '%cron%')
+              .order('data_hora', { ascending: false })
+              .limit(1);
+              
+            if (!error && data && data.length > 0) {
+              ultimaExecucaoCron = data[0];
+            }
+          } catch (error) {
+            novosErros.push(`Erro ao verificar logs de cron: ${error.message}`);
+          }
+        }
+        
+        // Verificar funções SQL existentes
+        let funcoesSQL = null;
+        
+        try {
+          const { data, error } = await supabase.rpc('verificar_funcoes_sistema');
+          if (!error) {
+            funcoesSQL = data;
+          }
+        } catch (error) {
+          novosErros.push(`Erro ao verificar funções SQL: ${error.message}`);
+        }
+
+        setDadosDiagnostico({
+          horario: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+          variaveisAmbiente,
+          origemVariaveis,
+          conexaoSupabase,
+          dadosConfig,
+          tabelaLogsExiste,
+          ultimaExecucaoCron,
+          funcoesSQL,
+          navegador: navigator.userAgent
+        });
+        
+        setErros(novosErros);
+        setStatus(novosErros.length > 0 ? 'erro' : 'sucesso');
+      } catch (error) {
+        console.error('Erro ao realizar diagnóstico:', error);
+        setErros([`Erro crítico: ${error.message}`]);
+        setStatus('erro');
+      }
+    };
+
+    realizarDiagnostico();
+  }, []);
 
   useEffect(() => {
     // Verificar se já está autenticado
@@ -293,11 +399,11 @@ export default function DiagnosticoPage() {
         </div>
       </header>
       
-      {status.carregando ? (
+      {status === 'carregando' ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '20px', fontWeight: 'bold' }}>Carregando diagnóstico...</div>
         </div>
-      ) : status.erro ? (
+      ) : status === 'erro' ? (
         <div style={{ 
           padding: '20px', 
           backgroundColor: '#461220', 
@@ -310,6 +416,71 @@ export default function DiagnosticoPage() {
         </div>
       ) : (
         <>
+          <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', marginBottom: '20px' }}>
+            <h2>Status: {status === 'carregando' ? 'Carregando...' : status === 'sucesso' ? '✅ OK' : '❌ Erro'}</h2>
+            <p>Hora do diagnóstico: {dadosDiagnostico.horario || '--'}</p>
+          </div>
+          
+          {erros.length > 0 && (
+            <div style={{ padding: '10px', border: '1px solid #e74c3c', backgroundColor: '#ffebee', borderRadius: '5px', marginBottom: '20px' }}>
+              <h3 style={{ color: '#e74c3c' }}>Erros Encontrados:</h3>
+              <ul>
+                {erros.map((erro, index) => (
+                  <li key={index}>{erro}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', marginBottom: '20px' }}>
+            <h3>Variáveis de Ambiente Frontend</h3>
+            <div style={{ backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+              <p>NEXT_PUBLIC_SUPABASE_URL: {dadosDiagnostico.variaveisAmbiente?.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurada' : '❌ Não configurada'}</p>
+              <p>NEXT_PUBLIC_SUPABASE_ANON_KEY: {dadosDiagnostico.variaveisAmbiente?.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada'}</p>
+              
+              <h4>Origem das Variáveis</h4>
+              <p>URL vem de env-config.js (hardcoded): {dadosDiagnostico.origemVariaveis?.URL_HARDCODED ? 'Sim ⚠️' : 'Não ✅'}</p>
+              <p>KEY vem de env-config.js (hardcoded): {dadosDiagnostico.origemVariaveis?.KEY_HARDCODED ? 'Sim ⚠️' : 'Não ✅'}</p>
+            </div>
+          </div>
+          
+          <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', marginBottom: '20px' }}>
+            <h3>Conexão com Supabase</h3>
+            <div style={{ backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+              <p>Status: {dadosDiagnostico.conexaoSupabase ? '✅ Conectado' : '❌ Falha na conexão'}</p>
+              <p>Tabela de Logs: {dadosDiagnostico.tabelaLogsExiste ? '✅ Existe' : '❌ Não existe'}</p>
+              
+              {dadosDiagnostico.ultimaExecucaoCron && (
+                <div>
+                  <h4>Última Execução do Cron Job</h4>
+                  <p>Data: {new Date(dadosDiagnostico.ultimaExecucaoCron.data_hora).toLocaleString('pt-BR')}</p>
+                  <p>Descrição: {dadosDiagnostico.ultimaExecucaoCron.descricao}</p>
+                </div>
+              )}
+              
+              {dadosDiagnostico.dadosConfig && (
+                <div>
+                  <h4>Configurações do Sistema</h4>
+                  <ul>
+                    {dadosDiagnostico.dadosConfig.map((config) => (
+                      <li key={config.id}>
+                        {config.chave}: {config.valor} 
+                        (atualizado em: {new Date(config.atualizado_em).toLocaleString('pt-BR')})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', marginBottom: '20px' }}>
+            <h3>Informações do Navegador</h3>
+            <div style={{ backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '5px', wordBreak: 'break-all' }}>
+              <p>{dadosDiagnostico.navegador}</p>
+            </div>
+          </div>
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
             {/* Card de Status */}
             <div style={{ 
@@ -497,6 +668,22 @@ export default function DiagnosticoPage() {
           </div>
         </>
       )}
+      
+      <div style={{ textAlign: 'center', marginTop: '20px' }}>
+        <button 
+          onClick={() => window.location.reload()}
+          style={{ 
+            padding: '10px 20px', 
+            backgroundColor: '#6441a5', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Atualizar Diagnóstico
+        </button>
+      </div>
     </div>
   );
 } 
