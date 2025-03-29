@@ -4,8 +4,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Configuração do Supabase
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://nsqiytflqwlyqhdmueki.supabase.co";
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTkxNzkwNCwiZXhwIjoyMDU1NDkzOTA0fQ.ME0-XlXtA8uKp72m9pniSlEFRdMTZITNUV2OCmzO23M";
 
 // Verificar se as variáveis necessárias estão configuradas
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
@@ -13,7 +13,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 
 // Log das configurações (reduzidas para não expor a chave completa)
-console.log(`SORTEIO-API DEBUG: Config - URL configurada: ${SUPABASE_URL ? 'Sim' : 'Não'}`);
+console.log(`SORTEIO-API DEBUG: Config - URL configurada: ${SUPABASE_URL}`);
 console.log(`SORTEIO-API DEBUG: Config - KEY configurada: ${SUPABASE_SERVICE_KEY ? 'Sim (últimos 4 caracteres: ' + (SUPABASE_SERVICE_KEY ? SUPABASE_SERVICE_KEY.slice(-4) : 'N/A') + ')' : 'NÃO CONFIGURADA'}`);
 
 // Criando o cliente Supabase com a chave de serviço para acesso total

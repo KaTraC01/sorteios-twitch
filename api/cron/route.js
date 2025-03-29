@@ -74,19 +74,13 @@ export default async function handler(req, res) {
 
     if (action) {
       // Chamar a API de sorteio usando a URL base configurada
-      const baseUrl = process.env.BASE_URL || '';
-      
-      if (!baseUrl) {
-        return res.status(500).json({ error: 'URL base não configurada' });
-      }
-      
+      const baseUrl = process.env.BASE_URL || 'https://sorteios-twitch.vercel.app';
       console.log(`SORTEIO DEBUG: URL base configurada - ${baseUrl}`);
       console.log(`SORTEIO DEBUG: Chamando endpoint /api/sorteio com ação "${action}"`);
       
       // Verificar se API_SECRET_KEY está definido
       if (!process.env.API_SECRET_KEY) {
         console.log('SORTEIO DEBUG: ERRO - API_SECRET_KEY não está configurada!');
-        return res.status(500).json({ error: 'API_SECRET_KEY não configurada' });
       } else {
         console.log('SORTEIO DEBUG: API_SECRET_KEY está configurada corretamente');
       }
