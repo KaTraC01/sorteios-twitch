@@ -178,10 +178,13 @@ async function realizarSorteio() {
 // Função para resetar a lista
 async function resetarLista() {
   console.log('SORTEIO-API DEBUG: Executando exclusão de participantes ativos');
+  
+  // Abordagem corrigida para excluir todos os participantes
   const { error } = await supabase
     .from("participantes_ativos")
     .delete()
-    .neq("id", "");
+    .gte("id", "00000000-0000-0000-0000-000000000000"); // Usar uma condição válida para UUIDs
+    // Alternativa: .delete().is("id", "is", "not null");
 
   if (error) {
     console.log(`SORTEIO-API DEBUG: ERRO ao limpar a lista - ${error.message}`);
