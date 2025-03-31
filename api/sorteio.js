@@ -58,10 +58,9 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, message: 'Lista resetada com sucesso' });
       }
       else if (action === 'congelar') {
-        console.log('SORTEIO-API DEBUG: Iniciando congelamento da lista');
-        await congelarLista();
-        console.log('SORTEIO-API DEBUG: Lista congelada com sucesso');
-        return res.status(200).json({ success: true, message: 'Lista congelada com sucesso' });
+        // A funcionalidade de congelar foi removida do projeto
+        console.log('SORTEIO-API DEBUG: Ação "congelar" foi solicitada, mas esta funcionalidade foi desativada');
+        return res.status(200).json({ success: true, message: 'Função de congelamento foi desativada' });
       }
       else {
         console.log(`SORTEIO-API DEBUG: Ação inválida recebida: "${action}"`);
@@ -191,38 +190,9 @@ async function resetarLista() {
 
   console.log('SORTEIO-API DEBUG: Lista resetada com sucesso');
   
-  // Descongelar a lista após resetar
-  console.log('SORTEIO-API DEBUG: Descongelando a lista');
-  await supabase
-    .from("configuracoes")
-    .upsert([
-      {
-        chave: "lista_congelada",
-        valor: "false",
-        atualizado_em: new Date().toISOString()
-      }
-    ]);
+  // A funcionalidade de congelar/descongelar foi removida do projeto
+  // Portanto, não precisamos mais atualizar o status de "lista_congelada"
 }
 
-// Função para congelar a lista
-async function congelarLista() {
-  // Aqui podemos adicionar uma flag no banco de dados para indicar que a lista está congelada
-  // Por exemplo, podemos criar uma tabela de configurações
-  console.log('SORTEIO-API DEBUG: Atualizando configuração para congelar lista');
-  const { error } = await supabase
-    .from("configuracoes")
-    .upsert([
-      {
-        chave: "lista_congelada",
-        valor: "true",
-        atualizado_em: new Date().toISOString()
-      }
-    ]);
-
-  if (error) {
-    console.log(`SORTEIO-API DEBUG: ERRO ao congelar a lista - ${error.message}`);
-    throw new Error(`Erro ao congelar a lista: ${error.message}`);
-  }
-
-  console.log('SORTEIO-API DEBUG: Lista congelada com sucesso');
-} 
+// A função congelarLista() foi removida pois não é mais necessária
+// async function congelarLista() { ... } - REMOVIDA 
