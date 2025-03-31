@@ -6,10 +6,12 @@ export default async function handler(req, res) {
     console.log(`===== SORTEIO DEBUG: Iniciando função às ${new Date().toISOString()} =====`);
     
     // Verificar se as variáveis de ambiente necessárias estão configuradas
-    if (!process.env.CRON_SECRET) {
-      console.error('ERRO CRÍTICO: A variável de ambiente CRON_SECRET não está configurada.');
-      return res.status(500).json({ error: 'Configuração do servidor incompleta: CRON_SECRET não configurada' });
-    }
+    // (Manter as verificações de API_SECRET_KEY e BASE_URL, se necessário,
+    //  mas a verificação do CRON_SECRET para a *requisição de entrada* deve ser removida)
+    // if (!process.env.CRON_SECRET) { // REMOVER/COMENTAR ESTA VERIFICAÇÃO
+    //   console.error('ERRO CRÍTICO: A variável de ambiente CRON_SECRET não está configurada.');
+    //   return res.status(500).json({ error: 'Configuração do servidor incompleta: CRON_SECRET não configurada' });
+    // }
     
     if (!process.env.API_SECRET_KEY) {
       console.error('ERRO CRÍTICO: A variável de ambiente API_SECRET_KEY não está configurada.');
@@ -21,19 +23,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Configuração do servidor incompleta: BASE_URL não configurada' });
     }
     
-    // Verificar se é uma requisição autorizada
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('SORTEIO DEBUG: Erro de autorização - header inválido ou ausente');
-      return res.status(401).json({ error: 'Não autorizado' });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    if (token !== process.env.CRON_SECRET) {
-      console.log('SORTEIO DEBUG: Erro de autorização - token inválido');
-      return res.status(401).json({ error: 'Token inválido' });
-    }
-    console.log('SORTEIO DEBUG: Autorização validada com sucesso');
+    // Verificar se é uma requisição autorizada - REMOVER/COMENTAR ESTE BLOCO INTEIRO
+    // const authHeader = req.headers.authorization;
+    // if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    //   console.log('SORTEIO DEBUG: Erro de autorização - header inválido ou ausente');
+    //   return res.status(401).json({ error: 'Não autorizado' });
+    // }
+    //
+    // const token = authHeader.split(' ')[1];
+    // if (token !== process.env.CRON_SECRET) {
+    //   console.log('SORTEIO DEBUG: Erro de autorização - token inválido');
+    //   return res.status(401).json({ error: 'Token inválido' });
+    // }
+    // console.log('SORTEIO DEBUG: Autorização validada com sucesso'); // REMOVER/COMENTAR ATÉ AQUI
 
     // Verificar a hora atual para determinar qual ação executar
     const agora = new Date();
