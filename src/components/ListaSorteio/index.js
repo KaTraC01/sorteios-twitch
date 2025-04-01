@@ -76,24 +76,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // 🔄 **Carrega os dados iniciais e configura atualizações periódicas**
-    useEffect(() => {
-        // Carregar dados iniciais
-        fetchParticipantes();
-        fetchUltimoVencedor();
-        verificarListaCongelada();
-
-        // Configurar atualizações periódicas
-        const intervalo = setInterval(() => {
-            fetchParticipantes();
-            verificarListaCongelada();
-            setUltimaAtualizacao(Date.now()); // Força a atualização do componente
-        }, 30000); // Atualiza a cada 30 segundos
-
-        return () => clearInterval(intervalo);
-    }, []);
-
-    // 🔄 **Atualiza quando o último vencedor muda**
+    // 🔄 **Carrega os dados iniciais e configura atualizações em tempo real com Supabase Realtime**
     useEffect(() => {
         // Verificar se há um último vencedor no localStorage
         const vencedorSalvo = localStorage.getItem("ultimoVencedor");
@@ -101,13 +84,64 @@ function ListaSorteio({ onReiniciarLista }) {
             setUltimoVencedor(JSON.parse(vencedorSalvo));
         }
         
-        // Buscar o último vencedor do Supabase a cada 2 minutos
-        const intervaloVencedor = setInterval(() => {
-            fetchUltimoVencedor();
-        }, 120000); // 2 minutos
+        // Carregar dados iniciais
+        fetchParticipantes();
+        fetchUltimoVencedor();
+        verificarListaCongelada();
         
-        return () => clearInterval(intervaloVencedor);
-    }, [ultimoVencedor]);
+        // Configurar canais Realtime para atualizações em tempo real
+        
+        // 1. Canal para participantes
+        const participantesChannel = supabase
+            .channel('public:participantes_ativos')
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'participantes_ativos' }, 
+                (payload) => {
+                    console.log('Alteração em participantes detectada:', payload);
+                    // Atualiza a lista completa para garantir a ordenação correta
+                    fetchParticipantes();
+                }
+            )
+            .subscribe((status) => {
+                console.log('Status do canal participantes:', status);
+            });
+            
+        // 2. Canal para sorteios (último vencedor)
+        const sorteiosChannel = supabase
+            .channel('public:sorteios')
+            .on('postgres_changes', 
+                { event: 'INSERT', schema: 'public', table: 'sorteios' }, 
+                (payload) => {
+                    console.log('Novo sorteio detectado:', payload);
+                    fetchUltimoVencedor();
+                }
+            )
+            .subscribe((status) => {
+                console.log('Status do canal sorteios:', status);
+            });
+            
+        // 3. Canal para configurações (lista congelada)
+        const configChannel = supabase
+            .channel('public:configuracoes')
+            .on('postgres_changes', 
+                { event: 'UPDATE', schema: 'public', table: 'configuracoes' }, 
+                (payload) => {
+                    console.log('Configuração atualizada:', payload);
+                    verificarListaCongelada();
+                }
+            )
+            .subscribe((status) => {
+                console.log('Status do canal configurações:', status);
+            });
+
+        // Limpeza ao desmontar o componente
+        return () => {
+            // Remover todos os canais de atualização em tempo real
+            supabase.removeChannel(participantesChannel);
+            supabase.removeChannel(sorteiosChannel);
+            supabase.removeChannel(configChannel);
+        };
+    }, []);
 
     // ⏳ **Atualiza o temporizador de espera**
     useEffect(() => {
