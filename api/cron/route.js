@@ -2,8 +2,15 @@ import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
   try {
-    // Log de início da execução
-    console.log(`===== SORTEIO DEBUG: Iniciando função às ${new Date().toISOString()} =====`);
+    // Log detalhado de horários para debug
+    const agora = new Date();
+    const horaBrasilia = new Date(agora.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const horaUTC = new Date(agora.toISOString());
+    
+    console.log(`===== SORTEIO DEBUG: Iniciando função às ${agora.toISOString()} =====`);
+    console.log(`SORTEIO DEBUG: Hora Brasília: ${horaBrasilia.getHours()}:${horaBrasilia.getMinutes()}:${horaBrasilia.getSeconds()}`);
+    console.log(`SORTEIO DEBUG: Hora UTC: ${horaUTC.getHours()}:${horaUTC.getMinutes()}:${horaUTC.getSeconds()}`);
+    console.log(`SORTEIO DEBUG: Timestamp: ${agora.getTime()}`);
     
     // Verificar se API_SECRET_KEY está configurada
     if (!process.env.API_SECRET_KEY) {

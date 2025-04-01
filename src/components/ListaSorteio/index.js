@@ -126,42 +126,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     }, [tempoEspera]);
 
-    // ⏰ **Verifica horários para congelar a lista e sortear**
-    useEffect(() => {
-        const verificarHorario = () => {
-            const agora = new Date();
-            const horas = agora.getHours();
-            const minutos = agora.getMinutes();
-
-            // Congelar a lista às 20:50
-            if (horas === 20 && minutos >= 50 && !listaCongelada) {
-                console.log("Congelando lista para sorteio das 21h");
-                setListaCongelada(true);
-                // Atualizar também no banco de dados
-                supabase
-                    .from("configuracoes")
-                    .upsert([
-                        {
-                            chave: "lista_congelada",
-                            valor: "true",
-                            atualizado_em: new Date().toISOString()
-                        }
-                    ]);
-            }
-
-            // Realizar sorteio às 21:00 se não foi realizado ainda
-            if (horas === 21 && minutos === 0 && !sorteioRealizado && listaCongelada) {
-                console.log("Horário do sorteio atingido, realizando sorteio automático");
-                realizarSorteio();
-            }
-        };
-
-        verificarHorario();
-        const intervalo = setInterval(verificarHorario, 60000); // Verifica a cada minuto
-        return () => clearInterval(intervalo);
-    }, [listaCongelada, sorteioRealizado]);
-
-    // 🎲 **Função para realizar o sorteio**
+    // 🎲 **Função para realizar o sorteio - Mantida apenas para uso manual pela interface administrativa**
     const realizarSorteio = async () => {
         if (participantes.length === 0) {
             mostrarFeedback("Nenhum participante na lista. O sorteio foi cancelado.", "erro");
