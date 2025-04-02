@@ -413,15 +413,14 @@ function ListaSorteio({ onReiniciarLista }) {
 
     return (
         <div className="lista-sorteio">
+            {/* Notificação de sucesso centralizada */}
+            <div id="notificacao-sucesso" className="notificacao-centralizada">
+                Participante adicionado com sucesso!
+            </div>
+            
             {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
             <Anuncio tipo="banner" posicao="topo" mostrarFechar={true} />
 
-            {feedback.visivel && (
-                <div className={`feedback-mensagem ${feedback.tipo}`}>
-                    {feedback.mensagem}
-                </div>
-            )}
-            
             {ultimoVencedor && (
                 <div className="vencedor-info">
                     <h3><span className="icon-trophy">🏆</span> Último Vencedor: {ultimoVencedor.nome}</h3>
@@ -477,12 +476,6 @@ function ListaSorteio({ onReiniciarLista }) {
                     {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
                 </button>
             </div>
-
-            {feedback.visivel && (
-                <div className={`feedback-mensagem ${feedback.tipo}`}>
-                    {feedback.mensagem}
-                </div>
-            )}
 
             {/* Espaço para propaganda principal - estilo cursos antes da tabela */}
             <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} />

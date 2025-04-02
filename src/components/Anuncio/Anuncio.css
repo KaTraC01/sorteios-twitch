@@ -476,7 +476,7 @@
 /* Notificação de sucesso centralizada */
 .notificacao-centralizada {
     position: fixed;
-    top: 70px; /* Posicionado abaixo do cabeçalho */
+    top: 180px; /* Posicionado mais abaixo para não sobrepor o cabeçalho e o timer */
     left: 50%;
     transform: translateX(-50%);
     background-color: #22af4c;

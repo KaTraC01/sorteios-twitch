@@ -75,11 +75,6 @@ function App() {
                     {/* Timer fixo abaixo do cabeçalho */}
                     <Timer listaReiniciada={listaReiniciada} />
                     
-                    {/* Notificação de sucesso centralizada */}
-                    <div id="notificacao-sucesso" className="notificacao-centralizada">
-                        Participante adicionado com sucesso!
-                    </div>
-
                     <main style={{ 
                         marginTop: "120px", /* Aumentando para acomodar o header e o timer */
                         padding: "20px", 
