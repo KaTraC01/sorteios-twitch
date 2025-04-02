@@ -6,7 +6,7 @@ import Anuncio from "../Anuncio"; // Importando o componente de anúncio
 function ListaSorteio({ onReiniciarLista }) {
     const [participantes, setParticipantes] = useState([]);
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "" });
-    const [tempoEspera, setTempoEspera] = useState(parseInt(localStorage.getItem("tempoEspera")) || 0);
+    const [tempoEspera, setTempoEspera] = useState(0);
     const [listaCongelada, setListaCongelada] = useState(false);
     const [sorteioRealizado, setSorteioRealizado] = useState(false);
     const [ultimoVencedor, setUltimoVencedor] = useState(null);
@@ -16,6 +16,27 @@ function ListaSorteio({ onReiniciarLista }) {
     // Estados para controlar a paginação
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [itensPorPagina, setItensPorPagina] = useState(10);
+
+    // Função para verificar o tempo de espera baseado na expiração
+    const verificarTempoEspera = () => {
+        const tempoExpiracao = localStorage.getItem("tempoExpiracao");
+        if (tempoExpiracao) {
+            const agora = Date.now();
+            const expiracao = parseInt(tempoExpiracao);
+            
+            if (agora >= expiracao) {
+                // Tempo já expirou
+                localStorage.removeItem("tempoExpiracao");
+                setTempoEspera(0);
+            } else {
+                // Ainda tem tempo restante
+                const segundosRestantes = Math.ceil((expiracao - agora) / 1000);
+                setTempoEspera(segundosRestantes);
+            }
+        } else {
+            setTempoEspera(0);
+        }
+    };
 
     // 🔄 **Função para buscar participantes no Supabase**
     const fetchParticipantes = async () => {
@@ -145,20 +166,16 @@ function ListaSorteio({ onReiniciarLista }) {
 
     // ⏳ **Atualiza o temporizador de espera**
     useEffect(() => {
-        if (tempoEspera > 0) {
-            localStorage.setItem("tempoEspera", tempoEspera);
-            const timer = setTimeout(() => {
-                setTempoEspera((prevTempo) => {
-                    const novoTempo = prevTempo - 1;
-                    if (novoTempo <= 0) {
-                        localStorage.removeItem("tempoEspera");
-                    }
-                    return novoTempo;
-                });
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [tempoEspera]);
+        // Verifica o tempo restante ao iniciar o componente
+        verificarTempoEspera();
+        
+        // Atualiza o tempo a cada segundo
+        const timer = setInterval(() => {
+            verificarTempoEspera();
+        }, 1000);
+        
+        return () => clearInterval(timer);
+    }, []);
 
     // 🎲 **Função para realizar o sorteio - Mantida apenas para uso manual pela interface administrativa**
     const realizarSorteio = async () => {
@@ -310,8 +327,13 @@ function ListaSorteio({ onReiniciarLista }) {
             } else {
                 fetchParticipantes(); // Atualiza a lista imediatamente após a inserção
                 setNovoParticipante({ nome: "", streamer: "" });
+                
+                // Define o tempo de expiração em vez do contador
+                const tempoEsperaMs = 10 * 1000; // 10 segundos em milissegundos
+                const tempoExpiracao = Date.now() + tempoEsperaMs;
+                localStorage.setItem("tempoExpiracao", tempoExpiracao.toString());
                 setTempoEspera(10);
-                localStorage.setItem("tempoEspera", 10);
+                
                 mostrarFeedback("Participante adicionado com sucesso!", "sucesso");
             }
         } else {
