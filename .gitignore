@@ -3,12 +3,27 @@ node_modules/
 /.pnp
 .pnp.js
 
-# Ambiente
+# Ambiente - Arquivos com potenciais credenciais
+.env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 .env.txt
+*.env
+
+# Arquivos específicos com credenciais
+mcp.json
+supabase-*.bat
+*-script.js
+*.sql
+*.config.js
+*credentials*
+*secret*
+*auth*
+*config*.md
+*setup*.md
 
 # Build
 /build

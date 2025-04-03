@@ -35,14 +35,15 @@ export default function DiagnosticoPage() {
         
         // Verificar variáveis de ambiente no Frontend
         const variaveisAmbiente = {
-          NEXT_PUBLIC_SUPABASE_URL: typeof window !== "undefined" ? window.NEXT_PUBLIC_SUPABASE_URL : null,
           NEXT_PUBLIC_SUPABASE_ANON_KEY: typeof window !== "undefined" ? window.NEXT_PUBLIC_SUPABASE_ANON_KEY : null,
+          NEXT_PUBLIC_SUPABASE_URL: typeof window !== "undefined" ? window.NEXT_PUBLIC_SUPABASE_URL : null,
         };
         
-        // Verificar se foi configurado via env-config.js ou variáveis reais
-        const origemVariaveis = {
-          URL_HARDCODED: variaveisAmbiente.NEXT_PUBLIC_SUPABASE_URL === 'https://nsqiytflqwlyqhdmueki.supabase.co',
-          KEY_HARDCODED: variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY && variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9')
+        // Verificar se as variáveis essenciais estão definidas
+        const verificacoes = {
+          // Removida verificação de URL específica por questões de segurança
+          URL_DEFINIDA: !!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_URL,
+          ANON_KEY_DEFINIDA: !!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         };
         
         if (!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_URL) {
@@ -114,7 +115,7 @@ export default function DiagnosticoPage() {
         setDadosDiagnostico({
           horario: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
           variaveisAmbiente,
-          origemVariaveis,
+          verificacoes,
           conexaoSupabase,
           dadosConfig,
           tabelaLogsExiste,
@@ -439,8 +440,8 @@ export default function DiagnosticoPage() {
               <p>NEXT_PUBLIC_SUPABASE_ANON_KEY: {dadosDiagnostico.variaveisAmbiente?.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada'}</p>
               
               <h4>Origem das Variáveis</h4>
-              <p>URL vem de env-config.js (hardcoded): {dadosDiagnostico.origemVariaveis?.URL_HARDCODED ? 'Sim ⚠️' : 'Não ✅'}</p>
-              <p>KEY vem de env-config.js (hardcoded): {dadosDiagnostico.origemVariaveis?.KEY_HARDCODED ? 'Sim ⚠️' : 'Não ✅'}</p>
+              <p>URL vem de env-config.js (hardcoded): {dadosDiagnostico.verificacoes?.URL_DEFINIDA ? 'Sim ⚠️' : 'Não ✅'}</p>
+              <p>KEY vem de env-config.js (hardcoded): {dadosDiagnostico.verificacoes?.ANON_KEY_DEFINIDA ? 'Sim ⚠️' : 'Não ✅'}</p>
             </div>
           </div>
           

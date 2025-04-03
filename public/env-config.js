@@ -1,39 +1,28 @@
 // Este arquivo pode ser usado para injetar variáveis de ambiente no frontend
 // Será carregado antes da aplicação React
 
-// Verificar se as variáveis já estão definidas para não sobrescrever
+// AVISO: Este arquivo não deve conter credenciais reais!
+// As variáveis de ambiente devem ser injetadas pelo processo de build da Vercel
+
 if (typeof window !== 'undefined') {
-  // Estas definições serão substituídas na build da Vercel
-  // No ambiente de desenvolvimento, podemos definir valores padrão
-  if (!window.NEXT_PUBLIC_SUPABASE_URL) {
-    window.NEXT_PUBLIC_SUPABASE_URL = 'https://nsqiytflqwlyqhdmueki.supabase.co';
+  // Apenas diagnóstico - verificar se as variáveis estão definidas
+  console.log('Iniciando diagnóstico do ambiente...');
+  
+  const temURL = !!window.NEXT_PUBLIC_SUPABASE_URL;
+  const temKey = !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  console.log('Variáveis de ambiente: ' + 
+    (temURL && temKey ? 'OK ✅' : 'FALTANDO ❌')
+  );
+  
+  // Aviso se as variáveis não estiverem definidas
+  if (!temURL || !temKey) {
+    console.warn('⚠️ ALERTA: Variáveis de ambiente não encontradas! A aplicação pode não funcionar corretamente.');
+    console.warn('Verifique a configuração das variáveis de ambiente na Vercel ou no arquivo .env.local');
   }
   
-  if (!window.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    window.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTc5MDQsImV4cCI6MjA1NTQ5MzkwNH0.IyrTn7Hrz-ktNM6iC1Chk8Z-kWK9rhmWljb0n2XLpjo';
-  }
-  
-  console.log('Ambiente configurado via env-config.js');
-  
-  // Para diagnóstico - imprimir primeiros caracteres das chaves
-  console.log('Valores parciais para diagnóstico:');
-  console.log('NEXT_PUBLIC_SUPABASE_URL: ' + 
-    (window.NEXT_PUBLIC_SUPABASE_URL ? 
-      window.NEXT_PUBLIC_SUPABASE_URL.substring(0, 15) + '...' : 
-      'não definido')
-  );
-  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY: ' + 
-    (window.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 
-      window.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 12) + '...' : 
-      'não definido')
-  );
-  
-  // Para diagnóstico - verificar origem das variáveis
-  console.log('Origem das variáveis:');
-  console.log('URL definida pelo env-config.js: ' + 
-    (window.NEXT_PUBLIC_SUPABASE_URL === 'https://nsqiytflqwlyqhdmueki.supabase.co')
-  );
-  console.log('ANON_KEY definida pelo env-config.js: ' + 
-    (window.NEXT_PUBLIC_SUPABASE_ANON_KEY.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'))
-  );
+  // Para diagnóstico - imprimir se as variáveis estão disponíveis (sem mostrar valores)
+  console.log('Status das variáveis:');
+  console.log('NEXT_PUBLIC_SUPABASE_URL: ' + (temURL ? 'Definido ✓' : 'Não definido ✗'));
+  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY: ' + (temKey ? 'Definido ✓' : 'Não definido ✗'));
 } 
