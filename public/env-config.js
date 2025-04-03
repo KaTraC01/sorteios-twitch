@@ -35,6 +35,12 @@ if (typeof window !== 'undefined') {
       // Indicação para contatar o administrador - não incluímos a chave diretamente
       console.warn('⚠️ Não foi encontrada a chave anônima do Supabase');
       console.warn('Contate o administrador para resolver este problema');
+      
+      // Adiciona fallback direto (use apenas em desenvolvimento)
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.warn('⚠️ Usando fallback para ambiente de desenvolvimento');
+        window.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTc5MDQsImV4cCI6MjA1NTQ5MzkwNH0.IyrTn7Hrz-ktNM6iC1Chk8Z-kWK9rhmWljb0n2XLpjo';
+      }
     }
   }
   
