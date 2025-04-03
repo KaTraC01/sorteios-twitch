@@ -5,26 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Site de Sorteios - Participe de sorteios diários e acompanhe os ganhadores!">
     <meta name="theme-color" content="#6441a5">
+    
+    <!-- Meta tags para variáveis do Supabase (serão preenchidas durante o build) -->
+    <meta name="supabase-url" content="%NEXT_PUBLIC_SUPABASE_URL%" />
+    
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Site de Sorteio</title>
+    
+    <!-- Script de configuração de ambiente -->
     <script src="%PUBLIC_URL%/env-config.js"></script>
+    
     <script>
       // Script para verificar se as variáveis de ambiente estão configuradas
       window.addEventListener('DOMContentLoaded', function() {
-        console.log('Verificando variáveis de ambiente do Supabase...');
-        console.log('NEXT_PUBLIC_SUPABASE_URL configurada:', !!window.NEXT_PUBLIC_SUPABASE_URL);
-        console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY configurada:', !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+        // Status após carregamento da página
+        console.log('==== VERIFICAÇÃO DE AMBIENTE ====');
+        console.log('NEXT_PUBLIC_SUPABASE_URL:', !!window.NEXT_PUBLIC_SUPABASE_URL);
+        console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY);
         
-        // Adicionar as variáveis manualmente se não estiverem definidas (APENAS PARA DIAGNÓSTICO)
-        if (!window.NEXT_PUBLIC_SUPABASE_URL) {
-          console.warn('AVISO: NEXT_PUBLIC_SUPABASE_URL não está definida no ambiente.');
+        // Verificar meta tags
+        const urlMeta = document.querySelector('meta[name="supabase-url"]');
+        if (urlMeta) {
+          const metaContent = urlMeta.getAttribute('content');
+          console.log('Meta tag supabase-url:', metaContent);
+          
+          // Verificar se a meta tag não foi substituída durante o build
+          if (metaContent.includes('%NEXT_PUBLIC_')) {
+            console.warn('⚠️ Meta tag não foi processada durante o build');
+          }
         }
         
-        if (!window.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          console.warn('AVISO: NEXT_PUBLIC_SUPABASE_ANON_KEY não está definida no ambiente.');
-        }
+        // Verificar funcionamento do Supabase
+        const testSupabase = function() {
+          if (window.supabase) {
+            console.log('✅ Cliente Supabase inicializado');
+          } else {
+            setTimeout(testSupabase, 1000); // Verificar novamente em 1 segundo
+          }
+        };
+        
+        setTimeout(testSupabase, 2000); // Verificar após 2 segundos
       });
     </script>
 </head>
