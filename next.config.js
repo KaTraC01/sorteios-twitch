@@ -21,7 +21,7 @@ const nextConfig = {
               // Substituir placeholders de variáveis de ambiente
               return content
                 .replace(/%NEXT_PUBLIC_SUPABASE_URL%/g, process.env.NEXT_PUBLIC_SUPABASE_URL || '')
-                .replace(/%NEXT_PUBLIC_SUPABASE_ANON_KEY%/g, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''); // Exposição controlada da chave
+                .replace(/%NEXT_PUBLIC_SUPABASE_ANON_KEY%/g, '**valor definido nas variáveis de ambiente**'); // Não expor a chave
             },
           },
         },
