@@ -62,6 +62,48 @@ export default async function handler(req, res) {
         console.log('SORTEIO-API DEBUG: Ação "congelar" foi solicitada, mas esta funcionalidade foi desativada');
         return res.status(200).json({ success: true, message: 'Função de congelamento foi desativada' });
       }
+      else if (action === 'diagnostico') {
+        // Nova ação para diagnóstico do cron job
+        console.log('SORTEIO-API DEBUG: Executando diagnóstico');
+        
+        // Verificar a conexão com o Supabase
+        let statusSupabase = 'não testado';
+        try {
+          const { data, error } = await supabase.from('configuracoes').select('*').limit(1);
+          if (error) {
+            statusSupabase = `erro: ${error.message}`;
+          } else {
+            statusSupabase = `ok (${data?.length || 0} registros retornados)`;
+          }
+        } catch (err) {
+          statusSupabase = `erro crítico: ${err.message}`;
+        }
+        
+        // Coleta informações sobre o ambiente
+        const diagnosticoInfo = {
+          timestamp: new Date().toISOString(),
+          status_api: 'funcionando',
+          auth: 'válida',
+          supabase_conexao: statusSupabase,
+          ambiente: {
+            node_version: process.version,
+            vercel_env: process.env.VERCEL_ENV || 'local',
+            hora_server: new Date().toISOString()
+          },
+          variaveis: {
+            supabase_url_configurada: !!process.env.SUPABASE_URL,
+            supabase_key_configurada: !!process.env.SUPABASE_SERVICE_KEY,
+            api_secret_key_configurada: !!process.env.API_SECRET_KEY
+          }
+        };
+        
+        console.log('SORTEIO-API DEBUG: Diagnóstico concluído:', JSON.stringify(diagnosticoInfo, null, 2));
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Diagnóstico realizado com sucesso', 
+          diagnostico: diagnosticoInfo 
+        });
+      }
       else {
         console.log(`SORTEIO-API DEBUG: Ação inválida recebida: "${action}"`);
         return res.status(400).json({ error: 'Ação inválida' });
