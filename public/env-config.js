@@ -4,43 +4,48 @@
 // AVISO: Este arquivo não deve conter credenciais reais em produção!
 // As variáveis de ambiente devem ser injetadas pelo processo de build da Vercel
 
+// Os valores abaixo serão substituídos automaticamente durante o build
+// Esta é uma abordagem segura que funciona com o sistema da Vercel
+window.__ENV__ = {
+  SUPABASE_URL: "%%SUPABASE_URL_PLACEHOLDER%%",
+  SUPABASE_ANON_KEY: "%%SUPABASE_ANON_KEY_PLACEHOLDER%%"
+};
+
 if (typeof window !== 'undefined') {
-  // SOLUÇÃO TEMPORÁRIA:
-  // Se as variáveis não estiverem definidas, verificar se estão disponíveis em outros formatos
-  // que a Vercel possa estar injetando
+  // Variáveis de ambiente da Vercel (adicionadas durante o build)
+  // Verificação e recuperação de valores
   
   // Para variável de URL do Supabase
   if (!window.NEXT_PUBLIC_SUPABASE_URL) {
-    // Tentar obter do atributo data no HTML (se a Vercel injetou lá)
+    // Tentar obter do atributo data no HTML
     const urlMeta = document.querySelector('meta[name="supabase-url"]');
     if (urlMeta) {
       window.NEXT_PUBLIC_SUPABASE_URL = urlMeta.getAttribute('content');
       console.log('URL recuperada de meta tag:', !!window.NEXT_PUBLIC_SUPABASE_URL);
+    } else if (window.__ENV__ && window.__ENV__.SUPABASE_URL && 
+               window.__ENV__.SUPABASE_URL !== "%%SUPABASE_URL_PLACEHOLDER%%") {
+      // Usar valor substituído durante o build
+      window.NEXT_PUBLIC_SUPABASE_URL = window.__ENV__.SUPABASE_URL;
+      console.log('URL recuperada de __ENV__');
     } else {
-      // Valores específicos para resolução temporária do problema
-      // Isso garante o funcionamento até que o problema de injeção de variáveis seja resolvido
-      console.warn('⚠️ Usando URL de fallback para o Supabase (solução temporária)');
-      window.NEXT_PUBLIC_SUPABASE_URL = 'https://nsqiytflqwlyqhdmueki.supabase.co';
+      console.warn('⚠️ URL do Supabase não encontrada');
     }
   }
   
   // Para variável de chave anônima do Supabase
   if (!window.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    // Tentar obter do atributo data no HTML (se a Vercel injetou lá)
+    // Tentar obter do atributo data no HTML
     const keyMeta = document.querySelector('meta[name="supabase-anon-key"]');
     if (keyMeta) {
       window.NEXT_PUBLIC_SUPABASE_ANON_KEY = keyMeta.getAttribute('content');
       console.log('Chave recuperada de meta tag:', !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    } else if (window.__ENV__ && window.__ENV__.SUPABASE_ANON_KEY && 
+               window.__ENV__.SUPABASE_ANON_KEY !== "%%SUPABASE_ANON_KEY_PLACEHOLDER%%") {
+      // Usar valor substituído durante o build
+      window.NEXT_PUBLIC_SUPABASE_ANON_KEY = window.__ENV__.SUPABASE_ANON_KEY;
+      console.log('Chave recuperada de __ENV__');
     } else {
-      // Indicação para contatar o administrador - não incluímos a chave diretamente
-      console.warn('⚠️ Não foi encontrada a chave anônima do Supabase');
-      console.warn('Contate o administrador para resolver este problema');
-      
-      // Adiciona fallback direto (use apenas em desenvolvimento)
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.warn('⚠️ Desenvolvimento local: Configure suas variáveis de ambiente no arquivo .env.local');
-        console.warn('⚠️ A aplicação pode não funcionar sem as variáveis corretas.');
-      }
+      console.warn('⚠️ Chave anônima do Supabase não encontrada');
     }
   }
   
