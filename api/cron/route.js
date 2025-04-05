@@ -29,22 +29,49 @@ export default async function handler(req, res) {
     // Realizar o sorteio diretamente (sem congelar a lista)
     console.log('SORTEIO DEBUG: Realizando o sorteio');
     
-    const respostaSorteio = await fetch(`${baseUrl}/api/sorteio`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.API_SECRET_KEY}`
-      },
-      body: JSON.stringify({ action: 'sorteio' })
-    });
-    
-    if (!respostaSorteio.ok) {
-      const erro = await respostaSorteio.json();
-      console.log(`SORTEIO DEBUG: ERRO ao realizar o sorteio - ${JSON.stringify(erro)}`);
-      throw new Error(`Erro ao realizar o sorteio: ${erro.error || 'Erro desconhecido'}`);
+    // Adicionar timeout para evitar problemas de rede
+    let respostaSorteio;
+    try {
+      respostaSorteio = await fetch(`${baseUrl}/api/sorteio`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.API_SECRET_KEY}`
+        },
+        body: JSON.stringify({ action: 'sorteio' }),
+        timeout: 8000 // 8 segundos de timeout para respeitar o limite da Vercel
+      });
+    } catch (fetchError) {
+      console.error(`SORTEIO DEBUG: ERRO AO FAZER REQUISIÇÃO: ${fetchError.message}`);
+      console.error(`SORTEIO DEBUG: DETALHES: URL=${baseUrl}/api/sorteio, AUTH=${process.env.API_SECRET_KEY ? 'Configurada' : 'NÃO CONFIGURADA'}`);
+      throw new Error(`Erro de conexão com API: ${fetchError.message}`);
     }
     
-    const resultadoSorteio = await respostaSorteio.json();
+    if (!respostaSorteio.ok) {
+      let mensagemErro = 'Erro desconhecido';
+      try {
+        const erro = await respostaSorteio.json();
+        mensagemErro = JSON.stringify(erro);
+      } catch {
+        try {
+          mensagemErro = await respostaSorteio.text();
+        } catch {
+          mensagemErro = `Status HTTP: ${respostaSorteio.status}`;
+        }
+      }
+      
+      console.log(`SORTEIO DEBUG: ERRO ao realizar o sorteio - ${mensagemErro}`);
+      throw new Error(`Erro ao realizar o sorteio: ${mensagemErro}`);
+    }
+    
+    let resultadoSorteio;
+    try {
+      resultadoSorteio = await respostaSorteio.json();
+    } catch (jsonError) {
+      console.error(`SORTEIO DEBUG: ERRO AO PROCESSAR RESPOSTA JSON: ${jsonError.message}`);
+      throw new Error(`Erro ao processar resposta: ${jsonError.message}`);
+    }
+    
     console.log(`SORTEIO DEBUG: Sorteio realizado com sucesso! Vencedor: ${resultadoSorteio.resultado?.vencedor?.nome || 'N/A'}`);
     
     // OBSERVAÇÃO:
@@ -63,7 +90,30 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('SORTEIO DEBUG: ERRO CRÍTICO:', error);
-    return res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
+    console.error('SORTEIO DEBUG: Stack trace:', error.stack);
+    
+    // Tentar registrar o erro em logs para diagnóstico futuro
+    try {
+      // Se tivermos Supabase configurado, poderíamos registrar em uma tabela de logs
+      // Como este é o cron job que está falhando, o registro seria no próprio log da Vercel
+      console.error(`SORTEIO DEBUG: Detalhes do erro: ${JSON.stringify({
+        mensagem: error.message,
+        horario: new Date().toISOString(),
+        stack: error.stack,
+        ambiente: {
+          node_version: process.version,
+          vercel_env: process.env.VERCEL_ENV || 'desconhecido'
+        }
+      })}`);
+    } catch (logError) {
+      console.error('SORTEIO DEBUG: Erro ao registrar logs:', logError);
+    }
+    
+    return res.status(500).json({ 
+      error: 'Erro interno do servidor', 
+      details: error.message, 
+      timestamp: new Date().toISOString() 
+    });
   } finally {
     console.log(`===== SORTEIO DEBUG: Função finalizada às ${new Date().toISOString()} =====`);
   }
