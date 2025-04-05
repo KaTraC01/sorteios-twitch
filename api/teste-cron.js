@@ -24,15 +24,9 @@ export default async function handler(req, res) {
     
     // Registrar o teste nos logs do sistema
     const { error: erroLog } = await supabase
-      .from('logs_sistema')
+      .from('logs')
       .insert([{
-        tipo: 'teste_cron',
         descricao: 'Teste manual do cron job',
-        detalhes: JSON.stringify({
-          hora: new Date().toISOString(),
-          origem: req.headers['user-agent'] || 'desconhecido'
-        }),
-        data_hora: new Date().toISOString()
       }]);
       
     if (erroLog) {
