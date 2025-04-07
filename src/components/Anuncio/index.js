@@ -2,7 +2,22 @@ import React, { useState, useEffect } from 'react';
 import './Anuncio.css';
 
 // Componente de anúncio que pode ser usado em diferentes formatos e locais
-function Anuncio({ tipo, posicao, mostrarFechar = false }) {
+function Anuncio({ 
+    tipo, 
+    posicao, 
+    mostrarFechar = false,
+    // Novos props para conteúdo personalizado
+    conteudoPersonalizado = null,
+    urlDestino = '#',
+    imagemSrc = '',
+    titulo = '',
+    descricao = '',
+    idade = '',
+    avisos = [],
+    logo = '',
+    cor = '',
+    corTexto = ''
+}) {
     const [fechado, setFechado] = useState(false);
     
     // Efeito para reabrir o anúncio após 30 segundos caso seja fechado
@@ -11,7 +26,7 @@ function Anuncio({ tipo, posicao, mostrarFechar = false }) {
         if (fechado) {
             timer = setTimeout(() => {
                 setFechado(false);
-            }, 30000); // 30 segundos
+            }, 30000);
         }
         
         return () => {
@@ -24,110 +39,47 @@ function Anuncio({ tipo, posicao, mostrarFechar = false }) {
         return null;
     }
 
+    // Se houver conteúdo personalizado, renderiza ele diretamente
+    if (conteudoPersonalizado) {
+        return (
+            <div className={`anuncio-${tipo} ${posicao}`} style={{ backgroundColor: cor, color: corTexto }}>
+                {mostrarFechar && (
+                    <button className="anuncio-fechar" onClick={() => setFechado(true)}>
+                        ✖
+                    </button>
+                )}
+                <div className="anuncio-tag">PUBLICIDADE</div>
+                {conteudoPersonalizado}
+            </div>
+        );
+    }
+
     // Define o conteúdo do anúncio baseado no tipo
     let conteudoAnuncio;
     
     switch (tipo) {
         case 'banner':
             conteudoAnuncio = (
-                <div className={`anuncio-banner ${posicao}`}>
-                    <div className="anuncio-conteudo">
-                        <div className="anuncio-tag">PUBLICIDADE</div>
-                        <p>Seu PRÓXIMO CLICK é PATROCINADO pela SUPERBET</p>
-                        <div className="anuncio-call-action">
-                            <span className="anuncio-icon">👆</span>
+                <div className={`anuncio-banner ${posicao}`} style={{ backgroundColor: cor, color: corTexto }}>
+                    <a href={urlDestino} target="_blank" rel="noopener noreferrer" className="anuncio-link">
+                        <div className="anuncio-conteudo">
+                            <div className="anuncio-tag">PUBLICIDADE</div>
+                            {logo && <img src={logo} alt="Logo do patrocinador" className="anuncio-logo" />}
+                            {imagemSrc && <img src={imagemSrc} alt={titulo} className="anuncio-imagem" />}
+                            <p>{titulo || "Espaço disponível para publicidade"}</p>
+                            {descricao && <p className="anuncio-descricao">{descricao}</p>}
                         </div>
-                    </div>
-                    <div className="anuncio-info">
-                        <span className="anuncio-idade">+18</span>
-                        <span className="anuncio-aviso">JOGUE COM RESPONSABILIDADE</span>
-                    </div>
+                        {(idade || avisos.length > 0) && (
+                            <div className="anuncio-info">
+                                {idade && <span className="anuncio-idade">{idade}</span>}
+                                {avisos.map((aviso, index) => (
+                                    <span key={index} className="anuncio-aviso">{aviso}</span>
+                                ))}
+                            </div>
+                        )}
+                    </a>
                     {mostrarFechar && (
                         <button className="anuncio-fechar" onClick={() => setFechado(true)}>
-                            ✖
-                        </button>
-                    )}
-                </div>
-            );
-            break;
-            
-        case 'quadrado':
-            conteudoAnuncio = (
-                <div className={`anuncio-quadrado ${posicao}`}>
-                    <div className="anuncio-tag">PUBLICIDADE</div>
-                    <div className="anuncio-conteudo">
-                        <p>DESPERTE SEUS SENTIDOS</p>
-                        <div className="anuncio-button">Saber mais</div>
-                    </div>
-                    {mostrarFechar && (
-                        <button className="anuncio-fechar" onClick={() => setFechado(true)}>
-                            ✖
-                        </button>
-                    )}
-                </div>
-            );
-            break;
-            
-        case 'video':
-            conteudoAnuncio = (
-                <div className={`anuncio-video ${posicao}`}>
-                    <div className="anuncio-tag">PUBLICIDADE</div>
-                    <div className="anuncio-conteudo">
-                        <div className="anuncio-play">▶</div>
-                        <div className="anuncio-button">Saber mais</div>
-                        <div className="anuncio-mute">🔇</div>
-                    </div>
-                    <div className="anuncio-info">
-                        <span className="anuncio-valor">R$18</span>
-                    </div>
-                    {mostrarFechar && (
-                        <button className="anuncio-fechar" onClick={() => setFechado(true)}>
-                            ✖
-                        </button>
-                    )}
-                </div>
-            );
-            break;
-            
-        case 'cursos':
-            conteudoAnuncio = (
-                <div className={`anuncio-cursos ${posicao}`}>
-                    <div className="anuncio-tag">PUBLICIDADE</div>
-                    <div className="anuncio-conteudo">
-                        <h3>Fez ENEM nos últimos 10 anos?</h3>
-                        <h4>Aproveite descontos nos cursos presenciais!</h4>
-                        <div className="anuncio-button">Saiba mais!</div>
-                    </div>
-                    {mostrarFechar && (
-                        <button className="anuncio-fechar" onClick={() => setFechado(true)}>
-                            ✖
-                        </button>
-                    )}
-                </div>
-            );
-            break;
-        
-        case 'fixo-inferior':
-            conteudoAnuncio = (
-                <div className={`anuncio-fixo-inferior ${posicao}`}>
-                    <div className="anuncio-tag-pequena">#PROPAGANDA</div>
-                    <div className="anuncio-fixo-conteudo">
-                        <div className="anuncio-fixo-logo">V</div>
-                        <div className="anuncio-fixo-texto">
-                            <p>SEU PRÓXIMO CLICK É PATROCINADO PELA</p>
-                            <h2>SUPERBET</h2>
-                        </div>
-                        <div className="anuncio-fixo-icone">
-                            <span>👆</span>
-                        </div>
-                    </div>
-                    <div className="anuncio-fixo-info">
-                        <span className="anuncio-idade">+18</span>
-                        <span className="anuncio-aviso-pequeno">PROIBIDO PARA MENORES DE 18 ANOS</span>
-                        <span className="anuncio-aviso-pequeno">JOGUE COM RESPONSABILIDADE</span>
-                    </div>
-                    {mostrarFechar && (
-                        <button className="anuncio-fechar-grande" onClick={() => setFechado(true)}>
                             ✖
                         </button>
                     )}
@@ -137,14 +89,53 @@ function Anuncio({ tipo, posicao, mostrarFechar = false }) {
             
         case 'lateral':
             conteudoAnuncio = (
-                <div className={`anuncio-lateral ${posicao}`}>
+                <div className={`anuncio-lateral ${posicao}`} style={{ backgroundColor: cor, color: corTexto }}>
                     <div className="anuncio-tag">PUBLICIDADE</div>
-                    <div className="anuncio-lateral-conteudo">
-                        <p>ANÚNCIO LATERAL</p>
-                        <div className="anuncio-button">Clique Aqui</div>
-                    </div>
+                    <a href={urlDestino} target="_blank" rel="noopener noreferrer" className="anuncio-link">
+                        <div className="anuncio-lateral-conteudo">
+                            {logo && <img src={logo} alt="Logo do patrocinador" className="anuncio-logo" />}
+                            {imagemSrc && <img src={imagemSrc} alt={titulo} className="anuncio-imagem" />}
+                            <p>{titulo || "Espaço disponível para publicidade"}</p>
+                            {descricao && <p className="anuncio-descricao">{descricao}</p>}
+                            <div className="anuncio-button">Saiba mais</div>
+                        </div>
+                    </a>
                     {mostrarFechar && (
                         <button className="anuncio-fechar" onClick={() => setFechado(true)}>
+                            ✖
+                        </button>
+                    )}
+                </div>
+            );
+            break;
+
+        case 'fixo-inferior':
+            conteudoAnuncio = (
+                <div className={`anuncio-fixo-inferior ${posicao}`} style={{ backgroundColor: cor, color: corTexto }}>
+                    <a href={urlDestino} target="_blank" rel="noopener noreferrer" className="anuncio-link">
+                        <div className="anuncio-tag-pequena">#PROPAGANDA</div>
+                        <div className="anuncio-fixo-conteudo">
+                            {logo && (
+                                <div className="anuncio-fixo-logo">
+                                    <img src={logo} alt="Logo do patrocinador" />
+                                </div>
+                            )}
+                            <div className="anuncio-fixo-texto">
+                                <p>{descricao || "Espaço disponível para publicidade"}</p>
+                                <h2>{titulo || "ANÚNCIO"}</h2>
+                            </div>
+                        </div>
+                        {(idade || avisos.length > 0) && (
+                            <div className="anuncio-fixo-info">
+                                {idade && <span className="anuncio-idade">{idade}</span>}
+                                {avisos.map((aviso, index) => (
+                                    <span key={index} className="anuncio-aviso-pequeno">{aviso}</span>
+                                ))}
+                            </div>
+                        )}
+                    </a>
+                    {mostrarFechar && (
+                        <button className="anuncio-fechar-grande" onClick={() => setFechado(true)}>
                             ✖
                         </button>
                     )}
