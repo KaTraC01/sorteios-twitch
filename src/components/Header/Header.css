@@ -21,6 +21,13 @@
     align-items: center;
 }
 
+.logo-presente {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
 .logo span {
     color: #19b5a5; /* Cor de identidade */
     margin-right: 5px;
@@ -32,6 +39,8 @@
     transition: all 0.3s ease;
     position: relative;
     padding: 5px 0;
+    display: flex;
+    align-items: center;
 }
 
 .sorteio-link:hover {

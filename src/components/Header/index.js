@@ -10,7 +10,9 @@ function Header() {
     return (
         <header className="header">
             <div className="logo">
-                <Link to="/" className={`sorteio-link ${pathname === '/' ? 'active' : ''}`}>🎲 Sorteio</Link>
+                <Link to="/" className={`sorteio-link ${pathname === '/' ? 'active' : ''}`}>
+                    <img src="/presente.png" alt="Presente" className="logo-presente" /> Sorteio
+                </Link>
             </div>
             <nav className="menu">
                 <Link to="/ganhadores" className={pathname === '/ganhadores' ? 'active' : ''}>Ganhadores</Link>
