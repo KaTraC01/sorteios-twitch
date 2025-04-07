@@ -11,10 +11,8 @@ function App() {
     const [listaReiniciada, setListaReiniciada] = useState(false);
     // Estado para controlar se os anúncios laterais foram fechados
     const [adsVisible, setAdsVisible] = useState({
-        esquerdaTopo: true,
-        esquerdaBaixo: true,
-        direitaTopo: true,
-        direitaBaixo: true,
+        esquerda: true,
+        direita: true,
         fixoInferior: true
     });
 
@@ -43,25 +41,14 @@ function App() {
     return (
         <Router>
             <div className="conteudo-com-laterais">
-                {/* Anúncios laterais personalizados à esquerda */}
+                {/* Anúncio lateral esquerdo */}
                 <div className="coluna-lateral esquerda">
-                    {adsVisible.esquerdaTopo && (
-                        <div className="anuncio-lateral esquerda" style={{ top: "120px", minHeight: "200px" }}>
-                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('esquerdaTopo')}>✖</button>
+                    {adsVisible.esquerda && (
+                        <div className="anuncio-lateral esquerda" style={{ top: "120px", height: "600px", width: "160px" }}>
+                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('esquerda')}>✖</button>
                             <div className="anuncio-tag">PUBLICIDADE</div>
                             <div className="anuncio-lateral-conteudo">
-                                <p>ANÚNCIO TOP</p>
-                                <button className="anuncio-button">Clique Aqui</button>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {adsVisible.esquerdaBaixo && (
-                        <div className="anuncio-lateral esquerda" style={{ top: "340px", minHeight: "200px" }}>
-                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('esquerdaBaixo')}>✖</button>
-                            <div className="anuncio-tag">PUBLICIDADE</div>
-                            <div className="anuncio-lateral-conteudo">
-                                <p>ANÚNCIO INFERIOR</p>
+                                <p>ANÚNCIO</p>
                                 <button className="anuncio-button">Clique Aqui</button>
                             </div>
                         </div>
@@ -99,39 +86,27 @@ function App() {
                     </main>
                 </div>
 
-                {/* Anúncios laterais personalizados à direita */}
+                {/* Anúncio lateral direito */}
                 <div className="coluna-lateral direita">
-                    {adsVisible.direitaTopo && (
-                        <div className="anuncio-lateral direita" style={{ top: "120px", minHeight: "200px" }}>
-                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('direitaTopo')}>✖</button>
+                    {adsVisible.direita && (
+                        <div className="anuncio-lateral direita" style={{ top: "120px", height: "600px", width: "160px" }}>
+                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('direita')}>✖</button>
                             <div className="anuncio-tag">PUBLICIDADE</div>
                             <div className="anuncio-lateral-conteudo">
-                                <p>ANÚNCIO TOP</p>
-                                <button className="anuncio-button">Clique Aqui</button>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {adsVisible.direitaBaixo && (
-                        <div className="anuncio-lateral direita" style={{ top: "340px", minHeight: "200px" }}>
-                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('direitaBaixo')}>✖</button>
-                            <div className="anuncio-tag">PUBLICIDADE</div>
-                            <div className="anuncio-lateral-conteudo">
-                                <p>ANÚNCIO INFERIOR</p>
+                                <p>ANÚNCIO</p>
                                 <button className="anuncio-button">Clique Aqui</button>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Anúncio fixo na parte inferior da tela */}
+                {/* Anúncio fixo inferior */}
                 {adsVisible.fixoInferior && (
                     <Anuncio tipo="fixo-inferior" posicao="fixo" mostrarFechar={true} />
                 )}
                 
-                {/* Substituir o anúncio padrão pelo nosso personalizado quando fechado */}
                 {!adsVisible.fixoInferior && (
-                    <div className="anuncio-fixo-botao" onClick={() => fecharAnuncio('fixoInferior')}>
+                    <div className="anuncio-fixo-botao" onClick={() => setAdsVisible(prev => ({ ...prev, fixoInferior: true }))}>
                         Mostrar publicidade
                     </div>
                 )}
