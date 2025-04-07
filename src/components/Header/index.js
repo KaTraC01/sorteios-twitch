@@ -11,7 +11,8 @@ function Header() {
         <header className="header">
             <div className="logo">
                 <Link to="/" className={`sorteio-link ${pathname === '/' ? 'active' : ''}`}>
-                    <img src="/presente.png" alt="Presente" className="logo-presente" /> Sorteio
+                    <img src="/presente.png" alt="Presente" className="logo-presente" style={{width: '24px', height: '24px', marginRight: '8px'}} /> 
+                    Sorteio
                 </Link>
             </div>
             <nav className="menu">
