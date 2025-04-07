@@ -123,20 +123,23 @@
     margin: 10px auto;
     color: white;
     text-align: left;
-    font-size: 14px;
+    font-size: 16px; /* Aumentar tamanho da fonte para igualar ao resto do site */
     max-width: 500px;
     line-height: 1.6;
     border: 2px solid #19b5a5; /* Nova cor de identidade */
     box-shadow: 0 0 10px rgba(25, 181, 165, 0.4);
+    font-family: inherit; /* Usar a mesma fonte do resto do site */
 }
 
-    /* Ícones e espaçamento nas instruções */
-    .instrucoes p {
-        margin: 5px 0;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
+/* Ícones e espaçamento nas instruções */
+.instrucoes p {
+    margin: 8px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: inherit; /* Usar a mesma fonte do resto do site */
+    font-weight: normal; /* Remover qualquer negrito não intencional */
+}
 
 /* Adicionar estilo para o título da lista */
 h2 {

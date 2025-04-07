@@ -469,9 +469,10 @@ function ListaSorteio({ onReiniciarLista }) {
 
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    <p>📝 **Escreva seu nickname da Twitch** e o **nome do Streamer** que deseja apoiar.</p>
-                    <p>🔄 Você **pode participar várias vezes**, escolhendo **diferentes streamers**.</p>
-                    <p>⏳ Os sorteios acontecem **às 21h**, mas **a lista é congelada 10 minutos antes**.</p>
+                    <p>• Preencha com seu nickname da Twitch e o nome do Streamer que você deseja apoiar.</p>
+                    <p>• Você pode participar várias vezes.</p>
+                    <p>• É permitido escolher streamers diferentes a cada participação.</p>
+                    <p>• Os sorteios acontecem todos os dias, de forma aleatória, entre 21h e 22h.</p>
                 </div>
             )}
 
@@ -480,7 +481,7 @@ function ListaSorteio({ onReiniciarLista }) {
             <div className="formulario">
                 <input
                     type="text"
-                    placeholder="Seu nickname da Twitch"
+                    placeholder="Nickname da Twitch"
                     value={novoParticipante.nome}
                     onChange={(e) => setNovoParticipante({ ...novoParticipante, nome: e.target.value })}
                     disabled={listaCongelada}
@@ -488,7 +489,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 />
                 <input
                     type="text"
-                    placeholder="Nome do Streamer"
+                    placeholder="Streamer"
                     value={novoParticipante.streamer}
                     onChange={(e) => setNovoParticipante({ ...novoParticipante, streamer: e.target.value })}
                     disabled={listaCongelada}

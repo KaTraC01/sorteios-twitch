@@ -79,9 +79,9 @@ function Ganhadores() {
 
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    <p>📝 Os sorteios acontecem <strong>todos os dias às 21h</strong>.</p>
-                    <p>🔄 A lista de participantes é <strong>congelada 10 minutos antes</strong> do sorteio.</p>
-                    <p>⏳ O histórico completo de todos os sorteios é mantido nesta página.</p>
+                    
+                    <p>• O histórico completo dos sorteios mais recentes é mantido nesta página.</p>
+                    <p>• O histórico completo dos sorteios mais recentes é mantido nesta página.</p>
                 </div>
             )}
 
