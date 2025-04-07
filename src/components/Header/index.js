@@ -11,7 +11,12 @@ function Header() {
         <header className="header">
             <div className="logo">
                 <Link to="/" className={`sorteio-link ${pathname === '/' ? 'active' : ''}`}>
-                    <img src="/presente.png" alt="Presente" className="logo-presente" style={{width: '24px', height: '24px', marginRight: '8px'}} /> 
+                    {/* Usando a imagem PNG da pasta public */}
+                    <img 
+                        src="/presente.png" 
+                        alt="Presente" 
+                        style={{width: '24px', height: '24px', marginRight: '8px', verticalAlign: 'middle'}} 
+                    /> 
                     Sorteio
                 </Link>
             </div>
