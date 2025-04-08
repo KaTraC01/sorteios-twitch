@@ -104,6 +104,7 @@ CREATE OR REPLACE FUNCTION reset_participantes_ativos()
 RETURNS TRIGGER AS $$
 DECLARE
     sorteio_id UUID;
+    registros_removidos INTEGER;
 BEGIN
     -- Adicionar log
     INSERT INTO logs (descricao) VALUES ('Executando trigger de reset após sorteio');
@@ -125,6 +126,16 @@ BEGIN
     
     -- Resetar configuração de lista congelada
     UPDATE configuracoes SET valor = 'false' WHERE chave = 'lista_congelada';
+    
+    -- NOVA FUNCIONALIDADE: Limpar histórico de participantes mais antigo que 7 dias
+    -- Isso mantém os registros dos sorteios (ganhadores), removendo apenas as listas detalhadas de participantes
+    DELETE FROM historico_participantes 
+    WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '7 days'
+    RETURNING COUNT(*) INTO registros_removidos;
+    
+    -- Registrar a limpeza no log
+    INSERT INTO logs (descricao) 
+    VALUES ('Limpeza automática: ' || registros_removidos || ' registros de participantes antigos (>7 dias) foram removidos');
     
     -- Adicionar log final
     INSERT INTO logs (descricao) VALUES ('Reset de participantes concluído com sucesso');
