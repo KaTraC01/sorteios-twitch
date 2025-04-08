@@ -17,39 +17,6 @@
     
     <!-- Script de configuração de ambiente -->
     <script src="%PUBLIC_URL%/env-config.js"></script>
-    
-    <script>
-      // Script para verificar se as variáveis de ambiente estão configuradas
-      window.addEventListener('DOMContentLoaded', function() {
-        // Status após carregamento da página
-        console.log('==== VERIFICAÇÃO DE AMBIENTE ====');
-        console.log('NEXT_PUBLIC_SUPABASE_URL:', !!window.NEXT_PUBLIC_SUPABASE_URL);
-        console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-        
-        // Verificar meta tags
-        const urlMeta = document.querySelector('meta[name="supabase-url"]');
-        if (urlMeta) {
-          const metaContent = urlMeta.getAttribute('content');
-          console.log('Meta tag supabase-url:', metaContent);
-          
-          // Verificar se a meta tag não foi substituída durante o build
-          if (metaContent.includes('%NEXT_PUBLIC_')) {
-            console.warn('⚠️ Meta tag não foi processada durante o build');
-          }
-        }
-        
-        // Verificar funcionamento do Supabase
-        const testSupabase = function() {
-          if (window.supabase) {
-            console.log('✅ Cliente Supabase inicializado');
-          } else {
-            setTimeout(testSupabase, 1000); // Verificar novamente em 1 segundo
-          }
-        };
-        
-        setTimeout(testSupabase, 2000); // Verificar após 2 segundos
-      });
-    </script>
 </head>
 <body>
     <noscript>Você precisa habilitar o JavaScript para executar este aplicativo.</noscript>

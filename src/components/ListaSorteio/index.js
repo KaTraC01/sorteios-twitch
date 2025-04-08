@@ -48,7 +48,6 @@ function ListaSorteio({ onReiniciarLista }) {
         if (error) {
             console.error("Erro ao buscar participantes:", error);
         } else {
-            // console.log("Participantes recebidos:", data);
             setParticipantes(data);
         }
     };
@@ -118,14 +117,11 @@ function ListaSorteio({ onReiniciarLista }) {
             .on('postgres_changes', 
                 { event: '*', schema: 'public', table: 'participantes_ativos' }, 
                 (payload) => {
-                    // console.log('Alteração em participantes detectada:', payload);
                     // Atualiza a lista completa para garantir a ordenação correta
                     fetchParticipantes();
                 }
             )
-            .subscribe((status) => {
-                // console.log('Status do canal participantes:', status);
-            });
+            .subscribe();
             
         // 2. Canal para sorteios (último vencedor)
         const sorteiosChannel = supabase
@@ -133,13 +129,10 @@ function ListaSorteio({ onReiniciarLista }) {
             .on('postgres_changes', 
                 { event: 'INSERT', schema: 'public', table: 'sorteios' }, 
                 (payload) => {
-                    // console.log('Novo sorteio detectado:', payload);
                     fetchUltimoVencedor();
                 }
             )
-            .subscribe((status) => {
-                // console.log('Status do canal sorteios:', status);
-            });
+            .subscribe();
             
         // 3. Canal para configurações (lista congelada)
         const configChannel = supabase
@@ -147,13 +140,10 @@ function ListaSorteio({ onReiniciarLista }) {
             .on('postgres_changes', 
                 { event: 'UPDATE', schema: 'public', table: 'configuracoes' }, 
                 (payload) => {
-                    // console.log('Configuração atualizada:', payload);
                     verificarListaCongelada();
                 }
             )
-            .subscribe((status) => {
-                // console.log('Status do canal configurações:', status);
-            });
+            .subscribe();
 
         // Limpeza ao desmontar o componente
         return () => {
