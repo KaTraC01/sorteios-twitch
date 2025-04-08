@@ -225,19 +225,55 @@
     font-weight: 500;
 }
 
-/* Anúncio fixo inferior (tipo Superbet da imagem) */
-.anuncio-fixo-inferior {
+/* Anúncio fixo inferior */
+.anuncio-fixo-bottom {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
     background-color: #222;
     color: white;
-    padding: 5px 15px;
+    padding: 10px 20px;
     z-index: 1000;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.anuncio-fixo-bottom .anuncio-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 5px 0;
+}
+
+.anuncio-fixo-bottom .anuncio-conteudo {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+    flex: 1;
+}
+
+.anuncio-fixo-bottom .presente-animado {
+    width: 60px;
+    height: auto;
+    margin: 0 20px;
+}
+
+.anuncio-fixo-bottom h3 {
+    font-size: 18px;
+    margin: 0 0 5px 0;
+}
+
+.anuncio-fixo-bottom .anuncio-descricao {
+    font-size: 14px;
+    margin: 0;
+}
+
+.anuncio-fixo-bottom .botao-presente {
+    margin-left: auto;
+    padding: 8px 16px;
 }
 
 .anuncio-tag-pequena {
@@ -335,32 +371,37 @@
     background: rgba(0, 0, 0, 0.8);
 }
 
-/* Anúncio lateral */
+/* Anúncio lateral (banners laterais) */
 .anuncio-lateral {
-    position: fixed;
+    position: relative;
     background-color: #222;
     color: white;
     border-radius: 8px;
+    margin: 0 auto;
     padding: 15px;
-    text-align: center;
-    z-index: 900;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
+    width: 160px;
+    height: 600px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    text-align: center;
+    z-index: 100;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    top: 120px;
 }
 
 .anuncio-lateral:hover {
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
 }
 
 .anuncio-lateral.esquerda {
-    left: 10px;
+    float: left;
 }
 
 .anuncio-lateral.direita {
-    right: 10px;
+    float: right;
 }
 
 .anuncio-lateral-conteudo {
@@ -578,4 +619,44 @@
 
 .coluna-lateral .anuncio-lateral {
     pointer-events: auto; /* Permitir interações com o anúncio */
+}
+
+/* Presente animado */
+.presente-animado {
+    width: 80px;
+    height: auto;
+    margin: 15px auto;
+    display: block;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-20px);
+    }
+    60% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Botão personalizado para o presente */
+.botao-presente {
+    background: linear-gradient(45deg, #ff7b00, #ff0062);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(255, 123, 0, 0.3);
+}
+
+.botao-presente:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(255, 123, 0, 0.5);
 } 

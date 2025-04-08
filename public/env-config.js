@@ -41,12 +41,13 @@ if (typeof window !== 'undefined') {
     }
   }
   
-  // Exibir status após a tentativa de recuperação
+  // Verificar silenciosamente se as variáveis foram configuradas corretamente
+  // Removida exibição de logs para aumentar a segurança
   const temURL = !!window.NEXT_PUBLIC_SUPABASE_URL;
   const temKey = !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  // Aviso se ainda houver problemas
-  if (!temURL || !temKey) {
+  // Aviso somente em ambiente de desenvolvimento
+  if ((!temURL || !temKey) && window.location.hostname === 'localhost') {
     console.error('❌ ERRO: Uma ou mais variáveis de ambiente não puderam ser recuperadas.');
     console.error('A aplicação pode não funcionar corretamente.');
   }

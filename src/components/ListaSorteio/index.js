@@ -118,7 +118,7 @@ function ListaSorteio({ onReiniciarLista }) {
             .on('postgres_changes', 
                 { event: '*', schema: 'public', table: 'participantes_ativos' }, 
                 (payload) => {
-                    console.log('Alteração em participantes detectada:', payload);
+                    // console.log('Alteração em participantes detectada:', payload);
                     // Atualiza a lista completa para garantir a ordenação correta
                     fetchParticipantes();
                 }
@@ -133,7 +133,7 @@ function ListaSorteio({ onReiniciarLista }) {
             .on('postgres_changes', 
                 { event: 'INSERT', schema: 'public', table: 'sorteios' }, 
                 (payload) => {
-                    console.log('Novo sorteio detectado:', payload);
+                    // console.log('Novo sorteio detectado:', payload);
                     fetchUltimoVencedor();
                 }
             )
@@ -147,7 +147,7 @@ function ListaSorteio({ onReiniciarLista }) {
             .on('postgres_changes', 
                 { event: 'UPDATE', schema: 'public', table: 'configuracoes' }, 
                 (payload) => {
-                    console.log('Configuração atualizada:', payload);
+                    // console.log('Configuração atualizada:', payload);
                     verificarListaCongelada();
                 }
             )
@@ -251,7 +251,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 if (erroHistorico) {
                     console.error("Erro ao salvar histórico de participantes:", erroHistorico);
                 } else {
-                    console.log("Histórico de participantes salvo com sucesso!");
+                    // console.log("Histórico de participantes salvo com sucesso!");
                 }
                 
                 // Resetar a lista imediatamente após salvar o histórico
@@ -277,7 +277,7 @@ function ListaSorteio({ onReiniciarLista }) {
         if (error) {
             console.error("Erro ao limpar a lista:", error);
         } else {
-            console.log("Lista resetada com sucesso!");
+            // console.log("Lista resetada com sucesso!");
             // Atualizar a configuração para indicar que a lista não está mais congelada
             await supabase
                 .from("configuracoes")
