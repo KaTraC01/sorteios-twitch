@@ -44,15 +44,14 @@ function App() {
                 {/* Anúncio lateral esquerdo */}
                 <div className="coluna-lateral esquerda">
                     {adsVisible.esquerda && (
-                        <Anuncio 
-                            tipo="lateral" 
-                            posicao="esquerda" 
-                            mostrarFechar={true}
-                            mostrarPresente={true}
-                            urlDestino="https://twitch.tv"
-                            titulo="Sorteios Twitch"
-                            descricao="Participe agora!"
-                        />
+                        <div className="anuncio-lateral esquerda" style={{ top: "120px", height: "600px", width: "160px" }}>
+                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('esquerda')}>✖</button>
+                            <div className="anuncio-tag">PUBLICIDADE</div>
+                            <div className="anuncio-lateral-conteudo">
+                                <p>ANÚNCIO</p>
+                                <button className="anuncio-button">Clique Aqui</button>
+                            </div>
+                        </div>
                     )}
                 </div>
 
@@ -90,28 +89,20 @@ function App() {
                 {/* Anúncio lateral direito */}
                 <div className="coluna-lateral direita">
                     {adsVisible.direita && (
-                        <Anuncio 
-                            tipo="lateral" 
-                            posicao="direita" 
-                            mostrarFechar={true}
-                            mostrarPresente={true}
-                            urlDestino="https://twitch.tv"
-                            titulo="Sorteios Twitch"
-                            descricao="Participe agora!"
-                        />
+                        <div className="anuncio-lateral direita" style={{ top: "120px", height: "600px", width: "160px" }}>
+                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('direita')}>✖</button>
+                            <div className="anuncio-tag">PUBLICIDADE</div>
+                            <div className="anuncio-lateral-conteudo">
+                                <p>ANÚNCIO</p>
+                                <button className="anuncio-button">Clique Aqui</button>
+                            </div>
+                        </div>
                     )}
                 </div>
 
                 {/* Anúncio fixo inferior */}
                 {adsVisible.fixoInferior && (
-                    <Anuncio 
-                        tipo="fixo-bottom" 
-                        mostrarFechar={true} 
-                        mostrarPresente={true}
-                        urlDestino="https://twitch.tv"
-                        titulo="Sorteios Diários!"
-                        descricao="Ganhe prêmios participando dos sorteios"
-                    />
+                    <Anuncio tipo="fixo-inferior" posicao="fixo" mostrarFechar={true} />
                 )}
                 
                 {!adsVisible.fixoInferior && (

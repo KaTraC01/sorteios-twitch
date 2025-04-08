@@ -115,31 +115,34 @@ const Anuncio = ({
         </div>
       );
     
-    case 'fixo-bottom':
+    case 'fixo-inferior':
       return (
-        <div 
-          className={`anuncio anuncio-${tipo}`}
-          style={estiloPersonalizado}
-        >
+        <div className={`anuncio-fixo-inferior`} style={estiloPersonalizado}>
+          <a href={urlDestino} target="_blank" rel="noopener noreferrer" className="anuncio-link">
+            <div className="anuncio-tag-pequena">#PROPAGANDA</div>
+            <div className="anuncio-fixo-conteudo">
+              {logo && (
+                <div className="anuncio-fixo-logo">
+                  <img src={logo} alt="Logo do patrocinador" />
+                </div>
+              )}
+              <div className="anuncio-fixo-texto">
+                <p>{descricao || "Espaço disponível para publicidade"}</p>
+                <h2>{titulo || "ANÚNCIO"}</h2>
+              </div>
+            </div>
+            {(idade || avisos) && (
+              <div className="anuncio-fixo-info">
+                {idade && <span className="anuncio-idade">{idade}</span>}
+                {avisos && <span className="anuncio-aviso-pequeno">{avisos}</span>}
+              </div>
+            )}
+          </a>
           {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
+            <button className="anuncio-fechar-grande" onClick={handleFechar}>
+              ✖
             </button>
           )}
-          <a href={urlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
-            {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
-            {imagemSrc && <img src={imagemSrc} alt={titulo || 'Anúncio'} className="anuncio-imagem" />}
-            {mostrarPresente && <img src="/presente.png" alt="Presente" className="presente-animado" />}
-            <div className="anuncio-conteudo">
-              {titulo && <h3>{titulo}</h3>}
-              {descricao && <p className="anuncio-descricao">{descricao}</p>}
-              {idade && <span className="anuncio-tag">+{idade}</span>}
-              {avisos && <small className="anuncio-avisos">{avisos}</small>}
-              {mostrarPresente && (
-                <button className="botao-presente">Clique para abrir!</button>
-              )}
-            </div>
-          </a>
         </div>
       );
     
@@ -147,10 +150,16 @@ const Anuncio = ({
     default:
       return (
         <div 
-          className={`anuncio anuncio-reservado anuncio-${posicao}`}
+          className={`anuncio anuncio-padrao anuncio-${posicao}`}
           style={estiloPersonalizado}
         >
-          <span>Espaço reservado para anúncio</span>
+          <div className="anuncio-tag">PUBLICIDADE</div>
+          <p>Espaço reservado para anúncio</p>
+          {mostrarFechar && (
+            <button className="anuncio-fechar" onClick={handleFechar}>
+              X
+            </button>
+          )}
         </div>
       );
   }

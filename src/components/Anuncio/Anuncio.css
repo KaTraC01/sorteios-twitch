@@ -225,55 +225,19 @@
     font-weight: 500;
 }
 
-/* Anúncio fixo inferior */
-.anuncio-fixo-bottom {
+/* Anúncio fixo inferior (tipo Superbet da imagem) */
+.anuncio-fixo-inferior {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
     background-color: #222;
     color: white;
-    padding: 10px 20px;
+    padding: 5px 15px;
     z-index: 1000;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.anuncio-fixo-bottom .anuncio-link {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 5px 0;
-}
-
-.anuncio-fixo-bottom .anuncio-conteudo {
-    display: flex;
     flex-direction: column;
-    margin-left: 20px;
-    flex: 1;
-}
-
-.anuncio-fixo-bottom .presente-animado {
-    width: 60px;
-    height: auto;
-    margin: 0 20px;
-}
-
-.anuncio-fixo-bottom h3 {
-    font-size: 18px;
-    margin: 0 0 5px 0;
-}
-
-.anuncio-fixo-bottom .anuncio-descricao {
-    font-size: 14px;
-    margin: 0;
-}
-
-.anuncio-fixo-bottom .botao-presente {
-    margin-left: auto;
-    padding: 8px 16px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .anuncio-tag-pequena {
@@ -371,37 +335,32 @@
     background: rgba(0, 0, 0, 0.8);
 }
 
-/* Anúncio lateral (banners laterais) */
+/* Anúncio lateral */
 .anuncio-lateral {
-    position: relative;
+    position: fixed;
     background-color: #222;
     color: white;
     border-radius: 8px;
-    margin: 0 auto;
     padding: 15px;
-    width: 160px;
-    height: 600px;
+    text-align: center;
+    z-index: 900;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
     display: flex;
     flex-direction: column;
-    text-align: center;
-    z-index: 100;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-    top: 120px;
+    transition: transform 0.3s ease;
 }
 
 .anuncio-lateral:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
 }
 
 .anuncio-lateral.esquerda {
-    float: left;
+    left: 10px;
 }
 
 .anuncio-lateral.direita {
-    float: right;
+    right: 10px;
 }
 
 .anuncio-lateral-conteudo {
@@ -621,7 +580,7 @@
     pointer-events: auto; /* Permitir interações com o anúncio */
 }
 
-/* Presente animado */
+/* Presente animado - mantido para uso futuro */
 .presente-animado {
     width: 80px;
     height: auto;
@@ -642,7 +601,7 @@
     }
 }
 
-/* Botão personalizado para o presente */
+/* Botão personalizado para o presente - mantido para uso futuro */
 .botao-presente {
     background: linear-gradient(45deg, #ff7b00, #ff0062);
     color: white;
