@@ -48,7 +48,7 @@ function ListaSorteio({ onReiniciarLista }) {
         if (error) {
             console.error("Erro ao buscar participantes:", error);
         } else {
-            console.log("Participantes recebidos:", data);
+            // console.log("Participantes recebidos:", data);
             setParticipantes(data);
         }
     };
@@ -124,7 +124,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 }
             )
             .subscribe((status) => {
-                console.log('Status do canal participantes:', status);
+                // console.log('Status do canal participantes:', status);
             });
             
         // 2. Canal para sorteios (último vencedor)
@@ -138,7 +138,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 }
             )
             .subscribe((status) => {
-                console.log('Status do canal sorteios:', status);
+                // console.log('Status do canal sorteios:', status);
             });
             
         // 3. Canal para configurações (lista congelada)
@@ -152,7 +152,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 }
             )
             .subscribe((status) => {
-                console.log('Status do canal configurações:', status);
+                // console.log('Status do canal configurações:', status);
             });
 
         // Limpeza ao desmontar o componente

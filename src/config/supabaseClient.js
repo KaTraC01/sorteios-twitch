@@ -19,8 +19,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Verificar no console se os valores estão disponíveis
-console.log('Supabase URL configurada:', !!supabaseUrl);
-console.log('Supabase Key configurada:', !!supabaseAnonKey);
+// console.log('Supabase URL configurada:', !!supabaseUrl);
+// console.log('Supabase Key configurada:', !!supabaseAnonKey);
 
 // Criar o cliente do Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey) 
