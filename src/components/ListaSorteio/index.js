@@ -3,6 +3,23 @@ import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "./ListaSorteio.css"; // Importando o CSS
 import Anuncio from "../Anuncio"; // Importando o componente de anúncio
 
+// Função de sanitização de entrada
+const sanitizarEntrada = (texto) => {
+  if (!texto) return "";
+  
+  // Remover caracteres especiais, HTML, scripts, etc.
+  let sanitizado = texto
+    .replace(/[<>'"\\\/\{\}\[\]]/g, '') // Remove caracteres potencialmente perigosos
+    .replace(/\s+/g, '_')              // Substitui espaços por underscore
+    .replace(/--/g, '_')               // Remove possíveis injeções SQL
+    .replace(/;/g, '')                 // Remove ponto e vírgula
+    .replace(/script/gi, '')           // Remove tentativas de XSS
+    .trim();                           // Remove espaços extras
+    
+  // Limitar comprimento
+  return sanitizado.substring(0, 25);
+};
+
 function ListaSorteio({ onReiniciarLista }) {
     const [participantes, setParticipantes] = useState([]);
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "" });
@@ -294,6 +311,12 @@ function ListaSorteio({ onReiniciarLista }) {
         setUltimaAtualizacao(Date.now());
     };
 
+    // Handler modificado para sanitizar entradas em tempo real
+    const handleInputChange = (e, field) => {
+        const valor = sanitizarEntrada(e.target.value);
+        setNovoParticipante({ ...novoParticipante, [field]: valor });
+    };
+
     // ➕ **Função para adicionar participante**
     const adicionarParticipante = async () => {
         if (listaCongelada) {
@@ -306,10 +329,14 @@ function ListaSorteio({ onReiniciarLista }) {
             return;
         }
 
-        if (novoParticipante.nome && novoParticipante.streamer) {
+        // Sanitizar novamente os valores antes de enviar para o servidor
+        const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
+        const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
+
+        if (nomeSanitizado && streamerSanitizado) {
             const { error } = await supabase
                 .from("participantes_ativos")
-                .insert([{ nome_twitch: novoParticipante.nome, streamer_escolhido: novoParticipante.streamer }]);
+                .insert([{ nome_twitch: nomeSanitizado, streamer_escolhido: streamerSanitizado }]);
 
             if (error) {
                 console.error("Erro ao adicionar participante:", error);
@@ -327,7 +354,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 mostrarFeedback("Participante adicionado com sucesso!", "sucesso");
             }
         } else {
-            mostrarFeedback("Preencha todos os campos!", "aviso");
+            mostrarFeedback("Preencha todos os campos com valores válidos!", "aviso");
         }
     };
 
@@ -473,7 +500,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     type="text"
                     placeholder="Nickname da Twitch"
                     value={novoParticipante.nome}
-                    onChange={(e) => setNovoParticipante({ ...novoParticipante, nome: e.target.value })}
+                    onChange={(e) => handleInputChange(e, 'nome')}
                     disabled={listaCongelada}
                     maxLength={25}
                 />
@@ -481,7 +508,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     type="text"
                     placeholder="Streamer"
                     value={novoParticipante.streamer}
-                    onChange={(e) => setNovoParticipante({ ...novoParticipante, streamer: e.target.value })}
+                    onChange={(e) => handleInputChange(e, 'streamer')}
                     disabled={listaCongelada}
                     maxLength={25}
                 />
