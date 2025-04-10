@@ -34,6 +34,12 @@ function Ganhadores() {
 
     // Função para buscar a lista de participantes de um sorteio específico
     const buscarParticipantesSorteio = async (sorteioId, sorteioData) => {
+        // Verificar se os dados do sorteio estão disponíveis (usando o valor do backend)
+        const sorteio = historico.find(s => s.id === sorteioId);
+        if (!sorteio || sorteio.dados_disponiveis === false) {
+            return; // Não busca participantes se os dados não estiverem disponíveis
+        }
+        
         setLoadingLista(true);
         setSorteioSelecionado({
             id: sorteioId,
@@ -125,9 +131,16 @@ function Ganhadores() {
                                     <td>{sorteio.nome}</td>
                                     <td>{sorteio.streamer}</td>
                                     <td>
-                                        <button onClick={() => buscarParticipantesSorteio(sorteio.id, sorteio.data)}>
-                                            📜 Ver Lista
-                                        </button>
+                                        {/* Verificar se os dados do sorteio estão disponíveis (usando o campo do backend) */}
+                                        {sorteio.dados_disponiveis === false ? (
+                                            <button className="botao-bloqueado" disabled>
+                                                🔒
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => buscarParticipantesSorteio(sorteio.id, sorteio.data)}>
+                                                📜 Ver Lista
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
 
