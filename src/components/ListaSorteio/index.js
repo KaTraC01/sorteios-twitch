@@ -495,7 +495,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
             <h2>Lista de Participantes {listaCongelada && "(❄️ Lista Congelada ❄️)"}</h2>
 
-            <div className="formulario">
+            <div className="formulario form-horizontal">
                 <input
                     type="text"
                     placeholder="Nickname da Twitch"
