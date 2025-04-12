@@ -35,9 +35,9 @@
 
 .historico-tabela {
     width: 100%;
-    min-width: 600px; /* Mantido para garantir largura mínima para a tabela */
+    min-width: 500px; /* Reduzido de 600px para 500px */
     border-collapse: collapse;
-    margin-top: 25px; /* Aumentado para melhor espaçamento */
+    margin-top: 25px;
     background: rgba(40, 40, 40, 0.9);
     color: white;
     border-radius: 5px;
@@ -47,30 +47,34 @@
 /* Ajustar largura das colunas da tabela */
 .historico-tabela th:nth-child(1), 
 .historico-tabela td:nth-child(1) {
-    width: 18%; /* Data - aumentado para melhor visualização */
+    width: 10%; /* Data - reduzido ainda mais */
+    min-width: 50px;
+    word-break: break-word;
 }
 
 .historico-tabela th:nth-child(2), 
 .historico-tabela td:nth-child(2) {
-    width: 12%; /* Número - aumentado ligeiramente */
+    width: 6%; /* Número - reduzido ainda mais */
+    min-width: 20px;
 }
 
 .historico-tabela th:nth-child(3), 
 .historico-tabela td:nth-child(3),
 .historico-tabela th:nth-child(4), 
 .historico-tabela td:nth-child(4) {
-    width: 28%; /* Nome e Streamer - ajustado para manter proporção */
+    width: 20%; /* Nome e Streamer - reduzido ainda mais */
+    word-break: break-word;
 }
 
 .historico-tabela th:nth-child(5), 
 .historico-tabela td:nth-child(5) {
-    width: 14%; /* Ver Lista - ajustado para manter proporção */
+    width: 6%; /* Ver Lista - reduzido ainda mais */
 }
 
 .historico-tabela th, 
 .historico-tabela td {
     border: 1px solid #444;
-    padding: 12px 15px;
+    padding: 6px 4px; /* Reduzido ainda mais */
     text-align: center;
 }
 
@@ -139,16 +143,18 @@
         padding-bottom: 15px;
     }
     
-    .historico-tabela th, 
-    .historico-tabela td {
-        padding: 8px 10px;
-        font-size: 14px;
+    .historico-tabela {
+        min-width: 350px; /* Reduzido ainda mais */
     }
     
-    .participantes-tabela th,
-    .participantes-tabela td {
-        padding: 8px 10px;
-        font-size: 14px;
+    .participantes-tabela {
+        min-width: 280px; /* Reduzido para melhor visualização em celulares */
+    }
+    
+    .historico-tabela th, 
+    .historico-tabela td {
+        padding: 3px 2px;
+        font-size: 11px;
     }
     
     .modal-header {
@@ -192,16 +198,24 @@
         font-size: 16px;
     }
     
+    .historico-tabela {
+        min-width: 300px; /* Reduzido ainda mais para celulares pequenos */
+    }
+    
     .historico-tabela th, 
     .historico-tabela td {
-        padding: 6px 8px;
-        font-size: 12px;
+        padding: 2px 1px;
+        font-size: 10px;
+    }
+    
+    .participantes-tabela {
+        min-width: 240px; /* Reduzido ainda mais para celulares pequenos */
     }
     
     .participantes-tabela th,
     .participantes-tabela td {
-        padding: 6px 8px;
-        font-size: 12px;
+        padding: 3px 2px;
+        font-size: 11px;
     }
     
     .lista-participantes-container {
@@ -210,6 +224,12 @@
     
     .total-participantes {
         font-size: 14px;
+    }
+    
+    /* Ajustar o botão "Ver Lista" para caber melhor */
+    .historico-tabela button {
+        padding: 3px 4px;
+        font-size: 10px;
     }
 }
 
@@ -356,7 +376,7 @@
 
 .participantes-tabela {
     width: 100%;
-    min-width: 500px; /* Mantido para garantir largura mínima */
+    min-width: 400px; /* Reduzido para melhor visualização em dispositivos móveis */
     border-collapse: collapse;
     margin-bottom: 25px; /* Aumentado para melhor espaçamento */
 }
@@ -364,21 +384,23 @@
 .participantes-tabela th,
 .participantes-tabela td {
     border: 1px solid #444;
-    padding: 12px 15px;
+    padding: 8px 6px;
     text-align: center;
 }
 
 /* Ajustar largura das colunas da tabela de participantes */
 .participantes-tabela th:first-child,
 .participantes-tabela td:first-child {
-    width: 10%; /* Coluna de número */
+    width: 6%;
+    min-width: 25px;
 }
 
 .participantes-tabela th:nth-child(2),
 .participantes-tabela td:nth-child(2),
 .participantes-tabela th:nth-child(3),
 .participantes-tabela td:nth-child(3) {
-    width: 45%; /* Colunas de nome e streamer */
+    width: 47%;
+    word-break: break-word;
 }
 
 .participantes-tabela th {

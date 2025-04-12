@@ -207,18 +207,20 @@ table {
 
 /* Ajustar largura das colunas da tabela */
 th:first-child, td:first-child {
-    width: 10%; /* Coluna de número */
+    width: 8%; /* Reduzido: Coluna de número */
+    min-width: 30px;
 }
 
 th:nth-child(2), td:nth-child(2),
 th:nth-child(3), td:nth-child(3) {
-    width: 45%; /* Colunas de nome e streamer */
+    width: 46%; /* Colunas de nome e streamer */
 }
 
 th, td {
-    padding: 12px 15px;
+    padding: 10px;
     border-bottom: 1px solid #444;
     text-align: center;
+    word-break: break-word; /* Permite quebra de palavras */
 }
 
 th {
@@ -355,8 +357,12 @@ tbody tr:nth-child(even) {
     }
     
     th, td {
-        padding: 8px 10px;
+        padding: 6px 8px;
         font-size: 14px;
+    }
+    
+    table {
+        min-width: 300px; /* Reduzido para melhor ajuste em celulares */
     }
     
     .formulario {
