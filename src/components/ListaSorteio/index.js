@@ -380,22 +380,18 @@ function ListaSorteio({ onReiniciarLista }) {
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
         try {
-            // Criar 10 objetos separados em um array para inserção única
-            const participantesArray = [];
-            
+            // Adicionar 10 participantes individualmente
             for (let i = 0; i < 10; i++) {
-                participantesArray.push({
+                await supabase.from("participantes_ativos").insert({
                     nome_twitch: nomeSanitizado,
-                    streamer_escolhido: streamerSanitizado
+                    streamer_escolhido: streamerSanitizado,
                 });
+                
+                // Pequena pausa para evitar problemas com a API
+                if (i < 9) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
             }
-            
-            // Inserir todos de uma vez
-            const { error } = await supabase
-                .from("participantes_ativos")
-                .insert(participantesArray);
-
-            if (error) throw error;
 
             // Limpar o formulário
             setNovoParticipante({ nome: "", streamer: "" });
