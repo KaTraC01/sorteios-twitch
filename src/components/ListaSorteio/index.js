@@ -370,16 +370,24 @@ function ListaSorteio({ onReiniciarLista }) {
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
         try {
-            // Criar array com 10 participantes individuais
-            const participantes = Array.from({ length: 10 }, () => ({
-                nome_twitch: nomeSanitizado,
-                streamer_escolhido: streamerSanitizado,
-            }));
+            // Criar array com 10 participantes individuais com IDs únicos para garantir que sejam tratados como entradas separadas
+            const participantes = [];
+            for (let i = 0; i < 10; i++) {
+                participantes.push({
+                    nome_twitch: nomeSanitizado,
+                    streamer_escolhido: streamerSanitizado,
+                    // Garantir que cada entrada seja única adicionando um timestamp com milissegundos + um número aleatório
+                    unique_id: `${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`
+                });
+            }
 
-            // Inserir no Supabase
-            const { error } = await supabase.from("participantes_ativos").insert(participantes);
-
-            if (error) throw error;
+            // Inserir no Supabase - uma entrada por vez para garantir
+            for (const participante of participantes) {
+                await supabase.from("participantes_ativos").insert([{
+                    nome_twitch: participante.nome_twitch,
+                    streamer_escolhido: participante.streamer_escolhido
+                }]);
+            }
 
             // Limpar o formulário
             setNovoParticipante({ nome: "", streamer: "" });
