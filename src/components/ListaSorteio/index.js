@@ -365,29 +365,37 @@ function ListaSorteio({ onReiniciarLista }) {
             return;
         }
 
+        if (listaCongelada) {
+            mostrarFeedback("A lista foi congelada! Você não pode mais adicionar nomes.", "erro");
+            return;
+        }
+
+        if (tempoEspera > 0) {
+            mostrarFeedback(`Aguarde ${tempoEspera} segundos antes de adicionar mais participantes.`, "aviso");
+            return;
+        }
+
         // Sanitizar entradas
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
         try {
-            // Criar array com 10 participantes individuais com IDs únicos para garantir que sejam tratados como entradas separadas
-            const participantes = [];
+            // Criar 10 objetos separados em um array para inserção única
+            const participantesArray = [];
+            
             for (let i = 0; i < 10; i++) {
-                participantes.push({
+                participantesArray.push({
                     nome_twitch: nomeSanitizado,
-                    streamer_escolhido: streamerSanitizado,
-                    // Garantir que cada entrada seja única adicionando um timestamp com milissegundos + um número aleatório
-                    unique_id: `${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`
+                    streamer_escolhido: streamerSanitizado
                 });
             }
+            
+            // Inserir todos de uma vez
+            const { error } = await supabase
+                .from("participantes_ativos")
+                .insert(participantesArray);
 
-            // Inserir no Supabase - uma entrada por vez para garantir
-            for (const participante of participantes) {
-                await supabase.from("participantes_ativos").insert([{
-                    nome_twitch: participante.nome_twitch,
-                    streamer_escolhido: participante.streamer_escolhido
-                }]);
-            }
+            if (error) throw error;
 
             // Limpar o formulário
             setNovoParticipante({ nome: "", streamer: "" });
@@ -396,6 +404,9 @@ function ListaSorteio({ onReiniciarLista }) {
             const expiracao = Date.now() + 30000;
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(30);
+
+            // Atualizar a lista manualmente
+            await fetchParticipantes();
 
             // Mostrar feedback de sucesso
             mostrarFeedback("10 participações adicionadas com sucesso!", "sucesso");
