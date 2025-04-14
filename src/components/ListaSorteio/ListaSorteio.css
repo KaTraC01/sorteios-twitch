@@ -154,43 +154,46 @@ h2 {
 /* Estilização do formulário */
 .formulario {
     display: flex;
-    flex-wrap: nowrap; /* Alterado para garantir que fiquem na mesma linha em telas grandes */
+    flex-wrap: nowrap;
     gap: 15px;
     justify-content: center;
     margin-bottom: 25px;
     margin-top: 25px;
 }
 
-input {
+.formulario input {
+    flex: 1;
+    max-width: 200px;
     padding: 10px 12px;
     border-radius: 5px;
     border: 1px solid #444;
-    width: 180px;
     background-color: #1a1a1a;
     color: white;
     font-size: 14px;
 }
 
-button {
+.formulario button {
+    padding: 10px 20px;
+    border-radius: 5px;
     background-color: #19b5a5;
     color: white;
-    padding: 10px 16px;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
-    transition: background 0.3s ease-in-out;
-    font-size: 14px;
     font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    min-width: 100px;
 }
 
-    button:hover {
-        background-color: #14968a; /* Versão mais escura da cor de identidade */
-    }
+.formulario button:hover:not(:disabled) {
+    background-color: #14968a;
+    transform: scale(1.05);
+}
 
-    button:disabled {
-        background-color: #555;
-        cursor: not-allowed;
-    }
+.formulario button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
 
 /* Estilização da tabela */
 table {
@@ -368,18 +371,11 @@ tbody tr:nth-child(even) {
     .formulario {
         flex-direction: column;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 20px;
-        margin-top: 20px;
-    }
-    
-    input {
         width: 100%;
-        max-width: 300px;
-        margin-bottom: 0;
     }
     
-    button {
+    .formulario input,
+    .formulario button {
         width: 100%;
         max-width: 300px;
     }

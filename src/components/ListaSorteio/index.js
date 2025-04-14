@@ -319,42 +319,82 @@ function ListaSorteio({ onReiniciarLista }) {
 
     // ➕ **Função para adicionar participante**
     const adicionarParticipante = async () => {
-        if (listaCongelada) {
-            mostrarFeedback("A lista foi congelada! Você não pode mais adicionar nomes.", "erro");
+        // Validações básicas
+        if (!novoParticipante.nome || !novoParticipante.streamer) {
+            mostrarFeedback("Por favor, preencha todos os campos.", "erro");
             return;
         }
 
-        if (tempoEspera > 0) {
-            mostrarFeedback(`Aguarde ${tempoEspera} segundos antes de adicionar outro nome.`, "aviso");
-            return;
-        }
-
-        // Sanitizar novamente os valores antes de enviar para o servidor
+        // Sanitizar entradas
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
-        if (nomeSanitizado && streamerSanitizado) {
-            const { error } = await supabase
-                .from("participantes_ativos")
-                .insert([{ nome_twitch: nomeSanitizado, streamer_escolhido: streamerSanitizado }]);
+        try {
+            // Inserir no Supabase
+            const { error } = await supabase.from("participantes_ativos").insert([
+                {
+                    nome_twitch: nomeSanitizado,
+                    streamer_escolhido: streamerSanitizado,
+                },
+            ]);
 
-            if (error) {
-                console.error("Erro ao adicionar participante:", error);
-                mostrarFeedback("Erro ao adicionar. Tente novamente.", "erro");
-            } else {
-                fetchParticipantes(); // Atualiza a lista imediatamente após a inserção
-                setNovoParticipante({ nome: "", streamer: "" });
-                
-                // Define o tempo de expiração em vez do contador
-                const tempoEsperaMs = 10 * 1000; // 10 segundos em milissegundos
-                const tempoExpiracao = Date.now() + tempoEsperaMs;
-                localStorage.setItem("tempoExpiracao", tempoExpiracao.toString());
-                setTempoEspera(10);
-                
-                mostrarFeedback("Participante adicionado com sucesso!", "sucesso");
-            }
-        } else {
-            mostrarFeedback("Preencha todos os campos com valores válidos!", "aviso");
+            if (error) throw error;
+
+            // Limpar o formulário
+            setNovoParticipante({ nome: "", streamer: "" });
+            
+            // Definir tempo de espera (10 segundos)
+            const expiracao = Date.now() + 10000;
+            localStorage.setItem("tempoExpiracao", expiracao.toString());
+            setTempoEspera(10);
+
+            // Mostrar feedback de sucesso
+            mostrarFeedback("Participante adicionado com sucesso!", "sucesso");
+
+        } catch (error) {
+            console.error("Erro ao adicionar participante:", error);
+            mostrarFeedback("Erro ao adicionar participante. Tente novamente.", "erro");
+        }
+    };
+
+    // Função para adicionar 10 participantes de uma vez
+    const adicionarDezParticipantes = async () => {
+        // Validações básicas
+        if (!novoParticipante.nome || !novoParticipante.streamer) {
+            mostrarFeedback("Por favor, preencha todos os campos.", "erro");
+            return;
+        }
+
+        // Sanitizar entradas
+        const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
+        const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
+
+        try {
+            // Criar array com 10 participantes individuais
+            const participantes = Array.from({ length: 10 }, () => ({
+                nome_twitch: nomeSanitizado,
+                streamer_escolhido: streamerSanitizado,
+            }));
+
+            // Inserir no Supabase
+            const { error } = await supabase.from("participantes_ativos").insert(participantes);
+
+            if (error) throw error;
+
+            // Limpar o formulário
+            setNovoParticipante({ nome: "", streamer: "" });
+            
+            // Definir tempo de espera (30 segundos)
+            const expiracao = Date.now() + 30000;
+            localStorage.setItem("tempoExpiracao", expiracao.toString());
+            setTempoEspera(30);
+
+            // Mostrar feedback de sucesso
+            mostrarFeedback("10 participações adicionadas com sucesso!", "sucesso");
+
+        } catch (error) {
+            console.error("Erro ao adicionar participantes:", error);
+            mostrarFeedback("Erro ao adicionar participantes. Tente novamente.", "erro");
         }
     };
 
@@ -514,6 +554,9 @@ function ListaSorteio({ onReiniciarLista }) {
                 />
                 <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
                     {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
+                </button>
+                <button onClick={adicionarDezParticipantes} disabled={tempoEspera > 0 || listaCongelada}>
+                    {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "+10"}
                 </button>
             </div>
 
