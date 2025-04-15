@@ -57,6 +57,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
     // 🔄 **Função para buscar participantes no Supabase**
     const fetchParticipantes = async () => {
+        console.log("Buscando participantes ativos...");
         const { data, error } = await supabase
             .from("participantes_ativos")
             .select("*")
@@ -65,6 +66,7 @@ function ListaSorteio({ onReiniciarLista }) {
         if (error) {
             console.error("Erro ao buscar participantes:", error);
         } else {
+            console.log(`Participantes encontrados: ${data.length}`, data);
             setParticipantes(data);
         }
     };
@@ -330,16 +332,24 @@ function ListaSorteio({ onReiniciarLista }) {
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
         try {
+            console.log("Adicionando participante:", nomeSanitizado, streamerSanitizado);
+            
             // Inserir no Supabase
-            const { error } = await supabase.from("participantes_ativos").insert([
+            const { data, error } = await supabase.from("participantes_ativos").insert([
                 {
                     nome_twitch: nomeSanitizado,
                     streamer_escolhido: streamerSanitizado,
                 },
-            ]);
+            ]).select();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Erro detalhado ao adicionar participante:", error);
+                mostrarFeedback(`Erro ao adicionar: ${error.message}`, "erro");
+                return;
+            }
 
+            console.log("Participante adicionado com sucesso:", data);
+            
             // Limpar o formulário
             setNovoParticipante({ nome: "", streamer: "" });
             
@@ -348,12 +358,15 @@ function ListaSorteio({ onReiniciarLista }) {
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(10);
 
+            // Forçar atualização imediata da lista
+            await fetchParticipantes();
+
             // Mostrar feedback de sucesso
             mostrarFeedback("Participante adicionado com sucesso!", "sucesso");
 
         } catch (error) {
             console.error("Erro ao adicionar participante:", error);
-            mostrarFeedback("Erro ao adicionar participante. Tente novamente.", "erro");
+            mostrarFeedback(`Erro inesperado: ${error.message}`, "erro");
         }
     };
 
@@ -379,50 +392,40 @@ function ListaSorteio({ onReiniciarLista }) {
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
-        // Número de inserções desejado
-        const numeroInserções = 10;
-
         try {
             // Mostrar feedback inicial
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
-            // Usar a nova função do banco de dados para inserções em lote
+            // Chamar a função RPC do Supabase para adicionar 10 participantes
             const { data, error } = await supabase.rpc('inserir_participantes_lote', {
-                p_nome_twitch: nomeSanitizado,
-                p_streamer_escolhido: streamerSanitizado,
-                p_quantidade: numeroInserções
+                nome: nomeSanitizado,
+                streamer: streamerSanitizado,
+                quantidade: 10
             });
             
             if (error) {
-                console.error('Erro ao adicionar participantes em lote:', error);
-                mostrarFeedback(`Erro ao adicionar participantes: ${error.message}`, "erro");
+                console.error("Erro ao adicionar participantes em lote:", error);
+                mostrarFeedback(`Erro: ${error.message}`, "erro");
                 return;
             }
             
-            // Verificar o resultado
-            console.log('Resultado da inserção em lote:', data);
+            // Limpar o formulário
+            setNovoParticipante({ nome: "", streamer: "" });
             
-            if (data && data.sucesso) {
-                // Limpar o formulário
-                setNovoParticipante({ nome: "", streamer: "" });
-                
-                // Definir tempo de espera (30 segundos)
-                const expiracao = Date.now() + 30000;
-                localStorage.setItem("tempoExpiracao", expiracao.toString());
-                setTempoEspera(30);
-                
-                // Forçar atualização da lista
-                await fetchParticipantes();
-                
-                // Mostrar feedback de sucesso
-                mostrarFeedback(`${data.inseridos} participações adicionadas com sucesso!`, "sucesso");
-            } else {
-                // Mostrar o erro retornado pelo banco
-                mostrarFeedback(data.mensagem || 'Erro ao adicionar participações em lote', "erro");
-            }
+            // Definir tempo de espera (30 segundos)
+            const expiracao = Date.now() + 30000;
+            localStorage.setItem("tempoExpiracao", expiracao.toString());
+            setTempoEspera(30);
+            
+            // Forçar atualização da lista
+            await fetchParticipantes();
+            
+            // Mostrar mensagem de sucesso
+            mostrarFeedback("10 participações adicionadas com sucesso!", "sucesso");
+            
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
-            mostrarFeedback(`Erro ao adicionar participantes: ${error.message}`, "erro");
+            mostrarFeedback(`Erro: ${error.message}`, "erro");
         }
     };
 
