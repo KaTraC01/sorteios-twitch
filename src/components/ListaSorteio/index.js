@@ -379,71 +379,47 @@ function ListaSorteio({ onReiniciarLista }) {
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
+        // Número de inserções desejado
+        const numeroInserções = 10;
+
         try {
             // Mostrar feedback inicial
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
-            console.log("Iniciando chamada para API adicionar-varios");
-            
-            // Obter URL base (funciona tanto em dev quanto em produção)
-            const baseUrl = window.location.origin;
-            const apiUrl = `${baseUrl}/api/adicionar-varios`;
-            
-            console.log("URL da API:", apiUrl);
-            
-            // Chamar o endpoint de API para inserções em lote
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    nome: nomeSanitizado,
-                    streamer: streamerSanitizado,
-                    quantidade: 5
-                }),
-                cache: 'no-cache', // Evitar problemas de cache
-                credentials: 'same-origin' // Usar cookies, se necessário
+            // Usar a nova função do banco de dados para inserções em lote
+            const { data, error } = await supabase.rpc('inserir_participantes_lote', {
+                p_nome_twitch: nomeSanitizado,
+                p_streamer_escolhido: streamerSanitizado,
+                p_quantidade: numeroInserções
             });
-
-            console.log("Status da resposta:", response.status);
             
-            // Obter texto da resposta primeiro (mais seguro que json diretamente)
-            const responseText = await response.text();
-            console.log("Resposta texto:", responseText);
+            if (error) {
+                console.error('Erro ao adicionar participantes em lote:', error);
+                mostrarFeedback(`Erro ao adicionar participantes: ${error.message}`, "erro");
+                return;
+            }
             
-            let result;
-            if (responseText) {
-                try {
-                    result = JSON.parse(responseText);
-                } catch (jsonError) {
-                    console.error("Erro ao fazer parse da resposta:", jsonError);
-                    throw new Error("Erro no formato da resposta do servidor");
-                }
+            // Verificar o resultado
+            console.log('Resultado da inserção em lote:', data);
+            
+            if (data && data.sucesso) {
+                // Limpar o formulário
+                setNovoParticipante({ nome: "", streamer: "" });
+                
+                // Definir tempo de espera (30 segundos)
+                const expiracao = Date.now() + 30000;
+                localStorage.setItem("tempoExpiracao", expiracao.toString());
+                setTempoEspera(30);
+                
+                // Forçar atualização da lista
+                await fetchParticipantes();
+                
+                // Mostrar feedback de sucesso
+                mostrarFeedback(`${data.inseridos} participações adicionadas com sucesso!`, "sucesso");
             } else {
-                result = {};
+                // Mostrar o erro retornado pelo banco
+                mostrarFeedback(data.mensagem || 'Erro ao adicionar participações em lote', "erro");
             }
-
-            // Verificar se a resposta foi bem-sucedida
-            if (!response.ok) {
-                throw new Error(result.mensagem || result.error || 'Erro ao adicionar participações');
-            }
-
-            // Limpar o formulário
-            setNovoParticipante({ nome: "", streamer: "" });
-            
-            // Definir tempo de espera (30 segundos)
-            const expiracao = Date.now() + 30000;
-            localStorage.setItem("tempoExpiracao", expiracao.toString());
-            setTempoEspera(30);
-
-            // Forçar atualização da lista
-            await fetchParticipantes();
-
-            // Mostrar feedback baseado na resposta
-            mostrarFeedback(result.mensagem || `${result.quantidade || 5} participações adicionadas com sucesso!`, "sucesso");
-
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
             mostrarFeedback(`Erro ao adicionar participantes: ${error.message}`, "erro");
