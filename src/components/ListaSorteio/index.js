@@ -380,20 +380,42 @@ function ListaSorteio({ onReiniciarLista }) {
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
         try {
-            // Usar uma abordagem mais simples, adicionando cada entrada com um nome ligeiramente diferente
-            for (let i = 0; i < 10; i++) {
-                // Adicionar um número ao final do nome para tornar cada entrada única
-                const nomeComSufixo = `${nomeSanitizado}_${i+1}`;
-                
-                // Inserir com nome único
-                await supabase.from("participantes_ativos").insert({
-                    nome_twitch: nomeComSufixo,
-                    streamer_escolhido: streamerSanitizado,
-                });
-                
-                // Pequena pausa entre inserções
-                if (i < 9) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
+            // Preparar uma chamada SQL direta para fazer 10 inserções de uma vez
+            const sqlInsert = `
+                INSERT INTO participantes_ativos (nome_twitch, streamer_escolhido)
+                SELECT nome, streamer
+                FROM (
+                    VALUES 
+                    ('${nomeSanitizado}_1', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_2', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_3', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_4', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_5', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_6', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_7', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_8', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_9', '${streamerSanitizado}'),
+                    ('${nomeSanitizado}_10', '${streamerSanitizado}')
+                ) AS t(nome, streamer);
+            `;
+
+            // Usar o método rpc para executar SQL diretamente
+            const { error } = await supabase.rpc('executar_sql', { sql: sqlInsert });
+
+            if (error) throw error;
+
+            // Como alternativa, tente usar chamadas individuais se o rpc falhar
+            if (error) {
+                console.log("Tentando método alternativo com inserções individuais");
+                // Tenta adicionar manualmente uma por uma
+                for (let i = 0; i < 10; i++) {
+                    const nomeUnico = `${nomeSanitizado}_${i+1}_${Date.now()}`;
+                    await supabase.from("participantes_ativos").insert({
+                        nome_twitch: nomeUnico,
+                        streamer_escolhido: streamerSanitizado
+                    });
+                    // Pausa longa entre inserções
+                    await new Promise(resolve => setTimeout(resolve, 300));
                 }
             }
 
@@ -405,7 +427,8 @@ function ListaSorteio({ onReiniciarLista }) {
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(30);
 
-            // Forçar atualização da lista
+            // Forçar atualização da lista - usar uma pequena pausa antes de atualizar
+            await new Promise(resolve => setTimeout(resolve, 500));
             await fetchParticipantes();
 
             // Mostrar feedback de sucesso
@@ -414,6 +437,26 @@ function ListaSorteio({ onReiniciarLista }) {
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
             mostrarFeedback("Erro ao adicionar participantes. Tente novamente.", "erro");
+            
+            // Tenta usar abordagem de fallback em caso de erro
+            try {
+                for (let i = 0; i < 10; i++) {
+                    const nomeUnico = `${nomeSanitizado}_${i+1}_${Math.random().toString(36).substring(7)}`;
+                    await supabase.from("participantes_ativos").insert({
+                        nome_twitch: nomeUnico,
+                        streamer_escolhido: streamerSanitizado
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+                
+                // Forçar atualização da lista
+                await fetchParticipantes();
+                
+                // Feedback de sucesso após fallback
+                mostrarFeedback("10 participações adicionadas após retry!", "sucesso");
+            } catch (fallbackError) {
+                console.error("Erro no fallback:", fallbackError);
+            }
         }
     };
 
