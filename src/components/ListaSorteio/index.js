@@ -380,25 +380,20 @@ function ListaSorteio({ onReiniciarLista }) {
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
         try {
-            // Função auxiliar para gerar UUID v4 no lado do cliente
-            const generateUUID = () => {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
-            };
-
-            // Adicionar 10 participantes individualmente com UUIDs diferentes
+            // Usar uma abordagem mais simples, adicionando cada entrada com um nome ligeiramente diferente
             for (let i = 0; i < 10; i++) {
+                // Adicionar um número ao final do nome para tornar cada entrada única
+                const nomeComSufixo = `${nomeSanitizado}_${i+1}`;
+                
+                // Inserir com nome único
                 await supabase.from("participantes_ativos").insert({
-                    id: generateUUID(), // Adiciona um UUID único para cada entrada
-                    nome_twitch: nomeSanitizado,
+                    nome_twitch: nomeComSufixo,
                     streamer_escolhido: streamerSanitizado,
                 });
                 
-                // Pequena pausa para evitar problemas com a API
+                // Pequena pausa entre inserções
                 if (i < 9) {
-                    await new Promise(resolve => setTimeout(resolve, 50));
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
             }
 
@@ -410,7 +405,7 @@ function ListaSorteio({ onReiniciarLista }) {
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(30);
 
-            // Atualizar a lista manualmente
+            // Forçar atualização da lista
             await fetchParticipantes();
 
             // Mostrar feedback de sucesso
