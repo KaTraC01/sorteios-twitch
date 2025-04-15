@@ -484,11 +484,14 @@ function ListaSorteio({ onReiniciarLista }) {
         const linhasTabela = [];
         
         participantesPaginados.forEach((participante, index) => {
+            // Limpar o nome para exibição (remover prefixos numéricos)
+            const nomeExibicao = participante.nome_twitch.replace(/\[\d+\]$/, '');
+            
             // Adicionar o participante
             linhasTabela.push(
                 <tr key={`participante-${index}`}>
                     <td>{index + 1}</td>
-                    <td>{participante.nome_twitch}</td>
+                    <td>{nomeExibicao}</td>
                     <td>{participante.streamer_escolhido}</td>
                 </tr>
             );
