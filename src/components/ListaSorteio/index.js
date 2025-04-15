@@ -357,7 +357,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // Função para adicionar 10 participantes de uma vez
+    // Função para adicionar participantes de uma vez
     const adicionarDezParticipantes = async () => {
         // Validações básicas
         if (!novoParticipante.nome || !novoParticipante.streamer) {
@@ -379,28 +379,41 @@ function ListaSorteio({ onReiniciarLista }) {
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
+        // Defina o número de inserções (reduzido para 5 para evitar bloqueios)
+        const numeroInserções = 5;
+        let sucessos = 0;
+
         try {
-            // Abordagem simplificada - usar o método padrão do Supabase para garantir que as credenciais sejam incluídas
-            for (let i = 0; i < 10; i++) {
-                // Adicionar um identificador único para garantir entradas distintas
-                const nomeUnico = `${nomeSanitizado}_${i+1}`;
-                
-                // Usar a instância supabase que já está configurada com as credenciais corretas
-                const { error } = await supabase
-                    .from("participantes_ativos")
-                    .insert({
-                        nome_twitch: nomeUnico,
-                        streamer_escolhido: streamerSanitizado
-                    });
-                
-                if (error) {
-                    console.error(`Erro ao adicionar participante ${i+1}:`, error);
-                    throw error;
-                }
-                
-                // Pequena pausa entre inserções
-                if (i < 9) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
+            // Mostrar feedback inicial
+            mostrarFeedback("Adicionando participações, aguarde...", "aviso");
+            
+            // Inserir participantes com intervalo maior entre cada um
+            for (let i = 0; i < numeroInserções; i++) {
+                try {
+                    // Adicionar um identificador único para garantir entradas distintas
+                    const nomeUnico = `${nomeSanitizado}_${i+1}`;
+                    
+                    // Fazer a inserção
+                    const { error } = await supabase
+                        .from("participantes_ativos")
+                        .insert({
+                            nome_twitch: nomeUnico,
+                            streamer_escolhido: streamerSanitizado
+                        });
+                    
+                    if (error) {
+                        console.error(`Erro ao adicionar participante ${i+1}:`, error);
+                        // Continuar tentando as outras inserções
+                    } else {
+                        sucessos++;
+                    }
+                    
+                    // Esperar tempo suficiente entre inserções (3 segundos)
+                    // Esta pausa longa é necessária devido à restrição "aguarde alguns segundos entre participações"
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                } catch (innerError) {
+                    console.error(`Erro na inserção ${i+1}:`, innerError);
                 }
             }
 
@@ -415,8 +428,8 @@ function ListaSorteio({ onReiniciarLista }) {
             // Forçar atualização da lista
             await fetchParticipantes();
 
-            // Mostrar feedback de sucesso
-            mostrarFeedback("10 participações adicionadas com sucesso!", "sucesso");
+            // Mostrar feedback de sucesso com o número real de participações adicionadas
+            mostrarFeedback(`${sucessos} participações adicionadas com sucesso!`, "sucesso");
 
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
