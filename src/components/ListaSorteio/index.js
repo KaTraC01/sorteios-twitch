@@ -383,15 +383,15 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
-            console.log("Iniciando chamada para adicionar-varios");
+            console.log("Iniciando chamada para API adicionar-varios");
             
-            // URL absoluta para evitar problemas de roteamento
+            // Obter URL base (funciona tanto em dev quanto em produção)
             const baseUrl = window.location.origin;
             const apiUrl = `${baseUrl}/api/adicionar-varios`;
             
             console.log("URL da API:", apiUrl);
             
-            // Chamar o novo endpoint de API para inserções em lote
+            // Chamar o endpoint de API para inserções em lote
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -401,22 +401,31 @@ function ListaSorteio({ onReiniciarLista }) {
                 body: JSON.stringify({
                     nome: nomeSanitizado,
                     streamer: streamerSanitizado,
-                    quantidade: 10
+                    quantidade: 5
                 }),
+                cache: 'no-cache', // Evitar problemas de cache
+                credentials: 'same-origin' // Usar cookies, se necessário
             });
 
             console.log("Status da resposta:", response.status);
             
+            // Obter texto da resposta primeiro (mais seguro que json diretamente)
+            const responseText = await response.text();
+            console.log("Resposta texto:", responseText);
+            
             let result;
-            try {
-                const textResponse = await response.text();
-                console.log("Resposta texto:", textResponse);
-                result = textResponse ? JSON.parse(textResponse) : {};
-            } catch (jsonError) {
-                console.error("Erro ao processar resposta JSON:", jsonError);
-                throw new Error("Erro ao processar resposta do servidor");
+            if (responseText) {
+                try {
+                    result = JSON.parse(responseText);
+                } catch (jsonError) {
+                    console.error("Erro ao fazer parse da resposta:", jsonError);
+                    throw new Error("Erro no formato da resposta do servidor");
+                }
+            } else {
+                result = {};
             }
 
+            // Verificar se a resposta foi bem-sucedida
             if (!response.ok) {
                 throw new Error(result.mensagem || result.error || 'Erro ao adicionar participações');
             }
@@ -433,7 +442,7 @@ function ListaSorteio({ onReiniciarLista }) {
             await fetchParticipantes();
 
             // Mostrar feedback baseado na resposta
-            mostrarFeedback(result.mensagem || `${result.quantidade} participações adicionadas com sucesso!`, "sucesso");
+            mostrarFeedback(result.mensagem || `${result.quantidade || 5} participações adicionadas com sucesso!`, "sucesso");
 
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
