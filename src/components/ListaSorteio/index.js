@@ -383,11 +383,20 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
+            console.log("Iniciando chamada para adicionar-varios");
+            
+            // URL absoluta para evitar problemas de roteamento
+            const baseUrl = window.location.origin;
+            const apiUrl = `${baseUrl}/api/adicionar-varios`;
+            
+            console.log("URL da API:", apiUrl);
+            
             // Chamar o novo endpoint de API para inserções em lote
-            const response = await fetch('/api/adicionar-varios', {
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     nome: nomeSanitizado,
@@ -396,10 +405,20 @@ function ListaSorteio({ onReiniciarLista }) {
                 }),
             });
 
-            const result = await response.json();
+            console.log("Status da resposta:", response.status);
+            
+            let result;
+            try {
+                const textResponse = await response.text();
+                console.log("Resposta texto:", textResponse);
+                result = textResponse ? JSON.parse(textResponse) : {};
+            } catch (jsonError) {
+                console.error("Erro ao processar resposta JSON:", jsonError);
+                throw new Error("Erro ao processar resposta do servidor");
+            }
 
             if (!response.ok) {
-                throw new Error(result.mensagem || 'Erro ao adicionar participações');
+                throw new Error(result.mensagem || result.error || 'Erro ao adicionar participações');
             }
 
             // Limpar o formulário
