@@ -379,42 +379,27 @@ function ListaSorteio({ onReiniciarLista }) {
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
-        // Defina o número de inserções (reduzido para 5 para evitar bloqueios)
-        const numeroInserções = 5;
-        let sucessos = 0;
-
         try {
             // Mostrar feedback inicial
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
-            // Inserir participantes com intervalo maior entre cada um
-            for (let i = 0; i < numeroInserções; i++) {
-                try {
-                    // Adicionar um identificador único para garantir entradas distintas
-                    const nomeUnico = `${nomeSanitizado}_${i+1}`;
-                    
-                    // Fazer a inserção
-                    const { error } = await supabase
-                        .from("participantes_ativos")
-                        .insert({
-                            nome_twitch: nomeUnico,
-                            streamer_escolhido: streamerSanitizado
-                        });
-                    
-                    if (error) {
-                        console.error(`Erro ao adicionar participante ${i+1}:`, error);
-                        // Continuar tentando as outras inserções
-                    } else {
-                        sucessos++;
-                    }
-                    
-                    // Esperar tempo suficiente entre inserções (3 segundos)
-                    // Esta pausa longa é necessária devido à restrição "aguarde alguns segundos entre participações"
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    
-                } catch (innerError) {
-                    console.error(`Erro na inserção ${i+1}:`, innerError);
-                }
+            // Chamar o novo endpoint de API para inserções em lote
+            const response = await fetch('/api/adicionar-varios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nome: nomeSanitizado,
+                    streamer: streamerSanitizado,
+                    quantidade: 10
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.mensagem || 'Erro ao adicionar participações');
             }
 
             // Limpar o formulário
@@ -428,8 +413,8 @@ function ListaSorteio({ onReiniciarLista }) {
             // Forçar atualização da lista
             await fetchParticipantes();
 
-            // Mostrar feedback de sucesso com o número real de participações adicionadas
-            mostrarFeedback(`${sucessos} participações adicionadas com sucesso!`, "sucesso");
+            // Mostrar feedback baseado na resposta
+            mostrarFeedback(result.mensagem || `${result.quantidade} participações adicionadas com sucesso!`, "sucesso");
 
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
