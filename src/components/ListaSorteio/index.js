@@ -380,9 +380,18 @@ function ListaSorteio({ onReiniciarLista }) {
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
 
         try {
-            // Adicionar 10 participantes individualmente
+            // Função auxiliar para gerar UUID v4 no lado do cliente
+            const generateUUID = () => {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            };
+
+            // Adicionar 10 participantes individualmente com UUIDs diferentes
             for (let i = 0; i < 10; i++) {
                 await supabase.from("participantes_ativos").insert({
+                    id: generateUUID(), // Adiciona um UUID único para cada entrada
                     nome_twitch: nomeSanitizado,
                     streamer_escolhido: streamerSanitizado,
                 });
