@@ -484,8 +484,12 @@ function ListaSorteio({ onReiniciarLista }) {
         const linhasTabela = [];
         
         participantesPaginados.forEach((participante, index) => {
-            // Limpar o nome para exibição (remover prefixos numéricos)
-            const nomeExibicao = participante.nome_twitch.replace(/\[\d+\]$/, '');
+            // Limpar o nome para exibição (remover qualquer tipo de prefixo numérico)
+            // Remove tanto padrões como "teste[1]" quanto "teste1", "teste #2", etc.
+            const nomeExibicao = participante.nome_twitch
+                .replace(/\[\d+\]$/, '')         // Remove [1], [2], etc. no final
+                .replace(/\s*#\d+$/, '')         // Remove #1, #2, etc. no final
+                .replace(/\d+$/, '');            // Remove números no final (teste1, teste2)
             
             // Adicionar o participante
             linhasTabela.push(
