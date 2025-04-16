@@ -210,13 +210,15 @@ table {
 
 /* Ajustar largura das colunas da tabela */
 th:first-child, td:first-child {
-    width: 8%; /* Reduzido: Coluna de número */
-    min-width: 30px;
+    width: 10%; /* Aumentado: Coluna de número */
+    min-width: 35px;
+    text-align: center;
+    white-space: nowrap; /* Evita que o número quebre em múltiplas linhas */
 }
 
 th:nth-child(2), td:nth-child(2),
 th:nth-child(3), td:nth-child(3) {
-    width: 46%; /* Colunas de nome e streamer */
+    width: 45%; /* Colunas de nome e streamer - ajustadas para compensar */
 }
 
 th, td {

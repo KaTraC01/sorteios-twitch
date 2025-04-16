@@ -54,15 +54,15 @@
 
 .historico-tabela th:nth-child(2), 
 .historico-tabela td:nth-child(2) {
-    width: 6%; /* Número - reduzido ainda mais */
-    min-width: 20px;
+    width: 12%; /* Número - alargado para evitar quebra de números */
+    min-width: 40px;
 }
 
 .historico-tabela th:nth-child(3), 
 .historico-tabela td:nth-child(3),
 .historico-tabela th:nth-child(4), 
 .historico-tabela td:nth-child(4) {
-    width: 20%; /* Nome e Streamer - reduzido ainda mais */
+    width: 18%; /* Nome e Streamer - ajustado para compensar */
     word-break: break-word;
 }
 
