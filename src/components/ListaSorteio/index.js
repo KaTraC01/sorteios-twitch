@@ -395,8 +395,8 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
-            // Chamar a função RPC do Supabase para adicionar 10 participantes
-            const { data, error } = await supabase.rpc('inserir_participantes_lote', {
+            // Chamar a nova função RPC do Supabase para adicionar participantes sem números
+            const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
                 quantidade: 10
@@ -444,12 +444,17 @@ function ListaSorteio({ onReiniciarLista }) {
         let mensagensErro = [];
         
         try {
+            // Registrar lote no log para que o trigger de rate limit permita
+            await supabase.from("logs").insert([{
+                descricao: `Lote autorizado: ${nome} - iniciando ${quantidade} inserções (fallback)`
+            }]);
+            
             for (let i = 1; i <= quantidade; i++) {
                 try {
-                    // Adicionar numeração ao final do nome usando formato "#N" para clareza visual
+                    // Inserir o mesmo nome sem numeração
                     const { error } = await supabase.from("participantes_ativos").insert([
                         {
-                            nome_twitch: `${nome} #${i}`,
+                            nome_twitch: nome,
                             streamer_escolhido: streamer,
                         },
                     ]);
@@ -466,6 +471,11 @@ function ListaSorteio({ onReiniciarLista }) {
                     mensagensErro.push(`Exceção ao inserir ${i}: ${err.message}`);
                 }
             }
+            
+            // Registrar conclusão do lote
+            await supabase.from("logs").insert([{
+                descricao: `Conclusão do lote: ${nome} - inseridos ${inseridos}/${quantidade} (fallback)`
+            }]);
             
             // Limpar o formulário
             setNovoParticipante({ nome: "", streamer: "" });
