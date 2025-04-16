@@ -372,7 +372,6 @@ function ListaSorteio({ onReiniciarLista }) {
 
     // Função para adicionar participantes de uma vez
     const adicionarDezParticipantes = async () => {
-        // Validações básicas
         if (!novoParticipante.nome || !novoParticipante.streamer) {
             mostrarFeedback("Por favor, preencha todos os campos.", "erro");
             return;
@@ -405,28 +404,89 @@ function ListaSorteio({ onReiniciarLista }) {
             
             if (error) {
                 console.error("Erro ao adicionar participantes em lote:", error);
-                mostrarFeedback(`Erro: ${error.message}`, "erro");
-                return;
+                // FALLBACK: Se a RPC falhar, inserir manualmente os participantes
+                mostrarFeedback("Usando método alternativo de inserção...", "aviso");
+                await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 5);
+            } else {
+                // Processamento normal se a RPC funcionou
+                // Limpar o formulário
+                setNovoParticipante({ nome: "", streamer: "" });
+                
+                // Definir tempo de espera (30 segundos)
+                const expiracao = Date.now() + 30000;
+                localStorage.setItem("tempoExpiracao", expiracao.toString());
+                setTempoEspera(30);
+                
+                // Mostrar mensagem de sucesso com o número real de inserções
+                if (data && data.sucesso) {
+                    const quantidade = data.inseridos || 10;
+                    mostrarFeedback(`${quantidade} participações adicionadas com sucesso!`, "sucesso");
+                } else if (data) {
+                    // Se a operação falhou mas retornou uma mensagem
+                    mostrarFeedback(data.mensagem || "Erro ao adicionar participantes", "erro");
+                } else {
+                    mostrarFeedback("10 participações adicionadas com sucesso!", "sucesso");
+                }
             }
             
-            // Limpar o formulário
-            setNovoParticipante({ nome: "", streamer: "" });
-            
-            // Definir tempo de espera (30 segundos)
-            const expiracao = Date.now() + 30000;
-            localStorage.setItem("tempoExpiracao", expiracao.toString());
-            setTempoEspera(30);
-            
-            // Forçar atualização da lista
+            // Forçar atualização da lista independentemente do método usado
             await fetchParticipantes();
-            
-            // Mostrar mensagem de sucesso
-            mostrarFeedback("10 participações adicionadas com sucesso!", "sucesso");
             
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
             mostrarFeedback(`Erro: ${error.message}`, "erro");
         }
+    };
+
+    // Método fallback para inserção manual de participantes
+    const inserirParticipantesManualmente = async (nome, streamer, quantidade) => {
+        let inseridos = 0;
+        let mensagensErro = [];
+        
+        try {
+            for (let i = 1; i <= quantidade; i++) {
+                try {
+                    // Adicionar numeração ao final do nome usando formato "#N" para clareza visual
+                    const { error } = await supabase.from("participantes_ativos").insert([
+                        {
+                            nome_twitch: `${nome} #${i}`,
+                            streamer_escolhido: streamer,
+                        },
+                    ]);
+                    
+                    if (error) {
+                        mensagensErro.push(`Erro ao inserir ${i}: ${error.message}`);
+                        console.error(`Erro ao inserir participante ${i}:`, error);
+                    } else {
+                        inseridos++;
+                        // Pequena pausa entre inserções para evitar rate limiting
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                } catch (err) {
+                    mensagensErro.push(`Exceção ao inserir ${i}: ${err.message}`);
+                }
+            }
+            
+            // Limpar o formulário
+            setNovoParticipante({ nome: "", streamer: "" });
+            
+            // Definir tempo de espera (15 segundos para o método manual)
+            const expiracao = Date.now() + 15000;
+            localStorage.setItem("tempoExpiracao", expiracao.toString());
+            setTempoEspera(15);
+            
+            if (inseridos > 0) {
+                mostrarFeedback(`${inseridos} participações adicionadas com sucesso!`, "sucesso");
+            } else {
+                mostrarFeedback("Não foi possível adicionar participantes. Tente novamente mais tarde.", "erro");
+                console.error("Erros durante inserção manual:", mensagensErro);
+            }
+        } catch (error) {
+            console.error("Erro na inserção manual:", error);
+            mostrarFeedback("Erro ao adicionar participantes manualmente.", "erro");
+        }
+        
+        return inseridos;
     };
 
     // Função para mostrar feedback
@@ -484,12 +544,9 @@ function ListaSorteio({ onReiniciarLista }) {
         const linhasTabela = [];
         
         participantesPaginados.forEach((participante, index) => {
-            // Limpar o nome para exibição (remover qualquer tipo de prefixo numérico)
-            // Remove tanto padrões como "teste[1]" quanto "teste1", "teste #2", etc.
-            const nomeExibicao = participante.nome_twitch
-                .replace(/\[\d+\]$/, '')         // Remove [1], [2], etc. no final
-                .replace(/\s*#\d+$/, '')         // Remove #1, #2, etc. no final
-                .replace(/\d+$/, '');            // Remove números no final (teste1, teste2)
+            // Usar o nome completo sem remover os números
+            // Isso permite que os números nos nomes sejam exibidos na tabela
+            const nomeExibicao = participante.nome_twitch;
             
             // Adicionar o participante
             linhasTabela.push(
