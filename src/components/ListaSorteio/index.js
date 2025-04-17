@@ -33,6 +33,8 @@ function ListaSorteio({ onReiniciarLista }) {
     // Estados para controlar a paginação
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [itensPorPagina, setItensPorPagina] = useState(10);
+    // Novo estado para controlar a visibilidade do anúncio de tela inteira
+    const [mostrarAnuncioTelaInteira, setMostrarAnuncioTelaInteira] = useState(false);
 
     // Função para verificar o tempo de espera baseado na expiração
     const verificarTempoEspera = () => {
@@ -370,7 +372,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // Função para adicionar participantes de uma vez
+    // Função para adicionar participantes de uma vez - atualizada para mostrar anúncio de tela inteira
     const adicionarDezParticipantes = async () => {
         if (!novoParticipante.nome || !novoParticipante.streamer) {
             mostrarFeedback("Por favor, preencha todos os campos.", "erro");
@@ -387,6 +389,17 @@ function ListaSorteio({ onReiniciarLista }) {
             return;
         }
 
+        // Mostrar anúncio de tela inteira antes de adicionar participantes
+        setMostrarAnuncioTelaInteira(true);
+        
+        // As chamadas para adicionar os participantes serão feitas quando o anúncio for fechado
+        // ou o usuário clicar no anúncio, através do componente de anúncio
+    };
+    
+    // Nova função para processar a adição de participantes após o anúncio
+    const processarAdicaoParticipantes = async () => {
+        setMostrarAnuncioTelaInteira(false);
+        
         // Sanitizar entradas
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
@@ -395,7 +408,7 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
-            // Chamar a nova função RPC do Supabase para adicionar participantes sem números
+            // Chamar a função RPC do Supabase para adicionar participantes sem números
             const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
@@ -689,6 +702,23 @@ function ListaSorteio({ onReiniciarLista }) {
 
             {/* Anúncio de vídeo no final da lista */}
             <Anuncio tipo="video" posicao="rodape" mostrarFechar={true} />
+
+            {/* Anúncio de tela inteira quando o botão +10 é clicado */}
+            {mostrarAnuncioTelaInteira && (
+                <Anuncio 
+                    tipo="tela-inteira"
+                    titulo="PROMOÇÃO EXCLUSIVA"
+                    descricao="Para adicionar +10 participações, confira nossa oferta especial"
+                    urlDestino="#"
+                    imagemSrc="/images/promo.jpg" // Opcional: O caminho para a imagem do anúncio
+                    mostrarFechar={true}
+                    avisos="Ao clicar você concorda com os termos de uso."
+                    onFechar={() => {
+                        setMostrarAnuncioTelaInteira(false);
+                        processarAdicaoParticipantes();
+                    }}
+                />
+            )}
         </div>
     );
 }

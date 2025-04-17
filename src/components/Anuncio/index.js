@@ -15,7 +15,8 @@ const Anuncio = ({
   cor,
   corTexto,
   mostrarFechar = true,
-  mostrarPresente = false
+  mostrarPresente = false,
+  onFechar = null
 }) => {
   const [fechado, setFechado] = useState(false);
   
@@ -32,6 +33,10 @@ const Anuncio = ({
   const handleFechar = (e) => {
     e.preventDefault();
     setFechado(true);
+    
+    if (onFechar && typeof onFechar === 'function') {
+      onFechar();
+    }
   };
   
   if (fechado) {
@@ -143,6 +148,61 @@ const Anuncio = ({
               ✖
             </button>
           )}
+        </div>
+      );
+    
+    case 'tela-inteira':
+      return (
+        <div className="anuncio-tela-inteira">
+          <div className="anuncio-tela-inteira-container" style={estiloPersonalizado}>
+            <div className="anuncio-tag">PUBLICIDADE</div>
+            
+            {mostrarFechar && (
+              <button className="anuncio-tela-inteira-fechar" onClick={handleFechar}>
+                ✖
+              </button>
+            )}
+            
+            <a 
+              href={urlDestino} 
+              className="anuncio-link" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onFechar && typeof onFechar === 'function') {
+                  onFechar();
+                } else {
+                  window.open(urlDestino, '_blank');
+                }
+              }}
+            >
+              {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+              
+              <h2 className="anuncio-tela-inteira-titulo">
+                {titulo || "OFERTA ESPECIAL"}
+              </h2>
+              
+              <h3 className="anuncio-tela-inteira-subtitulo">
+                {descricao || "Para continuar adicionando +10 participações"}
+              </h3>
+              
+              {imagemSrc && (
+                <img 
+                  src={imagemSrc} 
+                  alt={titulo || "Anúncio"} 
+                  className="anuncio-tela-inteira-imagem" 
+                />
+              )}
+              
+              <button className="anuncio-tela-inteira-botao">
+                CLIQUE PARA CONTINUAR
+              </button>
+              
+              {avisos && <p className="anuncio-tela-inteira-aviso">{avisos}</p>}
+              {idade && <span className="anuncio-tag">+{idade}</span>}
+            </a>
+          </div>
         </div>
       );
     
