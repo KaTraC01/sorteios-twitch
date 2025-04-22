@@ -48,4 +48,4 @@ UPDATE configuracoes SET valor = 'true' WHERE chave = 'lista_congelada';
 
 - Sempre faça backup do banco de dados antes de executar scripts de manutenção
 - Os scripts na pasta `historico/` são mantidos apenas para referência e não devem ser executados
-- Os triggers e funções são criados automaticamente pelo script de manutenção 
+- Os triggers e funções são criados automaticamente pelo script de manutenção.
