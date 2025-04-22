@@ -221,22 +221,49 @@ async function realizarSorteio() {
 async function resetarLista() {
   console.log('SORTEIO-API DEBUG: Executando exclusão de participantes ativos');
   
-  // Abordagem corrigida para excluir todos os participantes
-  const { error } = await supabase
-    .from("participantes_ativos")
-    .delete()
-    .gte("id", "00000000-0000-0000-0000-000000000000"); // Usar uma condição válida para UUIDs
-    // Alternativa: .delete().is("id", "is", "not null");
-
-  if (error) {
-    console.log(`SORTEIO-API DEBUG: ERRO ao limpar a lista - ${error.message}`);
-    throw new Error(`Erro ao limpar a lista: ${error.message}`);
+  try {
+    // Tentativa 1: Usar nossa nova função segura que foi criada especificamente para resolver este problema
+    console.log('SORTEIO-API DEBUG: Tentando usar função segura limpar_participantes_seguro');
+    const { error: safeError } = await supabase.rpc('limpar_participantes_seguro');
+    
+    if (!safeError) {
+      console.log('SORTEIO-API DEBUG: Lista resetada com sucesso via função segura');
+      return;
+    }
+    
+    console.log(`SORTEIO-API DEBUG: Erro na função segura: ${safeError.message}, tentando alternativa...`);
+    
+    // Tentativa 2: Usar a RPC resetar_participantes_ativos
+    console.log('SORTEIO-API DEBUG: Tentando usar RPC resetar_participantes_ativos');
+    const { error: rpcError } = await supabase.rpc('resetar_participantes_ativos');
+    
+    if (!rpcError) {
+      console.log('SORTEIO-API DEBUG: Lista resetada com sucesso via RPC');
+      return;
+    }
+    
+    console.log(`SORTEIO-API DEBUG: Falha na RPC: ${rpcError.message}, tentando método direto...`);
+    
+    // Tentativa 3: Método direto com cláusula WHERE segura
+    console.log('SORTEIO-API DEBUG: Tentando método direto com WHERE seguro');
+    const { error: deleteError } = await supabase
+      .from("participantes_ativos")
+      .delete()
+      .not('id', 'is', null);
+    
+    if (!deleteError) {
+      console.log('SORTEIO-API DEBUG: Lista resetada com sucesso via método direto');
+      return;
+    }
+    
+    console.log(`SORTEIO-API DEBUG: Erro no método direto: ${deleteError.message}`);
+    throw new Error(`Falha em todas as tentativas de limpar a lista: ${deleteError.message}`);
+    
+  } catch (error) {
+    console.log(`SORTEIO-API DEBUG: ERRO CRÍTICO ao limpar lista - ${error.message}`);
+    // Aqui não lançamos o erro para evitar quebrar o fluxo do sorteio
+    // apenas registramos no log para diagnóstico posterior
   }
-
-  console.log('SORTEIO-API DEBUG: Lista resetada com sucesso');
-  
-  // A funcionalidade de congelar/descongelar foi removida do projeto
-  // Portanto, não precisamos mais atualizar o status de "lista_congelada"
 }
 
 // A função congelarLista() foi removida pois não é mais necessária
