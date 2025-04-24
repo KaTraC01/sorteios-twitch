@@ -2,6 +2,7 @@
 import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "./ListaSorteio.css"; // Importando o CSS
 import Anuncio from "../Anuncio"; // Importando o componente de anúncio
+import PlataformaIcon from "../PlataformaIcon"; // Importando o componente de ícone de plataforma
 
 // Função de sanitização de entrada
 const sanitizarEntrada = (texto) => {
@@ -22,7 +23,7 @@ const sanitizarEntrada = (texto) => {
 
 function ListaSorteio({ onReiniciarLista }) {
     const [participantes, setParticipantes] = useState([]);
-    const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "" });
+    const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "", plataforma: "twitch" });
     const [tempoEspera, setTempoEspera] = useState(0);
     const [listaCongelada, setListaCongelada] = useState(false);
     const [sorteioRealizado, setSorteioRealizado] = useState(false);
@@ -89,7 +90,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 nome: vencedor.nome,
                 streamer: vencedor.streamer,
                 numero: vencedor.numero,
-                data: new Date(vencedor.data).toLocaleDateString('pt-BR')
+                data: new Date(vencedor.data).toLocaleDateString('pt-BR'),
+                plataforma: vencedor.plataforma_premio || "twitch"
             });
             
             // Salva no localStorage também como backup
@@ -97,7 +99,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 nome: vencedor.nome,
                 streamer: vencedor.streamer,
                 numero: vencedor.numero,
-                data: new Date(vencedor.data).toLocaleDateString('pt-BR')
+                data: new Date(vencedor.data).toLocaleDateString('pt-BR'),
+                plataforma: vencedor.plataforma_premio || "twitch"
             }));
         }
     };
@@ -206,7 +209,8 @@ function ListaSorteio({ onReiniciarLista }) {
             nome: vencedor.nome_twitch,
             streamer: vencedor.streamer_escolhido,
             numero: vencedorIndex + 1,
-            data: dataFormatada
+            data: dataFormatada,
+            plataforma: vencedor.plataforma_premio || "twitch"
         };
         
         // Atualiza o estado e salva no localStorage
@@ -235,6 +239,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     numero: vencedorIndex + 1,
                     nome: vencedor.nome_twitch,
                     streamer: vencedor.streamer_escolhido,
+                    plataforma_premio: vencedor.plataforma_premio || "twitch"
                 },
             ]).select();
 
@@ -251,7 +256,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 const participantesHistorico = participantes.map(participante => ({
                     sorteio_id: sorteioId,
                     nome_twitch: participante.nome_twitch,
-                    streamer_escolhido: participante.streamer_escolhido
+                    streamer_escolhido: participante.streamer_escolhido,
+                    plataforma_premio: participante.plataforma_premio || "twitch"
                 }));
                 
                 // Insere todos os participantes no histórico
@@ -332,15 +338,17 @@ function ListaSorteio({ onReiniciarLista }) {
         // Sanitizar entradas
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
+        const plataformaSelecionada = novoParticipante.plataforma;
 
         try {
-            console.log("Adicionando participante:", nomeSanitizado, streamerSanitizado);
+            console.log("Adicionando participante:", nomeSanitizado, streamerSanitizado, plataformaSelecionada);
             
             // Inserir no Supabase
             const { data, error } = await supabase.from("participantes_ativos").insert([
                 {
                     nome_twitch: nomeSanitizado,
                     streamer_escolhido: streamerSanitizado,
+                    plataforma_premio: plataformaSelecionada
                 },
             ]).select();
 
@@ -352,8 +360,8 @@ function ListaSorteio({ onReiniciarLista }) {
 
             console.log("Participante adicionado com sucesso:", data);
             
-            // Limpar o formulário
-            setNovoParticipante({ nome: "", streamer: "" });
+            // Limpar o formulário, mas manter a plataforma selecionada
+            setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
             
             // Definir tempo de espera (10 segundos)
             const expiracao = Date.now() + 10000;
@@ -403,6 +411,7 @@ function ListaSorteio({ onReiniciarLista }) {
         // Sanitizar entradas
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
+        const plataformaSelecionada = novoParticipante.plataforma;
 
         try {
             // Mostrar feedback inicial
@@ -412,18 +421,19 @@ function ListaSorteio({ onReiniciarLista }) {
             const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
-                quantidade: 10
+                quantidade: 10,
+                plataforma: plataformaSelecionada
             });
             
             if (error) {
                 console.error("Erro ao adicionar participantes em lote:", error);
                 // FALLBACK: Se a RPC falhar, inserir manualmente os participantes
                 mostrarFeedback("Usando método alternativo de inserção...", "aviso");
-                await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 5);
+                await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 5, plataformaSelecionada);
             } else {
                 // Processamento normal se a RPC funcionou
                 // Limpar o formulário
-                setNovoParticipante({ nome: "", streamer: "" });
+                setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
                 
                 // Definir tempo de espera (30 segundos)
                 const expiracao = Date.now() + 30000;
@@ -452,7 +462,7 @@ function ListaSorteio({ onReiniciarLista }) {
     };
 
     // Método fallback para inserção manual de participantes
-    const inserirParticipantesManualmente = async (nome, streamer, quantidade) => {
+    const inserirParticipantesManualmente = async (nome, streamer, quantidade, plataforma) => {
         let inseridos = 0;
         let mensagensErro = [];
         
@@ -469,6 +479,7 @@ function ListaSorteio({ onReiniciarLista }) {
                         {
                             nome_twitch: nome,
                             streamer_escolhido: streamer,
+                            plataforma_premio: plataforma
                         },
                     ]);
                     
@@ -490,8 +501,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 descricao: `Conclusão do lote: ${nome} - inseridos ${inseridos}/${quantidade} (fallback)`
             }]);
             
-            // Limpar o formulário
-            setNovoParticipante({ nome: "", streamer: "" });
+            // Limpar o formulário mas manter a plataforma
+            setNovoParticipante({ nome: "", streamer: "", plataforma });
             
             // Definir tempo de espera (15 segundos para o método manual)
             const expiracao = Date.now() + 15000;
@@ -558,7 +569,7 @@ function ListaSorteio({ onReiniciarLista }) {
         if (!participantesPaginados || participantesPaginados.length === 0) {
             return (
                 <tr>
-                    <td colSpan="3">Nenhum participante encontrado</td>
+                    <td colSpan="4">Nenhum participante encontrado</td>
                 </tr>
             );
         }
@@ -570,6 +581,7 @@ function ListaSorteio({ onReiniciarLista }) {
             // Usar o nome completo sem remover os números
             // Isso permite que os números nos nomes sejam exibidos na tabela
             const nomeExibicao = participante.nome_twitch;
+            const plataforma = participante.plataforma_premio || "twitch";
             
             // Adicionar o participante
             linhasTabela.push(
@@ -577,6 +589,9 @@ function ListaSorteio({ onReiniciarLista }) {
                     <td>{index + 1}</td>
                     <td>{nomeExibicao}</td>
                     <td>{participante.streamer_escolhido}</td>
+                    <td className="coluna-plataforma">
+                        <PlataformaIcon plataforma={plataforma} tamanho="pequeno" />
+                    </td>
                 </tr>
             );
             
@@ -584,7 +599,7 @@ function ListaSorteio({ onReiniciarLista }) {
             if (index === 9) {
                 linhasTabela.push(
                     <tr key="propaganda-linha-10-11" className="linha-propaganda">
-                        <td colSpan="3" className="anuncio-entre-linhas">
+                        <td colSpan="4" className="anuncio-entre-linhas">
                             <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
                         </td>
                     </tr>
@@ -597,7 +612,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 
                 linhasTabela.push(
                     <tr key={`propaganda-${index}`} className="linha-propaganda">
-                        <td colSpan="3">
+                        <td colSpan="4">
                             <Anuncio tipo={tipoAleatorio} posicao="na-tabela" mostrarFechar={true} />
                         </td>
                     </tr>
@@ -634,6 +649,19 @@ function ListaSorteio({ onReiniciarLista }) {
                             <div className="detalhe-label"><span className="icon-date">📅</span> Data</div>
                             <div className="detalhe-valor">{ultimoVencedor.data}</div>
                         </div>
+                        <div className="detalhe">
+                            <div className="detalhe-label"><span className="icon-platform">🎥</span> Plataforma</div>
+                            <div className="detalhe-valor">
+                                {ultimoVencedor.plataforma || "twitch"}
+                                <span className="plataforma-emoji">
+                                    {ultimoVencedor.plataforma === "youtube" ? <PlataformaIcon plataforma="youtube" tamanho="pequeno" /> :
+                                     ultimoVencedor.plataforma === "steam" ? <PlataformaIcon plataforma="steam" tamanho="pequeno" /> :
+                                     ultimoVencedor.plataforma === "xbox" ? <PlataformaIcon plataforma="xbox" tamanho="pequeno" /> :
+                                     ultimoVencedor.plataforma === "playstation" ? <PlataformaIcon plataforma="playstation" tamanho="pequeno" /> : 
+                                     <PlataformaIcon plataforma="twitch" tamanho="pequeno" />}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -645,6 +673,7 @@ function ListaSorteio({ onReiniciarLista }) {
             {mostrarInstrucoes && (
                 <div className="instrucoes">
                     <p>• Preencha com seu nickname da Twitch e o nome do Streamer que você deseja apoiar.</p>
+                    <p>• Selecione em qual plataforma deseja receber o prêmio, caso seja sorteado (seu prêmio será entregue nesta plataforma).</p>
                     <p>• Você pode participar várias vezes.</p>
                     <p>• É permitido escolher streamers diferentes a cada participação.</p>
                     <p>• Os sorteios acontecem todos os dias, de forma aleatória, entre 21h e 22h.</p>
@@ -670,6 +699,20 @@ function ListaSorteio({ onReiniciarLista }) {
                     disabled={listaCongelada}
                     maxLength={25}
                 />
+                <select
+                    value={novoParticipante.plataforma}
+                    onChange={(e) => setNovoParticipante({ ...novoParticipante, plataforma: e.target.value })}
+                    disabled={listaCongelada}
+                    className="plataforma-select"
+                >
+                    <option value="twitch">Twitch</option>
+                    {/* 
+                    <option value="youtube">YouTube</option>
+                    <option value="steam">Steam</option>
+                    <option value="xbox">Xbox</option>
+                    <option value="playstation">PlayStation</option>
+                    */}
+                </select>
                 <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
                     {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
                 </button>
@@ -687,6 +730,7 @@ function ListaSorteio({ onReiniciarLista }) {
                         <th>#</th>
                         <th>Nome na Twitch</th>
                         <th>Streamer</th>
+                        <th>🎥</th>
                     </tr>
                 </thead>
                 <tbody>

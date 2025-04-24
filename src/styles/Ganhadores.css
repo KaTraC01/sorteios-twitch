@@ -54,21 +54,28 @@
 
 .historico-tabela th:nth-child(2), 
 .historico-tabela td:nth-child(2) {
-    width: 12%; /* Número - alargado para evitar quebra de números */
-    min-width: 40px;
+    width: 6%; /* Número - reduzido */
+    min-width: 30px;
 }
 
 .historico-tabela th:nth-child(3), 
 .historico-tabela td:nth-child(3),
 .historico-tabela th:nth-child(4), 
 .historico-tabela td:nth-child(4) {
-    width: 18%; /* Nome e Streamer - ajustado para compensar */
+    width: 16%; /* Nome e Streamer - ajustado para compensar */
     word-break: break-word;
 }
 
 .historico-tabela th:nth-child(5), 
 .historico-tabela td:nth-child(5) {
-    width: 6%; /* Ver Lista - reduzido ainda mais */
+    width: 6%; /* Plataforma - coluna estreita */
+    min-width: 30px;
+}
+
+.historico-tabela th:nth-child(6), 
+.historico-tabela td:nth-child(6) {
+    width: 5%; /* Ver Lista - reduzido */
+    min-width: 30px;
 }
 
 .historico-tabela th, 
@@ -175,6 +182,10 @@
         width: 100%;
         max-width: 300px;
     }
+    
+    .coluna-plataforma {
+        font-size: 14px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -230,6 +241,10 @@
     .historico-tabela button {
         padding: 3px 4px;
         font-size: 10px;
+    }
+    
+    .coluna-plataforma {
+        font-size: 12px;
     }
 }
 
@@ -389,18 +404,28 @@
 }
 
 /* Ajustar largura das colunas da tabela de participantes */
-.participantes-tabela th:first-child,
-.participantes-tabela td:first-child {
-    width: 6%;
-    min-width: 25px;
+.participantes-tabela th:nth-child(1),
+.participantes-tabela td:nth-child(1) {
+    width: 8%;
+    min-width: 30px;
 }
 
 .participantes-tabela th:nth-child(2),
-.participantes-tabela td:nth-child(2),
+.participantes-tabela td:nth-child(2) {
+    width: 32%;
+    word-break: break-word;
+}
+
 .participantes-tabela th:nth-child(3),
 .participantes-tabela td:nth-child(3) {
-    width: 47%;
+    width: 32%;
     word-break: break-word;
+}
+
+.participantes-tabela th:nth-child(4),
+.participantes-tabela td:nth-child(4) {
+    width: 8%;
+    min-width: 30px;
 }
 
 .participantes-tabela th {
@@ -423,4 +448,10 @@
 
 .vencedor-row td {
     border-color: #19b5a5;
+}
+
+/* Estilo para a coluna de plataforma */
+.coluna-plataforma {
+    font-size: 16px;
+    text-align: center;
 }

@@ -2,6 +2,7 @@
 import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "../../styles/Ganhadores.css"; // Caminho do CSS
 import Anuncio from "../../components/Anuncio"; // Importando o componente de anúncio
+import PlataformaIcon from "../../components/PlataformaIcon"; // Importando o componente de ícone
 
 function Ganhadores() {
     const [historico, setHistorico] = useState([]);
@@ -68,6 +69,22 @@ function Ganhadores() {
         setListaParticipantes([]);
     };
 
+    // Função para retornar o emoji da plataforma - mantido para retrocompatibilidade
+    const getPlataformaEmoji = (plataforma) => {
+        switch(plataforma) {
+            case "youtube":
+                return "❤️"; // Coração vermelho para YouTube
+            case "steam":
+                return "💙"; // Coração azul para Steam
+            case "xbox":
+                return "💚"; // Coração verde para Xbox
+            case "playstation":
+                return "🔵"; // Círculo azul para PlayStation
+            default:
+                return "👾"; // Emoji de game para Twitch como padrão
+        }
+    };
+
     return (
         <div className="ganhadores-container">
             {/* Banner superior da SuperBet */}
@@ -82,7 +99,6 @@ function Ganhadores() {
 
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    
                     <p>• O histórico completo dos sorteios mais recentes é mantido nesta página.</p>
                     <p>• O histórico completo dos sorteios mais recentes é mantido nesta página.</p>
                 </div>
@@ -111,9 +127,10 @@ function Ganhadores() {
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>N° Sorteado</th>
-                            <th>Nome do Ganhador</th>
-                            <th>Streamer Escolhido</th>
+                            <th>N°</th>
+                            <th>Ganhador</th>
+                            <th>Streamer</th>
+                            <th>🎥</th>
                             <th>Lista</th>
                         </tr>
                     </thead>
@@ -130,6 +147,9 @@ function Ganhadores() {
                                     <td>{sorteio.numero}</td>
                                     <td>{sorteio.nome}</td>
                                     <td>{sorteio.streamer}</td>
+                                    <td className="coluna-plataforma">
+                                        <PlataformaIcon plataforma={sorteio.plataforma_premio || "twitch"} tamanho="pequeno" />
+                                    </td>
                                     <td>
                                         {/* Verificar se os dados do sorteio estão disponíveis (usando o campo do backend) */}
                                         {sorteio.dados_disponiveis === false ? (
@@ -138,7 +158,7 @@ function Ganhadores() {
                                             </button>
                                         ) : (
                                             <button onClick={() => buscarParticipantesSorteio(sorteio.id, sorteio.data)}>
-                                                📜 Ver Lista
+                                                📜
                                             </button>
                                         )}
                                     </td>
@@ -147,7 +167,7 @@ function Ganhadores() {
                                 {/* Adiciona anúncios a cada 5 linhas */}
                                 {(index + 1) % 5 === 0 && (
                                     <tr>
-                                        <td colSpan="5" className="banner-row">
+                                        <td colSpan="6" className="banner-row">
                                             <Anuncio 
                                                 tipo={(index % 2 === 0) ? "video" : "quadrado"} 
                                                 posicao="na-tabela" 
@@ -195,8 +215,9 @@ function Ganhadores() {
                                     <thead>
                                         <tr>
                                             <th>Nº</th>
-                                            <th>Nome Twitch</th>
-                                            <th>Streamer Escolhido</th>
+                                            <th>Nome</th>
+                                            <th>Streamer</th>
+                                            <th>🎥</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -205,6 +226,9 @@ function Ganhadores() {
                                                 <td>{index + 1}</td>
                                                 <td>{participante.nome_twitch}</td>
                                                 <td>{participante.streamer_escolhido}</td>
+                                                <td className="coluna-plataforma">
+                                                    <PlataformaIcon plataforma={participante.plataforma_premio || "twitch"} tamanho="pequeno" />
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>

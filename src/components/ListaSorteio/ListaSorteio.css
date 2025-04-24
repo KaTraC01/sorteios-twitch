@@ -44,7 +44,7 @@
 
 .vencedor-info .vencedor-detalhes {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin-top: 5px;
 }
@@ -89,6 +89,18 @@
 
 .vencedor-info .icon-date {
     color: #4a90e2;
+}
+
+.vencedor-info .icon-platform {
+    color: #ff5722;
+}
+
+/* Estilo para o emoji da plataforma no card do vencedor */
+.plataforma-emoji {
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
 }
 
 /* Responsividade para telas menores */
@@ -195,6 +207,33 @@ h2 {
     transform: none;
 }
 
+.formulario .plataforma-select {
+    flex: 1;
+    max-width: 150px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background-color: #1a1a1a;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 10px auto;
+    padding-right: 30px;
+}
+
+.formulario .plataforma-select:hover {
+    border-color: #19b5a5;
+}
+
+.formulario .plataforma-select option {
+    background-color: #2d2d2d;
+    color: white;
+}
+
 /* Estilização da tabela */
 table {
     width: 100%;
@@ -210,44 +249,42 @@ table {
 
 /* Ajustar largura das colunas da tabela */
 th:first-child, td:first-child {
-    width: 10%; /* Aumentado: Coluna de número */
-    min-width: 35px;
+    width: 8%; /* Reduzir a coluna de número */
+    min-width: 30px;
     text-align: center;
     white-space: nowrap; /* Evita que o número quebre em múltiplas linhas */
 }
 
-th:nth-child(2), td:nth-child(2),
-th:nth-child(3), td:nth-child(3) {
-    width: 45%; /* Colunas de nome e streamer - ajustadas para compensar */
-}
-
-th, td {
-    padding: 10px;
-    border-bottom: 1px solid #444;
+th:nth-child(2), td:nth-child(2) {
+    width: 32%; /* Coluna de nome - reduzida */
     text-align: center;
-    word-break: break-word; /* Permite quebra de palavras */
 }
 
-th {
-    background-color: #1a1a1a; /* Fundo mais escuro para o cabeçalho */
-    color: #19b5a5; /* Apenas o texto mantém a cor de identidade */
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 14px;
-    letter-spacing: 1px;
+th:nth-child(3), td:nth-child(3) {
+    width: 40%; /* Coluna de streamer - aumentada */
+    text-align: center;
 }
 
-tbody tr {
-    transition: background-color 0.2s ease;
+th:nth-child(4), td:nth-child(4) {
+    width: 20%; /* Coluna de plataforma */
+    text-align: center;
 }
 
-tbody tr:hover {
-    background-color: #3a3a3a; /* Tom um pouco mais claro ao passar o mouse */
+/* Estilo para a coluna de plataforma */
+.coluna-plataforma {
+    font-size: 18px; /* Aumentar o tamanho do ícone */
+    text-align: center;
+    padding: 8px 5px;
 }
 
-/* Estilo zebrado para melhorar a legibilidade */
-tbody tr:nth-child(even) {
-    background-color: #333333;
+/* Estilos para os ícones de plataforma */
+.plataforma-icone,
+.icone-twitch,
+.icone-youtube,
+.icone-steam,
+.icone-xbox,
+.icone-playstation {
+    display: none;
 }
 
 /* Estilização do feedback */
@@ -389,6 +426,27 @@ tbody tr:nth-child(even) {
     .vencedor-info .detalhe {
         padding: 6px 8px;
     }
+    
+    .vencedor-info .vencedor-detalhes {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    th:first-child, td:first-child {
+        width: 10%;
+    }
+    
+    th:nth-child(2), td:nth-child(2),
+    th:nth-child(3), td:nth-child(3) {
+        width: 35%;
+    }
+    
+    th:nth-child(4), td:nth-child(4) {
+        width: 20%;
+    }
+    
+    .coluna-plataforma {
+        font-size: 16px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -415,4 +473,50 @@ tbody tr:nth-child(even) {
         font-size: 20px;
         margin-bottom: 20px;
     }
+    
+    .vencedor-info .vencedor-detalhes {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Estilos para os ícones de plataforma */
+.plataforma-twitch, .plataforma-youtube, .plataforma-steam, .plataforma-xbox, .plataforma-playstation {
+    display: none;
+}
+
+/* Restaurar estilo normal da coluna do streamer */
+td:nth-child(3) {
+    display: table-cell;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Estilos da tabela */
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #444;
+    text-align: center;
+    word-break: break-word; /* Permite quebra de palavras */
+}
+
+th {
+    background-color: #1a1a1a; /* Fundo mais escuro para o cabeçalho */
+    color: #19b5a5; /* Apenas o texto mantém a cor de identidade */
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: #3a3a3a; /* Tom um pouco mais claro ao passar o mouse */
+}
+
+/* Estilo zebrado para melhorar a legibilidade */
+tbody tr:nth-child(even) {
+    background-color: #333333;
 }
