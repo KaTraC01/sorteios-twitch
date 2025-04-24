@@ -418,7 +418,7 @@ function ListaSorteio({ onReiniciarLista }) {
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
             // Chamar a função RPC do Supabase para adicionar participantes sem números
-            const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
+            const { data, error } = await supabase.rpc('inserir_participantes_lote', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
                 quantidade: 10,
