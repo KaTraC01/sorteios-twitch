@@ -418,7 +418,7 @@ function ListaSorteio({ onReiniciarLista }) {
             mostrarFeedback("Adicionando participações, aguarde...", "aviso");
             
             // Chamar a função RPC do Supabase para adicionar participantes sem números
-            const { data, error } = await supabase.rpc('inserir_participantes_lote', {
+            const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
                 quantidade: 10,
@@ -429,7 +429,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 console.error("Erro ao adicionar participantes em lote:", error);
                 // FALLBACK: Se a RPC falhar, inserir manualmente os participantes
                 mostrarFeedback("Usando método alternativo de inserção...", "aviso");
-                await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 5, plataformaSelecionada);
+                await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 10, plataformaSelecionada);
             } else {
                 // Processamento normal se a RPC funcionou
                 // Limpar o formulário
@@ -504,10 +504,10 @@ function ListaSorteio({ onReiniciarLista }) {
             // Limpar o formulário mas manter a plataforma
             setNovoParticipante({ nome: "", streamer: "", plataforma });
             
-            // Definir tempo de espera (15 segundos para o método manual)
-            const expiracao = Date.now() + 15000;
+            // Definir tempo de espera (30 segundos para o método manual)
+            const expiracao = Date.now() + 30000;
             localStorage.setItem("tempoExpiracao", expiracao.toString());
-            setTempoEspera(15);
+            setTempoEspera(30);
             
             if (inseridos > 0) {
                 mostrarFeedback(`${inseridos} participações adicionadas com sucesso!`, "sucesso");
