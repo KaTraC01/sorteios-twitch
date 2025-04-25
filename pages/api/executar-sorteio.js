@@ -7,87 +7,86 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Chamar a função de sorteio no banco de dados
-    const { data, error } = await supabase.rpc("realizar_sorteio_automatico");
+    console.log('Executando sorteio com realizar_sorteio_seguro_v2...');
+    
+    // Chamar a nova função de sorteio corrigida no banco de dados
+    const { data, error } = await supabase.rpc("realizar_sorteio_seguro_v2");
     
     if (error) {
-      console.error('Erro ao executar sorteio:', error);
-      return res.status(500).json({ 
-        sucesso: false,
-        erro: error.message,
-        detalhes: error
-      });
+      console.error('SORTEIO DEBUG: Erro ao executar sorteio:', error);
+      
+      // Se ocorreu um erro específico com a nova função, tentar com a função antiga como fallback
+      try {
+        console.log('SORTEIO DEBUG: Tentando função alternativa realizar_sorteio_automatico...');
+        const { data: oldData, error: oldError } = await supabase.rpc("realizar_sorteio_automatico");
+        
+        if (oldError) {
+          console.error('SORTEIO DEBUG: Erro com função alternativa:', oldError);
+          return res.status(500).json({ 
+            sucesso: false,
+            erro: `Erro em ambas as funções de sorteio. Último erro: ${oldError.message}`,
+            detalhes: oldError
+          });
+        }
+        
+        console.log('SORTEIO DEBUG: Função alternativa executada com sucesso');
+        return res.status(200).json({
+          sucesso: true,
+          resultado: oldData,
+          metodo: "alternativo"
+        });
+      } catch (fallbackError) {
+        console.error('SORTEIO DEBUG: Erro completo no fallback:', fallbackError);
+        return res.status(500).json({ 
+          sucesso: false,
+          erro: `Todos os métodos de sorteio falharam. Último erro: ${fallbackError.message}`
+        });
+      }
     }
     
-    // Já que o trigger reset_participantes_ativos contém a lógica para atualizar
-    // dados_disponiveis e limpar participantes antigos, não precisamos chamar
-    // nada adicional se o sorteio foi realizado e o trigger foi acionado
+    console.log('SORTEIO DEBUG: Sorteio realizado com sucesso', data);
     
-    // Porém, se o sorteio NÃO foi realizado (já aconteceu hoje, ou não há participantes),
-    // vamos atualizar a disponibilidade e limpar participantes antigos manualmente
-    if (!data?.realizado) {
+    // Verificar se o sorteio foi bem-sucedido
+    if (!data?.sucesso) {
       try {
-        // Verificar se a coluna dados_disponiveis existe
-        try {
-          const { error: errorColunaDados } = await supabase.rpc("verificar_coluna_dados_disponiveis");
-          if (errorColunaDados) {
-            console.warn('Aviso: Erro ao verificar coluna dados_disponiveis:', errorColunaDados);
-            // Não falha a operação principal
-          }
-        } catch (e) {
-          console.warn('Aviso: Erro ao verificar coluna dados_disponiveis:', e);
-          // Não falha a operação principal
-        }
-        
-        // Verificar se a coluna created_at existe
-        try {
-          const { error: errorColuna } = await supabase.rpc("verificar_coluna_created_at");
-          if (errorColuna) {
-            console.warn('Aviso: Erro ao verificar coluna created_at:', errorColuna);
-            // Não falha a operação principal
-          }
-        } catch (e) {
-          console.warn('Aviso: Erro ao verificar coluna created_at:', e);
-          // Não falha a operação principal
-        }
-        
-        // Atualizar o trigger para incluir a limpeza
-        try {
-          const { error: errorTrigger } = await supabase.rpc("atualizar_trigger_reset");
-          if (errorTrigger) {
-            console.warn('Aviso: Erro ao atualizar trigger:', errorTrigger);
-            // Não falha a operação principal
-          }
-        } catch (e) {
-          console.warn('Aviso: Erro ao atualizar trigger:', e);
-          // Não falha a operação principal
-        }
-        
         // Limpar participantes antigos (mais de 7 dias)
         try {
           const { error: errorLimpeza } = await supabase.rpc("limpar_historico_participantes_antigos");
           
           if (errorLimpeza) {
-            console.warn('Aviso: Erro ao limpar participantes antigos:', errorLimpeza);
-            // Não falha a operação principal, apenas registra o erro
+            console.warn('SORTEIO DEBUG: Erro ao limpar participantes antigos:', errorLimpeza);
+          } else {
+            console.log('SORTEIO DEBUG: Limpeza de participantes antigos concluída');
           }
         } catch (e) {
-          console.warn('Aviso: Erro ao limpar participantes antigos:', e);
-          // Não falha a operação principal, apenas registra o erro
+          console.warn('SORTEIO DEBUG: Erro ao limpar participantes antigos:', e);
+        }
+        
+        // Validar participantes para evitar problemas futuros
+        try {
+          const { error: errorValidacao } = await supabase.rpc("validar_corrigir_participantes_ativos");
+          
+          if (errorValidacao) {
+            console.warn('SORTEIO DEBUG: Erro ao validar participantes:', errorValidacao);
+          } else {
+            console.log('SORTEIO DEBUG: Validação de participantes concluída');
+          }
+        } catch (e) {
+          console.warn('SORTEIO DEBUG: Erro ao validar participantes:', e);
         }
       } catch (e) {
-        console.warn('Aviso: Erro ao processar atualizações adicionais:', e);
-        // Não falha a operação principal, apenas registra o erro
+        console.warn('SORTEIO DEBUG: Erro ao processar atualizações adicionais:', e);
       }
     }
     
     // Retornar o resultado do sorteio
     return res.status(200).json({
       sucesso: true,
-      resultado: data
+      resultado: data,
+      metodo: "seguro_v2"
     });
   } catch (error) {
-    console.error('Erro inesperado no sorteio:', error);
+    console.error('SORTEIO DEBUG: Erro inesperado no sorteio:', error);
     return res.status(500).json({ 
       sucesso: false,
       erro: error.message
