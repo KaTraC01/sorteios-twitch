@@ -4,19 +4,15 @@ import "./ListaSorteio.css"; // Importando o CSS
 import Anuncio from "../Anuncio"; // Importando o componente de anúncio
 import PlataformaIcon from "../PlataformaIcon"; // Importando o componente de ícone de plataforma
 
-// Função de sanitização de entrada
+// Função de sanitização de entrada (atualizada para suportar Unicode)
 const sanitizarEntrada = (texto) => {
   if (!texto) return "";
-  
-  // Remover caracteres especiais, HTML, scripts, etc.
   let sanitizado = texto
-    .replace(/[<>'"\\\/\{\}\[\]]/g, '') // Remove caracteres potencialmente perigosos
-    .replace(/\s+/g, '_')              // Substitui espaços por underscore
-    .replace(/--/g, '_')               // Remove possíveis injeções SQL
-    .replace(/;/g, '')                 // Remove ponto e vírgula
-    .replace(/script/gi, '')           // Remove tentativas de XSS
-    .trim();                           // Remove espaços extras
-    
+    // Remove apenas caracteres realmente perigosos, mas permite letras e números de qualquer idioma
+    .replace(/[<>'"\\/\{\}\[\];]/g, '') // Remove caracteres potencialmente perigosos
+    .replace(/--/g, '_')                      // Remove possíveis injeções SQL
+    .replace(/script/gi, '')                  // Remove tentativas de XSS
+    .trim();                                  // Remove espaços extras
   // Limitar comprimento
   return sanitizado.substring(0, 25);
 };
