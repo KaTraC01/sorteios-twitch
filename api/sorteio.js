@@ -2,6 +2,7 @@
 // Esta função será executada por um cron job da Vercel
 
 import { createClient } from "@supabase/supabase-js";
+import { sanitizarEntrada } from '../lib/supabaseClient';
 
 // Configuração do Supabase
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -145,7 +146,11 @@ async function realizarSorteio() {
   const vencedorIndex = Math.floor(Math.random() * participantes.length);
   const vencedor = participantes[vencedorIndex];
   
-  console.log(`SORTEIO-API DEBUG: Vencedor sorteado - ${vencedor.nome_twitch} (índice ${vencedorIndex})`);
+  // Sanitizar dados do vencedor antes de salvar
+  const nomeSanitizado = sanitizarEntrada(vencedor.nome_twitch);
+  const streamerSanitizado = sanitizarEntrada(vencedor.streamer_escolhido);
+  
+  console.log(`SORTEIO-API DEBUG: Vencedor sorteado - ${nomeSanitizado} (índice ${vencedorIndex})`);
   
   // Obter a data atual no fuso horário de Brasília
   const dataAtual = new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" });
@@ -160,8 +165,8 @@ async function realizarSorteio() {
       {
         data: dataHoraBrasil.toISOString(),
         numero: vencedorIndex + 1,
-        nome: vencedor.nome_twitch,
-        streamer: vencedor.streamer_escolhido,
+        nome: nomeSanitizado,
+        streamer: streamerSanitizado,
       },
     ])
     .select();
@@ -181,8 +186,8 @@ async function realizarSorteio() {
     // Prepara os dados dos participantes para inserção no histórico
     const participantesHistorico = participantes.map(participante => ({
       sorteio_id: sorteioId,
-      nome_twitch: participante.nome_twitch,
-      streamer_escolhido: participante.streamer_escolhido
+      nome_twitch: sanitizarEntrada(participante.nome_twitch),
+      streamer_escolhido: sanitizarEntrada(participante.streamer_escolhido)
     }));
     
     console.log(`SORTEIO-API DEBUG: Salvando ${participantesHistorico.length} participantes no histórico`);
@@ -200,7 +205,7 @@ async function realizarSorteio() {
     console.log('SORTEIO-API DEBUG: Histórico de participantes salvo com sucesso');
   }
 
-  console.log(`SORTEIO-API DEBUG: Sorteio realizado com sucesso. Vencedor: ${vencedor.nome_twitch}`);
+  console.log(`SORTEIO-API DEBUG: Sorteio realizado com sucesso. Vencedor: ${nomeSanitizado}`);
   
   // Resetar a lista após o sorteio
   console.log('SORTEIO-API DEBUG: Resetando lista de participantes');
@@ -209,8 +214,8 @@ async function realizarSorteio() {
   return { 
     realizado: true, 
     vencedor: {
-      nome: vencedor.nome_twitch,
-      streamer: vencedor.streamer_escolhido,
+      nome: nomeSanitizado,
+      streamer: streamerSanitizado,
       numero: vencedorIndex + 1,
       data: dataHoraBrasil.toISOString()
     }

@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabaseClient";
+import { sanitizarEntrada } from '../../lib/supabaseClient';
 
 export default async function handler(req, res) {
   // Verificar se é uma chamada GET ou POST (aceita ambos)
