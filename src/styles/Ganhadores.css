@@ -178,7 +178,6 @@
     
     .lista-participantes-container {
         padding: 15px;
-        overflow-x: auto; /* Adicionar rolagem horizontal apenas em tablets e celulares */
     }
     
     .fale-conosco,
@@ -207,8 +206,10 @@
     }
     
     .modal-content {
-        width: 98%;
+        width: 100%;
+        max-width: 100%;
         max-height: 90vh;
+        border-radius: 0;
     }
     
     .modal-header h3 {
@@ -233,6 +234,8 @@
     .participantes-tabela td {
         padding: 3px 2px;
         font-size: 11px;
+        white-space: normal;
+        overflow-wrap: break-word;
     }
     
     .lista-participantes-container {
@@ -251,6 +254,10 @@
     
     .coluna-plataforma {
         font-size: 12px;
+    }
+    
+    .modal-overlay {
+        padding: 0;
     }
 }
 
@@ -388,7 +395,9 @@
 }
 
 .lista-participantes-container {
-    padding: 22px;
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .total-participantes {
@@ -399,7 +408,6 @@
 
 .participantes-tabela {
     width: 100%;
-    min-width: 400px; /* Reduzido para melhor visualização em dispositivos móveis */
     border-collapse: collapse;
     margin-bottom: 25px; /* Aumentado para melhor espaçamento */
 }
@@ -414,26 +422,24 @@
 /* Ajustar largura das colunas da tabela de participantes */
 .participantes-tabela th:nth-child(1),
 .participantes-tabela td:nth-child(1) {
-    width: 8%;
-    min-width: 30px;
+    width: 10%;
 }
 
 .participantes-tabela th:nth-child(2),
 .participantes-tabela td:nth-child(2) {
-    width: 32%;
+    width: 40%;
     word-break: break-word;
 }
 
 .participantes-tabela th:nth-child(3),
 .participantes-tabela td:nth-child(3) {
-    width: 32%;
+    width: 40%;
     word-break: break-word;
 }
 
 .participantes-tabela th:nth-child(4),
 .participantes-tabela td:nth-child(4) {
-    width: 8%;
-    min-width: 30px;
+    width: 10%;
 }
 
 .participantes-tabela th {
