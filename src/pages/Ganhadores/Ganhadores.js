@@ -12,6 +12,9 @@ function Ganhadores() {
     const [listaParticipantes, setListaParticipantes] = useState([]);
     const [sorteioSelecionado, setSorteioSelecionado] = useState(null);
     const [loadingLista, setLoadingLista] = useState(false);
+    // Estados para controlar a paginação
+    const [paginaAtual, setPaginaAtual] = useState(1);
+    const [itensPorPagina, setItensPorPagina] = useState(10);
 
     // 🔄 **Carrega o histórico dos sorteios do Supabase**
     useEffect(() => {
@@ -84,6 +87,23 @@ function Ganhadores() {
                 return "👾"; // Emoji de game para Twitch como padrão
         }
     };
+    
+    // Função para alternar a exibição de mais itens (mostrar mais/menos)
+    const alternarMostrarMais = () => {
+        if (paginaAtual * itensPorPagina >= historico.length) {
+            // Se já estamos mostrando todos, voltar para a primeira página
+            setPaginaAtual(1);
+        } else {
+            // Caso contrário, avançar para a próxima página
+            setPaginaAtual(paginaAtual + 1);
+        }
+    };
+    
+    // Calcular quais sorteios mostrar na página atual
+    const historicoPaginado = historico.slice(0, paginaAtual * itensPorPagina);
+    
+    // Verificar se há mais sorteios para mostrar
+    const temMaisSorteios = historico.length > paginaAtual * itensPorPagina;
 
     return (
         <div className="ganhadores-container">
@@ -135,7 +155,7 @@ function Ganhadores() {
                         </tr>
                     </thead>
                     <tbody>
-                        {historico.map((sorteio, index) => (
+                        {historicoPaginado.map((sorteio, index) => (
                             <React.Fragment key={sorteio.id || index}>
                                 <tr>
                                     <td>{new Date(sorteio.data).toLocaleDateString('pt-BR', {
@@ -164,12 +184,12 @@ function Ganhadores() {
                                     </td>
                                 </tr>
 
-                                {/* Adiciona anúncios a cada 5 linhas */}
-                                {(index + 1) % 5 === 0 && (
+                                {/* Adiciona anúncios a cada 10 linhas */}
+                                {(index + 1) % 10 === 0 && index !== historicoPaginado.length - 1 && (
                                     <tr>
                                         <td colSpan="6" className="banner-row">
                                             <Anuncio 
-                                                tipo={(index % 2 === 0) ? "video" : "quadrado"} 
+                                                tipo={index === 9 ? "banner" : ["video", "quadrado", "cursos"][Math.floor(Math.random() * 3)]} 
                                                 posicao="na-tabela" 
                                                 mostrarFechar={true} 
                                             />
@@ -180,6 +200,13 @@ function Ganhadores() {
                         ))}
                     </tbody>
                 </table>
+            )}
+            
+            {/* Botão Mostrar Mais/Menos */}
+            {historico.length > 10 && (
+                <button className="botao-mostrar-mais" onClick={alternarMostrarMais}>
+                    {temMaisSorteios ? "Mostrar Mais" : "Mostrar Menos"}
+                </button>
             )}
             
             {/* Modal para exibir a lista de participantes */}

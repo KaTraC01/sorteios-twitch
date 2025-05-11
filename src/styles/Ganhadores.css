@@ -455,3 +455,22 @@
     font-size: 16px;
     text-align: center;
 }
+
+.botao-mostrar-mais {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #19b5a5, #31e0cd);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.botao-mostrar-mais:hover {
+    background: linear-gradient(135deg, #17a394, #2ac9b8);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(25, 181, 165, 0.4);
+}
