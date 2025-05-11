@@ -15,6 +15,9 @@ function Ganhadores() {
     // Estados para controlar a paginação
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [itensPorPagina, setItensPorPagina] = useState(10);
+    // Estado para controlar a paginação da lista de participantes
+    const [paginaParticipantes, setPaginaParticipantes] = useState(1);
+    const itensPorPaginaParticipantes = 10; // Constante para quantidade de participantes por página
 
     // 🔄 **Carrega o histórico dos sorteios do Supabase**
     useEffect(() => {
@@ -50,6 +53,9 @@ function Ganhadores() {
             data: sorteioData
         });
         
+        // Resetar a página dos participantes ao abrir um novo modal
+        setPaginaParticipantes(1);
+        
         const { data, error } = await supabase
             .from("historico_participantes")
             .select("*")
@@ -70,7 +76,25 @@ function Ganhadores() {
     const fecharListaParticipantes = () => {
         setSorteioSelecionado(null);
         setListaParticipantes([]);
+        setPaginaParticipantes(1); // Resetar a página quando fechar o modal
     };
+
+    // Função para alternar a exibição de mais participantes no modal
+    const alternarMostrarMaisParticipantes = () => {
+        if (paginaParticipantes * itensPorPaginaParticipantes >= listaParticipantes.length) {
+            // Se já estamos mostrando todos, voltar para a primeira página
+            setPaginaParticipantes(1);
+        } else {
+            // Caso contrário, avançar para a próxima página
+            setPaginaParticipantes(paginaParticipantes + 1);
+        }
+    };
+    
+    // Calcular quais participantes mostrar na página atual do modal
+    const participantesPaginados = listaParticipantes.slice(0, paginaParticipantes * itensPorPaginaParticipantes);
+    
+    // Verificar se há mais participantes para mostrar
+    const temMaisParticipantes = listaParticipantes.length > paginaParticipantes * itensPorPaginaParticipantes;
 
     // Função para retornar o emoji da plataforma - mantido para retrocompatibilidade
     const getPlataformaEmoji = (plataforma) => {
@@ -104,6 +128,51 @@ function Ganhadores() {
     
     // Verificar se há mais sorteios para mostrar
     const temMaisSorteios = historico.length > paginaAtual * itensPorPagina;
+
+    // Renderizar os participantes com propagandas intercaladas
+    const renderizarParticipantesComPropaganda = () => {
+        const linhasTabela = [];
+        
+        participantesPaginados.forEach((participante, index) => {
+            // Adicionar o participante
+            linhasTabela.push(
+                <tr key={participante.id || index} className={participante.nome_twitch === historico.find(s => s.id === sorteioSelecionado.id)?.nome ? "vencedor-row" : ""}>
+                    <td>{index + 1}</td>
+                    <td>{participante.nome_twitch}</td>
+                    <td>{participante.streamer_escolhido}</td>
+                    <td className="coluna-plataforma">
+                        <PlataformaIcon plataforma={participante.plataforma_premio || "twitch"} tamanho="pequeno" />
+                    </td>
+                </tr>
+            );
+            
+            // Adicionar anúncio específico entre as linhas 10 e 11
+            if (index === 9) {
+                linhasTabela.push(
+                    <tr key="propaganda-linha-10-11" className="linha-propaganda">
+                        <td colSpan="4" className="banner-row">
+                            <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
+                        </td>
+                    </tr>
+                );
+            }
+            // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda
+            else if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
+                const tiposAnuncios = ['video', 'quadrado', 'cursos'];
+                const tipoAleatorio = tiposAnuncios[Math.floor(Math.random() * tiposAnuncios.length)];
+                
+                linhasTabela.push(
+                    <tr key={`propaganda-${index}`} className="linha-propaganda">
+                        <td colSpan="4" className="banner-row">
+                            <Anuncio tipo={tipoAleatorio} posicao="na-tabela" mostrarFechar={true} />
+                        </td>
+                    </tr>
+                );
+            }
+        });
+        
+        return linhasTabela;
+    };
 
     return (
         <div className="ganhadores-container">
@@ -251,18 +320,19 @@ function Ganhadores() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {listaParticipantes.map((participante, index) => (
-                                            <tr key={participante.id || index} className={participante.nome_twitch === historico.find(s => s.id === sorteioSelecionado.id)?.nome ? "vencedor-row" : ""}>
-                                                <td>{index + 1}</td>
-                                                <td>{participante.nome_twitch}</td>
-                                                <td>{participante.streamer_escolhido}</td>
-                                                <td className="coluna-plataforma">
-                                                    <PlataformaIcon plataforma={participante.plataforma_premio || "twitch"} tamanho="pequeno" />
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {renderizarParticipantesComPropaganda()}
                                     </tbody>
                                 </table>
+                                
+                                {/* Botão Mostrar Mais/Menos para a lista de participantes */}
+                                {listaParticipantes.length > 10 && (
+                                    <button 
+                                        className={`botao-mostrar-mais ${!temMaisParticipantes ? 'mostrar-menos' : ''}`} 
+                                        onClick={alternarMostrarMaisParticipantes}
+                                    >
+                                        {temMaisParticipantes ? "Mostrar Mais" : "Mostrar Menos"}
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

@@ -493,3 +493,20 @@
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }
+
+/* Linhas de propaganda na tabela de participantes */
+.participantes-tabela .linha-propaganda {
+    background-color: transparent !important;
+    border: none;
+}
+
+.participantes-tabela .linha-propaganda td {
+    padding: 5px !important;
+    border: none;
+}
+
+.participantes-tabela .banner-row {
+    padding: 0 !important;
+    border: none !important;
+    background-color: transparent !important;
+}
