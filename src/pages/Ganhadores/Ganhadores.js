@@ -79,6 +79,14 @@ function Ganhadores() {
         setPaginaParticipantes(1); // Resetar a página quando fechar o modal
     };
 
+    // Função para lidar com cliques no overlay do modal
+    const handleModalOverlayClick = (e) => {
+        // Verifica se o clique foi diretamente no overlay (não em um de seus filhos)
+        if (e.target.className === 'modal-overlay') {
+            fecharListaParticipantes();
+        }
+    };
+
     // Função para alternar a exibição de mais participantes no modal
     const alternarMostrarMaisParticipantes = () => {
         if (paginaParticipantes * itensPorPaginaParticipantes >= listaParticipantes.length) {
@@ -283,7 +291,7 @@ function Ganhadores() {
             
             {/* Modal para exibir a lista de participantes */}
             {sorteioSelecionado && (
-                <div className="modal-overlay">
+                <div className="modal-overlay" onClick={handleModalOverlayClick}>
                     <div className="modal-content">
                         <div className="modal-header">
                             <h3>Lista de Participantes - Sorteio {new Date(sorteioSelecionado.data).toLocaleDateString('pt-BR', {
