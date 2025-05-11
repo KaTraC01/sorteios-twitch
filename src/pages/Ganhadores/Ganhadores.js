@@ -204,7 +204,10 @@ function Ganhadores() {
             
             {/* Botão Mostrar Mais/Menos */}
             {historico.length > 10 && (
-                <button className="botao-mostrar-mais" onClick={alternarMostrarMais}>
+                <button 
+                    className={`botao-mostrar-mais ${!temMaisSorteios ? 'mostrar-menos' : ''}`} 
+                    onClick={alternarMostrarMais}
+                >
                     {temMaisSorteios ? "Mostrar Mais" : "Mostrar Menos"}
                 </button>
             )}

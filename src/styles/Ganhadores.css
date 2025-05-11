@@ -474,3 +474,14 @@
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(25, 181, 165, 0.4);
 }
+
+/* Estilo específico para o botão "Mostrar Menos" */
+.botao-mostrar-mais.mostrar-menos {
+    background: linear-gradient(135deg, #138379, #27b8a8);
+}
+
+.botao-mostrar-mais.mostrar-menos:hover {
+    background: linear-gradient(135deg, #107369, #219890);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(19, 131, 121, 0.4);
+}
