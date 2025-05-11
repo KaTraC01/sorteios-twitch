@@ -1,6 +1,6 @@
 .ganhadores-container {
-    max-width: 1200px;
-    width: 90%;
+    max-width: 1800px;
+    width: 100%;
     margin: 120px auto 20px;
     padding: 25px;
     text-align: center;
@@ -37,7 +37,7 @@
 
 .historico-tabela {
     width: 100%;
-    min-width: 500px; /* Reduzido de 600px para 500px */
+    min-width: 600px;
     border-collapse: collapse;
     margin-top: 25px;
     background: rgba(40, 40, 40, 0.9);
@@ -49,41 +49,41 @@
 /* Ajustar largura das colunas da tabela */
 .historico-tabela th:nth-child(1), 
 .historico-tabela td:nth-child(1) {
-    width: 10%; /* Data - reduzido ainda mais */
-    min-width: 50px;
+    width: 9%; /* Data - mantido */
+    min-width: 65px;
     word-break: break-word;
 }
 
 .historico-tabela th:nth-child(2), 
 .historico-tabela td:nth-child(2) {
-    width: 6%; /* Número - reduzido */
-    min-width: 30px;
+    width: 5%; /* Número - mantido */
+    min-width: 40px;
 }
 
 .historico-tabela th:nth-child(3), 
 .historico-tabela td:nth-child(3),
 .historico-tabela th:nth-child(4), 
 .historico-tabela td:nth-child(4) {
-    width: 16%; /* Nome e Streamer - ajustado para compensar */
+    width: 25%; /* Nome e Streamer - aumentado de 20% para 25% */
     word-break: break-word;
 }
 
 .historico-tabela th:nth-child(5), 
 .historico-tabela td:nth-child(5) {
-    width: 6%; /* Plataforma - coluna estreita */
-    min-width: 30px;
+    width: 5%; /* Plataforma - mantido */
+    min-width: 40px;
 }
 
 .historico-tabela th:nth-child(6), 
 .historico-tabela td:nth-child(6) {
-    width: 5%; /* Ver Lista - reduzido */
-    min-width: 30px;
+    width: 4%; /* Ver Lista - mantido */
+    min-width: 40px;
 }
 
 .historico-tabela th, 
 .historico-tabela td {
     border: 1px solid #444;
-    padding: 6px 4px; /* Reduzido ainda mais */
+    padding: 10px 8px; /* Aumentado para dar mais espaço */
     text-align: center;
 }
 

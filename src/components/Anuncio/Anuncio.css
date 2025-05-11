@@ -468,9 +468,9 @@
 
 .area-central {
     width: 100%;
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 180px;
+    padding: 0 40px;
 }
 
 /* Animações */
@@ -563,7 +563,7 @@
     z-index: 900;
     top: 0;
     bottom: 0;
-    width: 180px; /* Largura suficiente para o anúncio + margem */
+    width: 160px; /* Reduzindo de 180px para 160px */
     pointer-events: none;
 }
 

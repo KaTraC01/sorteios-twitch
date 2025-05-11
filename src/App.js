@@ -64,11 +64,12 @@ function App() {
                     
                     <main style={{ 
                         marginTop: "120px", /* Aumentando para acomodar o header e o timer */
-                        padding: "20px", 
+                        padding: "20px 0", /* Removendo padding horizontal para maximizar espaço */
                         textAlign: "center", 
                         backgroundColor: "#0a0a0a", 
                         color: "white",
-                        minHeight: "calc(100vh - 120px)" 
+                        minHeight: "calc(100vh - 120px)",
+                        width: "100%" /* Garantindo largura máxima */
                     }}>
                         <Routes>
                             {/* Rota para a Lista de Sorteios */}

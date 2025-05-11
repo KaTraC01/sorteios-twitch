@@ -4,8 +4,8 @@
     padding: 25px; /* Aumentado para melhor espaçamento */
     text-align: center;
     border-radius: 10px;
-    max-width: 1100px; /* Aumentado para telas de computador */
-    width: 90%; /* Ajustado para melhor aparência em desktops */
+    max-width: 1600px; /* Aumentado para ocupar mais espaço horizontal */
+    width: 100%; /* Aumentado para ocupar todo o espaço disponível */
     margin: 20px auto;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
     border: 1px solid #444;
@@ -264,24 +264,24 @@ table {
 
 /* Ajustar largura das colunas da tabela */
 th:first-child, td:first-child {
-    width: 8%; /* Reduzir a coluna de número */
+    width: 6%; /* Reduzido de 8% para 6% */
     min-width: 30px;
     text-align: center;
     white-space: nowrap; /* Evita que o número quebre em múltiplas linhas */
 }
 
 th:nth-child(2), td:nth-child(2) {
-    width: 32%; /* Coluna de nome - reduzida */
+    width: 37%; /* Aumentado de 32% para 37% */
     text-align: center;
 }
 
 th:nth-child(3), td:nth-child(3) {
-    width: 40%; /* Coluna de streamer - aumentada */
+    width: 42%; /* Aumentado de 40% para 42% */
     text-align: center;
 }
 
 th:nth-child(4), td:nth-child(4) {
-    width: 20%; /* Coluna de plataforma */
+    width: 15%; /* Reduzido de 20% para 15% */
     text-align: center;
 }
 
@@ -524,10 +524,12 @@ td:nth-child(3) {
 
 /* Estilos da tabela */
 th, td {
-    padding: 10px;
+    padding: 10px 8px; /* Ajustado para melhor visualização */
     border-bottom: 1px solid #444;
     text-align: center;
     word-break: break-word; /* Permite quebra de palavras */
+    overflow: hidden; /* Impede que o conteúdo extravase */
+    text-overflow: ellipsis; /* Mostra reticências para texto truncado */
 }
 
 th {
