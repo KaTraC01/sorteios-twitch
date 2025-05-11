@@ -89,21 +89,40 @@
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .menu a:hover {
     color: white; /* Mantendo a cor do texto branca ao passar o mouse */
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.25);
     font-weight: 500;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    animation: glow 1.5s infinite alternate;
+}
+
+/* Efeito de glow para o botão Ganhadores */
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    }
+    to {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    }
 }
 
 .menu a.active {
     color: #12423e;
     background-color: white;
     font-weight: 600;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid white;
 }
 
 .menu a::before {
@@ -141,6 +160,13 @@
 .menu a.active::after {
     width: 100%;
     background-color: #12423e;
+}
+
+/* Estilo para o ícone de troféu */
+.trofeu-icon {
+    font-size: 18px;
+    display: inline-block;
+    transform: translateY(0px);
 }
 
 /* Animação ao passar o mouse */

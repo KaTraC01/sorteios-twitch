@@ -21,7 +21,11 @@ function Header() {
                 </Link>
             </div>
             <nav className="menu">
-                <Link to="/ganhadores" className={pathname === '/ganhadores' ? 'active' : ''}>Ganhadores</Link>
+                <Link to="/ganhadores" className={pathname === '/ganhadores' ? 'active' : ''}>
+                    {/* Adicionando ícone de troféu */}
+                    <span className="trofeu-icon" role="img" aria-label="Troféu">🏆</span>
+                    <span style={{marginLeft: '5px'}}>Ganhadores</span>
+                </Link>
             </nav>
         </header>
     );
