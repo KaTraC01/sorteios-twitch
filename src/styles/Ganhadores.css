@@ -120,6 +120,7 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    font-size: 18px; /* Igualando ao tamanho do botão de cadeado */
 }
 
 .historico-tabela button:hover {
@@ -245,7 +246,7 @@
     /* Ajustar o botão "Ver Lista" para caber melhor */
     .historico-tabela button {
         padding: 3px 4px;
-        font-size: 10px;
+        font-size: 18px; /* Mantendo o mesmo tamanho de fonte do desktop */
     }
     
     .coluna-plataforma {
