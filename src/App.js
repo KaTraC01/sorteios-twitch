@@ -69,7 +69,10 @@ function App() {
                         backgroundColor: "#0a0a0a", 
                         color: "white",
                         minHeight: "calc(100vh - 120px)",
-                        width: "100%" /* Garantindo largura máxima */
+                        width: "100%", /* Garantindo largura máxima */
+                        maxWidth: "100%", /* Garantindo que não haja limitação máxima */
+                        margin: "0", /* Removendo margens horizontais */
+                        boxSizing: "border-box" /* Garantindo que padding não afete a largura */
                     }}>
                         <Routes>
                             {/* Rota para a Lista de Sorteios */}

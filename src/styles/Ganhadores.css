@@ -142,13 +142,14 @@
 @media (max-width: 768px) {
     .ganhadores-container {
         margin-top: 150px;
-        padding: 15px;
-        width: 95%;
+        padding: 15px 5px;
+        width: 100%;
+        max-width: 100%;
         overflow-x: auto; /* Adicionar rolagem horizontal apenas em tablets e celulares */
     }
     
     .modal-content {
-        width: 95%;
+        width: 98%;
         padding-bottom: 15px;
     }
     
@@ -193,8 +194,10 @@
 @media (max-width: 480px) {
     .ganhadores-container {
         margin-top: 140px;
-        padding: 12px;
-        width: 98%;
+        padding: 10px 2px;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
     }
     
     .ganhadores-container h2 {

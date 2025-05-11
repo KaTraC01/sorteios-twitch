@@ -417,10 +417,12 @@ th:nth-child(4), td:nth-child(4) {
 /* Responsividade para telas menores */
 @media (max-width: 768px) {
     .lista-sorteio {
-        padding: 15px;
-        width: 95%;
-        margin: 15px auto;
+        padding: 15px 5px;
+        width: 100%;
+        margin: 15px 0;
         overflow-x: auto; /* Adicionar rolagem horizontal apenas em tablets e celulares */
+        max-width: 100%;
+        border-radius: 8px;
     }
     
     th, td {
@@ -482,13 +484,15 @@ th:nth-child(4), td:nth-child(4) {
 
 @media (max-width: 480px) {
     .lista-sorteio {
-        padding: 12px;
-        width: 98%;
-        margin: 10px auto;
+        padding: 10px 2px;
+        width: 100%;
+        margin: 0;
+        max-width: 100%;
+        border-radius: 0;
     }
     
     th, td {
-        padding: 6px 8px;
+        padding: 6px 4px;
         font-size: 12px;
     }
     

@@ -487,7 +487,8 @@
     }
     
     .area-central {
-        padding: 0 20px;
+        padding: 0 10px;
+        max-width: 100%;
     }
 }
 
@@ -511,6 +512,24 @@
     .anuncio-fixo-logo {
         width: 32px;
         height: 32px;
+    }
+    
+    .area-central {
+        padding: 0 5px;
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .area-central {
+        padding: 0;
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .conteudo-com-laterais {
+        padding: 0;
     }
 }
 
