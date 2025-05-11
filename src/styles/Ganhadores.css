@@ -18,19 +18,21 @@
 }
 
 .fale-conosco {
-    background-color: #19b5a5; /* Cor primária do tema */
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
     color: white;
-    padding: 10px 15px;
     border: none;
-    cursor: pointer;
+    padding: 8px 16px;
     border-radius: 5px;
+    cursor: pointer;
     margin-bottom: 20px;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
 
 .fale-conosco:hover {
-    background-color: #14a090;
+    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }
 
 .historico-tabela {
@@ -86,7 +88,7 @@
 }
 
 .historico-tabela th {
-    background-color: #19b5a5;
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
     color: white;
     font-weight: bold;
 }
@@ -251,7 +253,7 @@
 /* Adicionando estilos para os novos elementos */
 
 .como-participar-btn {
-    background-color: #19b5a5; /* Cor de identidade */
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
     color: white;
     border: none;
     padding: 12px 20px;
@@ -263,7 +265,9 @@
 }
 
 .como-participar-btn:hover {
-    background-color: #14a090; /* Versão mais escura da cor de identidade */
+    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }
 
 .instrucoes {
@@ -429,7 +433,7 @@
 }
 
 .participantes-tabela th {
-    background-color: #19b5a5;
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
     color: white;
 }
 
@@ -460,7 +464,7 @@
     display: block;
     margin: 20px auto;
     padding: 10px 20px;
-    background: linear-gradient(135deg, #19b5a5, #31e0cd);
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as mesmas cores do botão Mostrar Menos */
     color: white;
     border: none;
     border-radius: 5px;
@@ -470,18 +474,18 @@
 }
 
 .botao-mostrar-mais:hover {
-    background: linear-gradient(135deg, #17a394, #2ac9b8);
+    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(25, 181, 165, 0.4);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }
 
 /* Estilo específico para o botão "Mostrar Menos" */
 .botao-mostrar-mais.mostrar-menos {
-    background: linear-gradient(135deg, #138379, #27b8a8);
+    background: linear-gradient(135deg, #12423e, #27b8a8);
 }
 
 .botao-mostrar-mais.mostrar-menos:hover {
-    background: linear-gradient(135deg, #107369, #219890);
+    background: linear-gradient(135deg, #0d322e, #219890);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(19, 131, 121, 0.4);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }

@@ -735,7 +735,10 @@ function ListaSorteio({ onReiniciarLista }) {
             </table>
 
             {participantes.length > 10 && (
-                <button className="botao-mostrar-mais" onClick={alternarMostrarMais}>
+                <button 
+                    className={`botao-mostrar-mais ${!temMaisParticipantes ? 'mostrar-menos' : ''}`} 
+                    onClick={alternarMostrarMais}
+                >
                     {temMaisParticipantes ? "Mostrar Mais" : "Mostrar Menos"}
                 </button>
             )}

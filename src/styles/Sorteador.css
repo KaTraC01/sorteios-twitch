@@ -100,6 +100,26 @@
     justify-content: center;
 }
 
+.botoes-sorteio button {
+    margin: 0;
+    padding: 12px 25px;
+    border: none;
+    background: linear-gradient(135deg, #12423e, #27b8a8);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+.botoes-sorteio button:hover {
+    background: linear-gradient(135deg, #0d322e, #219890);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
+}
+
 .ganhador-info {
     background-color: rgba(40, 40, 40, 0.7);
     border-radius: 8px;

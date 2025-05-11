@@ -38,12 +38,14 @@ button {
   padding: 8px 16px;
   font-weight: 600;
   transition: all 0.2s ease;
-  background-color: #19b5a5; /* Cor de identidade */
+  background: linear-gradient(135deg, #12423e, #27b8a8); /* Gradiente usando as cores do botão Mostrar Menos */
   color: white;
 }
 
 button:hover {
-  background-color: #14968a; /* Versão mais escura da cor de identidade */
+  background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(18, 66, 62, 0.3);
 }
 
 button:disabled {

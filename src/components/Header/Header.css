@@ -1,5 +1,5 @@
 .header {
-    background-color: #19b5a5; /* Cor de identidade */
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Aplicando o mesmo gradiente do botão Mostrar Menos */
     color: white;
     display: flex;
     justify-content: space-between;
@@ -50,7 +50,7 @@
 }
 
 .sorteio-link.active {
-    color: #19b5a5;
+    color: #12423e;
     background-color: white;
     border-radius: 4px;
     padding: 5px 10px;
@@ -100,7 +100,7 @@
 }
 
 .menu a.active {
-    color: #19b5a5;
+    color: #12423e;
     background-color: white;
     font-weight: 600;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -140,7 +140,7 @@
 
 .menu a.active::after {
     width: 100%;
-    background-color: #19b5a5;
+    background-color: #12423e;
 }
 
 /* Animação ao passar o mouse */
