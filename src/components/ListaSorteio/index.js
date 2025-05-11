@@ -681,7 +681,7 @@ function ListaSorteio({ onReiniciarLista }) {
             <div className="formulario form-horizontal">
                 <input
                     type="text"
-                    placeholder="Nickname da Twitch"
+                    placeholder="Nickname"
                     value={novoParticipante.nome}
                     onChange={(e) => handleInputChange(e, 'nome')}
                     disabled={listaCongelada}
