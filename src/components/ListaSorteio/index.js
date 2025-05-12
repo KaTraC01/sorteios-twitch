@@ -439,12 +439,12 @@ function ListaSorteio({ onReiniciarLista }) {
                 // Mostrar mensagem de sucesso com o número real de inserções
                 if (data && data.sucesso) {
                     const quantidade = data.inseridos || 10;
-                    mostrarFeedback(`${quantidade} participações adicionadas com sucesso!`, "sucesso");
+                    mostrarFeedback(`Participante adicionado com sucesso! ${quantidade} participações foram registradas.`, "sucesso");
                 } else if (data) {
                     // Se a operação falhou mas retornou uma mensagem
                     mostrarFeedback(data.mensagem || "Erro ao adicionar participantes", "erro");
                 } else {
-                    mostrarFeedback("10 participações adicionadas com sucesso!", "sucesso");
+                    mostrarFeedback("Participante adicionado com sucesso! 10 participações foram registradas.", "sucesso");
                 }
             }
             
@@ -506,7 +506,7 @@ function ListaSorteio({ onReiniciarLista }) {
             setTempoEspera(30);
             
             if (inseridos > 0) {
-                mostrarFeedback(`${inseridos} participações adicionadas com sucesso!`, "sucesso");
+                mostrarFeedback(`Participante adicionado com sucesso! ${inseridos} participações foram registradas.`, "sucesso");
             } else {
                 mostrarFeedback("Não foi possível adicionar participantes. Tente novamente mais tarde.", "erro");
                 console.error("Erros durante inserção manual:", mensagensErro);
