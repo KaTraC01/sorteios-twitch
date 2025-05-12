@@ -393,17 +393,6 @@ function ListaSorteio({ onReiniciarLista }) {
             return;
         }
 
-        // Mostrar anúncio de tela inteira antes de adicionar participantes
-        setMostrarAnuncioTelaInteira(true);
-        
-        // As chamadas para adicionar os participantes serão feitas quando o anúncio for fechado
-        // ou o usuário clicar no anúncio, através do componente de anúncio
-    };
-    
-    // Nova função para processar a adição de participantes após o anúncio
-    const processarAdicaoParticipantes = async () => {
-        setMostrarAnuncioTelaInteira(false);
-        
         // Sanitizar entradas
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
         const streamerSanitizado = sanitizarEntrada(novoParticipante.streamer);
@@ -455,6 +444,29 @@ function ListaSorteio({ onReiniciarLista }) {
             console.error("Erro ao adicionar participantes:", error);
             mostrarFeedback(`Erro: ${error.message}`, "erro");
         }
+
+        // Mostrar anúncio de tela inteira após processar as entradas
+        setMostrarAnuncioTelaInteira(true);
+        
+        // Registrar a exibição do anúncio para métricas
+        try {
+            await supabase.from("metricas_anuncios").insert([{
+                tipo_anuncio: "botao_mais_10",
+                usuario_info: {
+                    nome: nomeSanitizado,
+                    streamer: streamerSanitizado,
+                    plataforma: plataformaSelecionada
+                },
+                detalhes: `Usuário adicionou 10 participações - Nome: ${nomeSanitizado}`
+            }]);
+        } catch (error) {
+            console.error("Erro ao registrar métrica de anúncio:", error);
+        }
+    };
+
+    // Função simplificada apenas para fechar o anúncio
+    const processarAdicaoParticipantes = () => {
+        setMostrarAnuncioTelaInteira(false);
     };
 
     // Método fallback para inserção manual de participantes
@@ -758,7 +770,6 @@ function ListaSorteio({ onReiniciarLista }) {
                     avisos="Ao clicar você concorda com os termos de uso."
                     onFechar={() => {
                         setMostrarAnuncioTelaInteira(false);
-                        processarAdicaoParticipantes();
                     }}
                 />
             )}
