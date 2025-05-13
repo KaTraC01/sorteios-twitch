@@ -38,23 +38,35 @@
     text-decoration: none;
     transition: all 0.3s ease;
     position: relative;
-    padding: 5px 0;
+    padding: 8px 15px;
     display: flex;
     align-items: center;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .sorteio-link:hover {
     color: white; /* Mantendo a cor do texto branca ao passar o mouse */
-    font-weight: 600;
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.25);
+    font-weight: 500;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    animation: glow 1.5s infinite alternate;
 }
 
 .sorteio-link.active {
     color: #12423e;
     background-color: white;
     border-radius: 4px;
-    padding: 5px 10px;
-    margin: -5px -10px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid white;
 }
 
 .sorteio-link::after {
