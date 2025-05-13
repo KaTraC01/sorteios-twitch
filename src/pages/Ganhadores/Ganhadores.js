@@ -142,10 +142,15 @@ function Ganhadores() {
         const linhasTabela = [];
         
         participantesPaginados.forEach((participante, index) => {
+            // Obter o sorteio atual
+            const sorteioAtual = historico.find(s => s.id === sorteioSelecionado.id);
+            // Verificar se este participante é o vencedor
+            const isVencedor = participante.nome_twitch === sorteioAtual?.nome;
+            
             // Adicionar o participante
             linhasTabela.push(
-                <tr key={participante.id || index} className={participante.nome_twitch === historico.find(s => s.id === sorteioSelecionado.id)?.nome ? "vencedor-row" : ""}>
-                    <td>{index + 1}</td>
+                <tr key={participante.id || index} className={isVencedor ? "vencedor-row" : ""}>
+                    <td>{isVencedor ? sorteioAtual?.numero : index + 1}</td>
                     <td>{participante.nome_twitch}</td>
                     <td>{participante.streamer_escolhido}</td>
                     <td className="coluna-plataforma">
