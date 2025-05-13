@@ -201,13 +201,14 @@ function ListaSorteio({ onReiniciarLista }) {
         const dataAtual = new Date();
         const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
         
-        // Gerar um número aleatório entre 1 e 100 para o sorteio
-        const numeroSorteado = Math.floor(Math.random() * 100) + 1;
+        // Gerar um número baseado no índice do participante na lista (1-based)
+        // Assim garantimos que o número sorteado corresponde a um participante real
+        const numeroSorteado = vencedorIndex + 1;
         
         const dadosVencedor = {
             nome: vencedor.nome_twitch,
             streamer: vencedor.streamer_escolhido,
-            numero: numeroSorteado,
+            numero: numeroSorteado, // Usar o número baseado no índice real do participante
             data: dataFormatada,
             plataforma: vencedor.plataforma_premio || "twitch"
         };
@@ -235,7 +236,7 @@ function ListaSorteio({ onReiniciarLista }) {
             const { data: sorteioSalvo, error: erroSorteio } = await supabase.from("sorteios").insert([
                 {
                     data: dataISO,
-                    numero: numeroSorteado,
+                    numero: numeroSorteado, // Usar o número baseado no índice real do participante
                     nome: vencedor.nome_twitch,
                     streamer: vencedor.streamer_escolhido,
                     plataforma_premio: vencedor.plataforma_premio || "twitch"
