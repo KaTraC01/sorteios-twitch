@@ -643,9 +643,15 @@ function ListaSorteio({ onReiniciarLista }) {
                 Participante adicionado com sucesso!
             </div>
             
+            {/* Espaçamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
+            
             {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
-            <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
-
+            <div className="anuncio-container-superior">
+                <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
+            </div>
+            
+            <h2>Participantes do Sorteio</h2>
+            
             {ultimoVencedor && (
                 <div className="vencedor-info">
                     <h3><span className="icon-trophy">🏆</span> Último Vencedor: {ultimoVencedor.nome}</h3>

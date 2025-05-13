@@ -190,9 +190,13 @@ function Ganhadores() {
     return (
         <div className="ganhadores-container">
             {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
-            <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
-
-            <h2>🏆 Ganhadores Anteriores</h2>
+            <div className="anuncio-container-superior">
+                <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
+            </div>
+            
+            {/* Espaçamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
+            
+            <h2>Histórico de Ganhadores</h2>
 
             {/* Botão para instruções */}
             <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>

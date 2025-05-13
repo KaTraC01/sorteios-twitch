@@ -12,6 +12,7 @@
 
 .ganhadores-container h2 {
     color: #19b5a5;
+    margin-top: 10px;
     margin-bottom: 25px;
     font-size: 26px;
     font-weight: bold;
@@ -147,6 +148,10 @@
         width: 100%;
         max-width: 100%;
         overflow-x: auto; /* Adicionar rolagem horizontal apenas em tablets e celulares */
+    }
+    
+    .ganhadores-container h2 {
+        margin-top: 10px;
     }
     
     .modal-content {

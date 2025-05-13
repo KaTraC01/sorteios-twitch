@@ -1060,21 +1060,42 @@
     align-items: center;
     margin: 15px auto;
     position: relative;
+    font-size: 0;
+    line-height: 0;
+    width: 100%;
+}
+
+.anuncio-container-superior {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+    overflow: hidden;
+    background-color: transparent !important;
+    box-sizing: border-box;
+    border-radius: 8px;
+    margin-bottom: 25px; /* Espaço de respiro abaixo do anúncio superior */
 }
 
 /* Anúncio fixo superior */
 .anuncio-fixo-superior {
     position: relative;
-    background-color: transparent;
+    background-color: transparent !important;
     color: white;
     border-radius: 8px;
-    padding: 0;
-    margin: 15px 0;
+    padding: 0 !important;
+    margin: 0 !important;
     text-align: center;
     overflow: hidden;
-    min-height: 100px;
+    min-height: 0 !important;
     transition: transform 0.3s ease;
     width: 100%;
+    font-size: 0;
+    line-height: 0;
+    display: block;
+    box-sizing: border-box;
 }
 
 .anuncio-fixo-superior:hover {
@@ -1088,6 +1109,11 @@
     display: block;
     border-radius: 8px;
     margin: 0;
+    padding: 0;
+    max-width: 100%;
+    vertical-align: top;
+    object-fit: cover;
+    box-sizing: border-box;
 }
 
 .anuncio-fixo-superior .anuncio-link {
@@ -1095,6 +1121,11 @@
     display: block;
     width: 100%;
     height: 100%;
+    font-size: 0;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .anuncio-fixo-superior .anuncio-conteudo {
@@ -1125,4 +1156,17 @@
     margin: 8px 0;
     text-transform: uppercase;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Ajuste responsivo para o espaçamento em telas menores */
+@media (max-width: 768px) {
+    .anuncio-container-superior {
+        margin-bottom: 20px; /* Um pouco menos de espaço em telas médias */
+    }
+}
+
+@media (max-width: 480px) {
+    .anuncio-container-superior {
+        margin-bottom: 15px; /* Ainda menos espaço em telas muito pequenas */
+    }
 } 

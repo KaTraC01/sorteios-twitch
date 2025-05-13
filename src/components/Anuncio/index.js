@@ -143,32 +143,34 @@ const Anuncio = ({
     
     case 'fixo-superior':
       return (
-        <div 
-          className={`anuncio anuncio-fixo-superior`} 
-          style={estiloPersonalizado}
-        >
-          {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
-            </button>
-          )}
-          <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
-            {/* Quando há imagem, mostrar apenas ela */}
-            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
-            
-            {/* Quando não há imagem, mostrar o conteúdo tradicional */}
-            {!anuncioImagemSrc && (
-              <>
-                <div className="anuncio-conteudo">
-                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
-                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
-                  {idade && <span className="anuncio-tag">+{idade}</span>}
-                  {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
-                </div>
-                {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
-              </>
+        <div className="anuncio-container-superior">
+          <div 
+            className={`anuncio anuncio-fixo-superior`} 
+            style={estiloPersonalizado}
+          >
+            {mostrarFechar && (
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
+              </button>
             )}
-          </a>
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {/* Quando há imagem, mostrar apenas ela */}
+              {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
+              
+              {/* Quando não há imagem, mostrar o conteúdo tradicional */}
+              {!anuncioImagemSrc && (
+                <>
+                  <div className="anuncio-conteudo">
+                    {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                    {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                    {idade && <span className="anuncio-tag">+{idade}</span>}
+                    {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                  </div>
+                  {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                </>
+              )}
+            </a>
+          </div>
         </div>
       );
     
