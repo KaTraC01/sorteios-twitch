@@ -60,7 +60,7 @@ function Ganhadores() {
             .from("historico_participantes")
             .select("*")
             .eq("sorteio_id", sorteioId)
-            .order("created_at", { ascending: true });
+            .order("posicao_original", { ascending: true }); // Ordenar pela posição original em vez de created_at
             
         if (error) {
             console.error("Erro ao buscar participantes do sorteio:", error);
@@ -150,7 +150,7 @@ function Ganhadores() {
             // Adicionar o participante
             linhasTabela.push(
                 <tr key={participante.id || index} className={isVencedor ? "vencedor-row" : ""}>
-                    <td>{isVencedor ? sorteioAtual?.numero : index + 1}</td>
+                    <td>{participante.posicao_original || index + 1}</td>
                     <td>{participante.nome_twitch}</td>
                     <td>{participante.streamer_escolhido}</td>
                     <td className="coluna-plataforma">

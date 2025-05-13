@@ -253,11 +253,12 @@ function ListaSorteio({ onReiniciarLista }) {
                 const sorteioId = sorteioSalvo[0].id;
                 
                 // Prepara os dados dos participantes para inserção no histórico
-                const participantesHistorico = participantes.map(participante => ({
+                const participantesHistorico = participantes.map((participante, index) => ({
                     sorteio_id: sorteioId,
                     nome_twitch: participante.nome_twitch,
                     streamer_escolhido: participante.streamer_escolhido,
-                    plataforma_premio: participante.plataforma_premio || "twitch"
+                    plataforma_premio: participante.plataforma_premio || "twitch",
+                    posicao_original: index + 1 // Adicionando a posição original (começando em 1)
                 }));
                 
                 // Insere todos os participantes no histórico

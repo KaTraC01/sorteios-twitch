@@ -184,10 +184,11 @@ async function realizarSorteio() {
     console.log(`SORTEIO-API DEBUG: Preparando histórico de participantes para sorteio ID ${sorteioId}`);
     
     // Prepara os dados dos participantes para inserção no histórico
-    const participantesHistorico = participantes.map(participante => ({
+    const participantesHistorico = participantes.map((participante, index) => ({
       sorteio_id: sorteioId,
       nome_twitch: sanitizarEntrada(participante.nome_twitch),
-      streamer_escolhido: sanitizarEntrada(participante.streamer_escolhido)
+      streamer_escolhido: sanitizarEntrada(participante.streamer_escolhido),
+      posicao_original: index + 1 // Adicionando a posição original (começando em 1)
     }));
     
     console.log(`SORTEIO-API DEBUG: Salvando ${participantesHistorico.length} participantes no histórico`);
