@@ -181,3 +181,56 @@
 .menu .language-switcher {
     margin-left: 10px;
 }
+
+/* Media queries para responsividade */
+@media (max-width: 768px) {
+    .header {
+        padding: 12px 15px;
+    }
+    
+    .menu {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        font-size: 20px;
+    }
+    
+    .menu {
+        gap: 8px;
+    }
+    
+    .menu a {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+    
+    /* Aumentando a margem entre o link "Ganhadores" e o seletor de idioma */
+    .menu .language-switcher {
+        margin-left: 8px;
+    }
+}
+
+/* Para telas muito pequenas, garantir espaçamento adequado */
+@media (max-width: 360px) {
+    .header {
+        padding: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .menu {
+        gap: 10px;
+    }
+    
+    .logo, .menu {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 5px;
+    }
+    
+    .menu a {
+        margin: 0 5px;
+    }
+}
