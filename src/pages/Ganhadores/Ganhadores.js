@@ -189,8 +189,8 @@ function Ganhadores() {
 
     return (
         <div className="ganhadores-container">
-            {/* Banner superior da SuperBet */}
-            <Anuncio tipo="banner" posicao="topo" mostrarFechar={true} />
+            {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
+            <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
 
             <h2>🏆 Ganhadores Anteriores</h2>
 

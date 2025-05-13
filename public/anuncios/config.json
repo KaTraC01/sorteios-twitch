@@ -1,6 +1,15 @@
 {
   "banner": [
     {
+      "id": "banner-tabela",
+      "imagem": "/anuncios/banner/banner1.png",
+      "titulo": "Banner Fixo da Tabela",
+      "descricao": "Este banner aparece sempre no topo da tabela",
+      "urlDestino": "https://exemplo.com/oferta",
+      "posicao": "na-tabela",
+      "ativo": true
+    },
+    {
       "id": "banner1",
       "imagem": "/anuncios/banner/banner1.png",
       "titulo": "Oferta Especial",
@@ -14,6 +23,16 @@
       "titulo": "Nova Coleção",
       "descricao": "Produtos exclusivos",
       "urlDestino": "https://exemplo.com/colecao",
+      "ativo": true
+    }
+  ],
+  "fixo-superior": [
+    {
+      "id": "fixo-superior1",
+      "imagem": "/anuncios/banner/banner1.png",
+      "titulo": "Anúncio Fixo Superior",
+      "descricao": "Este anúncio aparece sempre no topo da página",
+      "urlDestino": "https://exemplo.com/oferta-especial",
       "ativo": true
     }
   ],

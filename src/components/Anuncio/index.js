@@ -30,16 +30,29 @@ const Anuncio = ({
         if (data[tipo] && data[tipo].length > 0) {
           const anunciosAtivos = data[tipo].filter(a => a.ativo);
           if (anunciosAtivos.length > 0) {
-            // Seleciona um anúncio aleatório do tipo especificado
-            const anuncioSelecionado = anunciosAtivos[Math.floor(Math.random() * anunciosAtivos.length)];
-            setAnuncioConfig(anuncioSelecionado);
+            // Se for banner na tabela, procurar por um anúncio específico para essa posição
+            if (tipo === 'banner' && posicao === 'na-tabela') {
+              // Procurar por um anúncio com posição específica 'na-tabela'
+              const anuncioEspecifico = anunciosAtivos.find(a => a.posicao === 'na-tabela');
+              // Se encontrar, usar esse anúncio, senão usar o primeiro da lista
+              setAnuncioConfig(anuncioEspecifico || anunciosAtivos[0]);
+            } 
+            // Se for do tipo fixo-superior, sempre usar o primeiro anúncio da lista
+            else if (tipo === 'fixo-superior') {
+              setAnuncioConfig(anunciosAtivos[0]);
+            }
+            else {
+              // Para outros casos, seleciona um anúncio aleatório do tipo especificado
+              const anuncioSelecionado = anunciosAtivos[Math.floor(Math.random() * anunciosAtivos.length)];
+              setAnuncioConfig(anuncioSelecionado);
+            }
           }
         }
       })
       .catch(error => {
         console.error("Erro ao carregar configuração de anúncios:", error);
       });
-  }, [tipo]);
+  }, [tipo, posicao]);
   
   useEffect(() => {
     if (fechado) {
@@ -122,6 +135,37 @@ const Anuncio = ({
                 </div>
                 {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
                 {mostrarPresente && <img src="/presente.png" alt="Presente" className="presente-animado" />}
+              </>
+            )}
+          </a>
+        </div>
+      );
+    
+    case 'fixo-superior':
+      return (
+        <div 
+          className={`anuncio anuncio-fixo-superior`} 
+          style={estiloPersonalizado}
+        >
+          {mostrarFechar && (
+            <button className="anuncio-fechar" onClick={handleFechar}>
+              X
+            </button>
+          )}
+          <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+            {/* Quando há imagem, mostrar apenas ela */}
+            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
+            
+            {/* Quando não há imagem, mostrar o conteúdo tradicional */}
+            {!anuncioImagemSrc && (
+              <>
+                <div className="anuncio-conteudo">
+                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                  {idade && <span className="anuncio-tag">+{idade}</span>}
+                  {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                </div>
+                {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
               </>
             )}
           </a>

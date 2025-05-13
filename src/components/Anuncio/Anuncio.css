@@ -1060,4 +1060,69 @@
     align-items: center;
     margin: 15px auto;
     position: relative;
+}
+
+/* Anúncio fixo superior */
+.anuncio-fixo-superior {
+    position: relative;
+    background-color: transparent;
+    color: white;
+    border-radius: 8px;
+    padding: 0;
+    margin: 15px 0;
+    text-align: center;
+    overflow: hidden;
+    min-height: 100px;
+    transition: transform 0.3s ease;
+    width: 100%;
+}
+
+.anuncio-fixo-superior:hover {
+    transform: translateY(-2px);
+}
+
+.anuncio-fixo-superior .anuncio-imagem {
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    margin: 0;
+}
+
+.anuncio-fixo-superior .anuncio-link {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.anuncio-fixo-superior .anuncio-conteudo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.anuncio-fixo-superior h3 {
+    color: #fff;
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    font-weight: bold;
+}
+
+.anuncio-fixo-superior .anuncio-descricao {
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 8px 0;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 } 

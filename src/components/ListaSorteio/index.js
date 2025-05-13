@@ -644,7 +644,7 @@ function ListaSorteio({ onReiniciarLista }) {
             </div>
             
             {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
-            <Anuncio tipo="banner" posicao="topo" mostrarFechar={true} />
+            <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
 
             {ultimoVencedor && (
                 <div className="vencedor-info">
