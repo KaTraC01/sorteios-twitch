@@ -239,8 +239,22 @@
     .participantes-tabela td {
         padding: 3px 2px;
         font-size: 11px;
-        white-space: normal;
         overflow-wrap: break-word;
+    }
+    
+    /* Manter proporções das colunas em telas pequenas */
+    .participantes-tabela th:nth-child(1),
+    .participantes-tabela td:nth-child(1) {
+        width: 15%; /* Manter proporção igual à tela grande */
+        min-width: 40px;
+        white-space: nowrap;
+    }
+    
+    .participantes-tabela th:nth-child(2),
+    .participantes-tabela td:nth-child(2),
+    .participantes-tabela th:nth-child(3),
+    .participantes-tabela td:nth-child(3) {
+        width: 37.5%; /* Manter proporção igual à tela grande */
     }
     
     .lista-participantes-container {
@@ -427,18 +441,20 @@
 /* Ajustar largura das colunas da tabela de participantes */
 .participantes-tabela th:nth-child(1),
 .participantes-tabela td:nth-child(1) {
-    width: 10%;
+    width: 15%; /* Aumentado de 10% para 15% para comportar números de até 4 dígitos */
+    min-width: 50px; /* Garantir um tamanho mínimo */
+    white-space: nowrap; /* Evitar quebra de linha nos números */
 }
 
 .participantes-tabela th:nth-child(2),
 .participantes-tabela td:nth-child(2) {
-    width: 40%;
+    width: 37.5%; /* Reduzido de 40% para 37.5% */
     word-break: break-word;
 }
 
 .participantes-tabela th:nth-child(3),
 .participantes-tabela td:nth-child(3) {
-    width: 40%;
+    width: 37.5%; /* Reduzido de 40% para 37.5% */
     word-break: break-word;
 }
 
