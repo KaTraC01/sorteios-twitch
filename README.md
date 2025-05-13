@@ -234,4 +234,55 @@ ORDER BY data_hora DESC
 LIMIT 20;
 ```
 
+## Sistema de Anúncios
+
+### Estrutura de Pastas
+
+O sistema de anúncios utiliza a seguinte estrutura de pastas:
+
+```
+/public/anuncios/
+   /banner/          - Para anúncios em formato de banner
+   /lateral/         - Para anúncios laterais 
+   /quadrado/        - Para anúncios em formato quadrado
+   /video/           - Para anúncios em formato de vídeo
+   /fixo-inferior/   - Para anúncios fixos na parte inferior
+   /tela-inteira/    - Para anúncios de tela inteira
+   config.json       - Arquivo de configuração dos anúncios
+```
+
+### Como Adicionar ou Alterar Anúncios
+
+1. Adicione a imagem do anúncio na pasta correspondente ao seu tipo
+2. Edite o arquivo `config.json` para adicionar ou modificar as configurações do anúncio
+
+### Formato do Arquivo de Configuração
+
+O arquivo `config.json` tem a seguinte estrutura:
+
+```json
+{
+  "banner": [
+    {
+      "id": "banner1",
+      "imagem": "/anuncios/banner/banner1.jpg",
+      "titulo": "Oferta Especial",
+      "descricao": "Desconto de 20%",
+      "urlDestino": "https://exemplo.com/oferta",
+      "ativo": true
+    }
+  ],
+  "lateral": [
+    // configurações para anúncios laterais
+  ],
+  // outros tipos de anúncios
+}
+```
+
+Cada tipo de anúncio possui uma lista de configurações possíveis. Os anúncios com `"ativo": true` serão exibidos aleatoriamente.
+
+### Métricas de Anúncios
+
+O sistema registra automáticamente as métricas de visualização de anúncios na tabela `metricas_anuncios` do banco de dados.
+
 

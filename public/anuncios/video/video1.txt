@@ -1,0 +1,6 @@
+Este arquivo é um exemplo para simular a imagem video1.png.
+
+IMPORTANTE: Você precisa adicionar o arquivo PNG real chamado "video1.png" nesta pasta.
+A configuração no arquivo config.json já está apontando para este arquivo.
+
+Em um ambiente real, você colocaria uma imagem PNG, JPG ou WebP neste local. 

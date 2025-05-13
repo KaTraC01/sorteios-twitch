@@ -1,0 +1,115 @@
+{
+  "banner": [
+    {
+      "id": "banner1",
+      "imagem": "/anuncios/banner/banner1.png",
+      "titulo": "Oferta Especial",
+      "descricao": "Desconto de 20%",
+      "urlDestino": "https://exemplo.com/oferta",
+      "ativo": true
+    },
+    {
+      "id": "banner2",
+      "imagem": "/anuncios/banner/banner2.jpg",
+      "titulo": "Nova Coleção",
+      "descricao": "Produtos exclusivos",
+      "urlDestino": "https://exemplo.com/colecao",
+      "ativo": true
+    }
+  ],
+  "lateral": [
+    {
+      "id": "lateral1",
+      "imagem": "/anuncios/lateral/lateral1.jpg",
+      "titulo": "Produto Especial",
+      "descricao": "Desconto imperdível",
+      "urlDestino": "https://exemplo.com/produto",
+      "posicao": "esquerda",
+      "ativo": true
+    },
+    {
+      "id": "lateral2",
+      "imagem": "/anuncios/lateral/lateral2.jpg",
+      "titulo": "Oferta Limitada",
+      "descricao": "Últimas unidades",
+      "urlDestino": "https://exemplo.com/oferta-limitada",
+      "posicao": "direita",
+      "ativo": true
+    }
+  ],
+  "quadrado": [
+    {
+      "id": "quadrado1",
+      "imagem": "/anuncios/quadrado/quadrado1.png",
+      "titulo": "Curso Online",
+      "descricao": "Aprenda novas habilidades",
+      "urlDestino": "https://exemplo.com/curso",
+      "ativo": true
+    }
+  ],
+  "video": [
+    {
+      "id": "video1",
+      "imagem": "/anuncios/video/video1.png",
+      "titulo": "Lançamento Exclusivo",
+      "descricao": "Conheça nosso novo produto",
+      "urlDestino": "https://exemplo.com/lancamento",
+      "ativo": true
+    }
+  ],
+  "fixo-inferior": [
+    {
+      "id": "fixo1",
+      "imagem": "/anuncios/fixo-inferior/fixo1.jpg",
+      "titulo": "PROMOÇÃO",
+      "descricao": "Produtos com até 50% de desconto",
+      "urlDestino": "https://exemplo.com/promocao",
+      "ativo": true
+    }
+  ],
+  "tela-inteira": [
+    {
+      "id": "telaInteira1",
+      "imagem": "/anuncios/tela-inteira/telaInteira1.jpg",
+      "titulo": "PROMOÇÃO EXCLUSIVA",
+      "descricao": "Para adicionar +10 participações, confira nossa oferta especial",
+      "urlDestino": "https://exemplo.com/promocao-especial",
+      "avisos": "Ao clicar você concorda com os termos de uso.",
+      "ativo": true
+    }
+  ],
+  "cursos": [
+    {
+      "id": "curso1",
+      "imagem": "/anuncios/cursos/cursos1.jpg",
+      "titulo": "Curso de Programação",
+      "subtitulo": "Aprenda a programar do zero",
+      "descricao": "Inicie sua carreira como desenvolvedor",
+      "urlDestino": "https://exemplo.com/curso-programacao",
+      "botaoTexto": "MATRICULAR AGORA",
+      "corFundo": "#ff5722",
+      "corTexto": "#ffffff",
+      "ativo": true
+    }
+  ],
+  "logos": [
+    {
+      "id": "logo1",
+      "imagem": "/anuncios/logos/logo1.png",
+      "titulo": "Empresa Parceira",
+      "descricao": "Conheça nosso parceiro oficial",
+      "urlDestino": "https://exemplo.com/parceiro",
+      "tamanho": "pequeno",
+      "ativo": true
+    },
+    {
+      "id": "logo2",
+      "imagem": "/anuncios/logos/logo2.png",
+      "titulo": "Patrocinador",
+      "descricao": "Patrocinador oficial",
+      "urlDestino": "https://exemplo.com/patrocinador",
+      "tamanho": "medio",
+      "ativo": true
+    }
+  ]
+} 

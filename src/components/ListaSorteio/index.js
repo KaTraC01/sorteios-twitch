@@ -615,7 +615,7 @@ function ListaSorteio({ onReiniciarLista }) {
             }
             // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda
             else if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
-                const tiposAnuncios = ['video', 'quadrado', 'cursos'];
+                const tiposAnuncios = ['video', 'quadrado', 'cursos', 'logos'];
                 const tipoAleatorio = tiposAnuncios[Math.floor(Math.random() * tiposAnuncios.length)];
                 
                 linhasTabela.push(

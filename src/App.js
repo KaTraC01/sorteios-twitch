@@ -44,14 +44,12 @@ function App() {
                 {/* Anúncio lateral esquerdo */}
                 <div className="coluna-lateral esquerda">
                     {adsVisible.esquerda && (
-                        <div className="anuncio-lateral esquerda" style={{ top: "120px", height: "600px", width: "160px" }}>
-                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('esquerda')}>✖</button>
-                            <div className="anuncio-tag">PUBLICIDADE</div>
-                            <div className="anuncio-lateral-conteudo">
-                                <p>ANÚNCIO</p>
-                                <button className="anuncio-button">Clique Aqui</button>
-                            </div>
-                        </div>
+                        <Anuncio 
+                            tipo="lateral" 
+                            posicao="esquerda" 
+                            mostrarFechar={true}
+                            onFechar={() => fecharAnuncio('esquerda')}
+                        />
                     )}
                 </div>
 
@@ -93,20 +91,18 @@ function App() {
                 {/* Anúncio lateral direito */}
                 <div className="coluna-lateral direita">
                     {adsVisible.direita && (
-                        <div className="anuncio-lateral direita" style={{ top: "120px", height: "600px", width: "160px" }}>
-                            <button className="anuncio-fechar" onClick={() => fecharAnuncio('direita')}>✖</button>
-                            <div className="anuncio-tag">PUBLICIDADE</div>
-                            <div className="anuncio-lateral-conteudo">
-                                <p>ANÚNCIO</p>
-                                <button className="anuncio-button">Clique Aqui</button>
-                            </div>
-                        </div>
+                        <Anuncio 
+                            tipo="lateral" 
+                            posicao="direita" 
+                            mostrarFechar={true}
+                            onFechar={() => fecharAnuncio('direita')}
+                        />
                     )}
                 </div>
 
                 {/* Anúncio fixo inferior */}
                 {adsVisible.fixoInferior && (
-                    <Anuncio tipo="fixo-inferior" posicao="fixo" mostrarFechar={true} />
+                    <Anuncio tipo="fixo-inferior" posicao="fixo" mostrarFechar={true} onFechar={() => fecharAnuncio('fixoInferior')} />
                 )}
                 
                 {!adsVisible.fixoInferior && (

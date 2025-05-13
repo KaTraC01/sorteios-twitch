@@ -79,10 +79,10 @@
 /* Banner horizontal (como o da Superbet) */
 .anuncio-banner {
     position: relative;
-    background-color: #222;
+    background-color: transparent;
     color: white;
     border-radius: 8px;
-    padding: 15px;
+    padding: 0;
     margin: 15px 0;
     text-align: center;
     overflow: hidden;
@@ -94,17 +94,50 @@
     transform: translateY(-2px);
 }
 
+.anuncio-banner .anuncio-imagem {
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    margin: 0;
+}
+
+.anuncio-banner .anuncio-link {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 .anuncio-banner .anuncio-conteudo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    backdrop-filter: blur(2px);
 }
 
-.anuncio-banner p {
-    font-size: 20px;
+.anuncio-banner h3 {
+    color: #fff;
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    font-weight: bold;
+}
+
+.anuncio-banner .anuncio-descricao {
+    color: #fff;
+    font-size: 14px;
     font-weight: bold;
     margin: 8px 0;
     text-transform: uppercase;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .anuncio-banner .anuncio-call-action {
@@ -134,49 +167,156 @@
 /* Anúncio em formato quadrado (tipo ENEM) */
 .anuncio-cursos {
     position: relative;
-    background-color: #ff5722;
+    background-color: transparent;
     color: white;
     border-radius: 8px;
-    padding: 20px;
-    margin: 15px 0;
+    padding: 0;
+    margin: 15px auto;
     text-align: center;
+    width: 300px;
+    height: 250px;
+    overflow: hidden;
+}
+
+.anuncio-cursos .anuncio-imagem {
+    width: 300px;
+    height: 250px;
+    object-fit: cover;
+    margin: 0;
+    padding: 0;
+    border: none;
+    display: block;
+    border-radius: 8px;
+}
+
+.anuncio-cursos .anuncio-link {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
 }
 
 .anuncio-cursos h3 {
-    font-size: 20px;
+    font-size: 24px;
     margin: 10px 0 5px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 .anuncio-cursos h4 {
-    font-size: 16px;
+    font-size: 18px;
     margin: 5px 0 15px;
+    font-weight: 500;
+}
+
+.anuncio-cursos .anuncio-descricao {
+    font-size: 16px;
+    margin-bottom: 20px;
 }
 
 .anuncio-cursos .anuncio-button {
     background-color: #fff;
     color: #ff5722;
     font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+.anuncio-cursos .anuncio-button:hover {
+    background-color: #f5f5f5;
+    transform: scale(1.05);
+}
+
+/* Estilos para logos de patrocinadores */
+.anuncio-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px auto;
+    text-align: center;
+    background-color: transparent;
+    border-radius: 8px;
+    padding: 0;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.anuncio-logos:hover {
+    transform: scale(1.05);
+}
+
+.anuncio-logos-pequeno,
+.anuncio-logos-medio,
+.anuncio-logos-grande {
+    width: 200px;
+    height: 200px;
+}
+
+.anuncio-logos a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+}
+
+.anuncio-logos-imagem {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+/* Contêiner para múltiplos logos */
+.logos-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
 }
 
 /* Anúncio formato vídeo (tipo Max) */
 .anuncio-video {
     position: relative;
-    background-color: #000;
+    background-color: transparent;
     color: white;
     border-radius: 8px;
-    padding: 15px;
+    padding: 0;
     margin: 15px 0;
-    min-height: 120px;
+    width: 600px;
+    height: 338px; /* Proporção 16:9 padrão para vídeos */
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.anuncio-video .anuncio-conteudo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 15px;
+.anuncio-video .anuncio-imagem {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin: 0;
+    padding: 0;
+    border: none;
+    display: block;
+}
+
+.anuncio-video .anuncio-link {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
 }
 
 .anuncio-video .anuncio-play {
@@ -207,17 +347,36 @@
 /* Anúncio quadrado (tipo café) */
 .anuncio-quadrado {
     position: relative;
-    background-color: #333;
-    background-image: linear-gradient(45deg, #333, #222);
+    background-color: transparent;
     color: white;
     border-radius: 8px;
-    padding: 20px;
-    margin: 15px 0;
+    padding: 0;
+    margin: 15px auto;
     text-align: center;
-    min-height: 120px;
+    width: 300px;
+    height: 250px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
+}
+
+.anuncio-quadrado .anuncio-imagem {
+    width: 300px;
+    height: 250px;
+    object-fit: cover;
+    margin: 0;
+    padding: 0;
+    border: none;
+    display: block;
+}
+
+.anuncio-quadrado .anuncio-link {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
 }
 
 .anuncio-quadrado p {
@@ -230,15 +389,37 @@
 .anuncio-fixo-inferior {
     position: fixed;
     bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #222;
-    color: white;
-    padding: 5px 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 970px;
+    height: 90px;
+    padding: 0;
+    margin: 0;
     z-index: 1000;
+    background-color: transparent;
     display: flex;
-    flex-direction: column;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.anuncio-fixo-inferior .anuncio-imagem {
+    width: 970px;
+    height: 90px;
+    object-fit: cover;
+    margin: 0;
+    padding: 0;
+    border: none;
+    display: block;
+}
+
+.anuncio-fixo-inferior .anuncio-link {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 .anuncio-tag-pequena {
@@ -318,12 +499,12 @@
     position: absolute;
     top: 5px;
     right: 5px;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -339,10 +520,10 @@
 /* Anúncio lateral */
 .anuncio-lateral {
     position: fixed;
-    background-color: #222;
+    background-color: transparent;
     color: white;
     border-radius: 8px;
-    padding: 15px;
+    padding: 0;
     text-align: center;
     z-index: 900;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);
@@ -350,6 +531,10 @@
     display: flex;
     flex-direction: column;
     transition: transform 0.3s ease;
+    top: 120px;
+    height: 600px;
+    width: 160px;
+    overflow: hidden;
 }
 
 .anuncio-lateral:hover {
@@ -381,10 +566,16 @@
 }
 
 .anuncio-lateral .anuncio-tag {
+    position: relative;
+    z-index: 2;
     align-self: flex-start;
-    color: #ccc;
+    color: #fff;
     font-size: 10px;
     margin-bottom: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 3px 6px;
+    border-radius: 4px;
+    backdrop-filter: blur(2px);
 }
 
 .anuncio-lateral .anuncio-button {
@@ -402,6 +593,58 @@
 .anuncio-lateral .anuncio-button:hover {
     transform: scale(1.05);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Ajustes específicos para imagens nos anúncios laterais */
+.anuncio-lateral .anuncio-imagem {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin: 0;
+    z-index: 0;
+    border-radius: 8px;
+}
+
+.anuncio-lateral .anuncio-link {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 15px;
+}
+
+.anuncio-lateral .anuncio-conteudo {
+    position: relative;
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: auto;
+    backdrop-filter: blur(2px);
+}
+
+.anuncio-lateral h3 {
+    color: #fff;
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    font-weight: bold;
+}
+
+.anuncio-lateral .anuncio-descricao {
+    color: #fff;
+    margin: 0;
+    font-size: 12px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.anuncio-lateral .anuncio-fechar {
+    z-index: 3;
 }
 
 /* Anúncio entre linhas */
@@ -519,6 +762,13 @@
         max-width: 100%;
         width: 100%;
     }
+    
+    .anuncio-video {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        aspect-ratio: 16/9;
+    }
 }
 
 @media (max-width: 480px) {
@@ -531,12 +781,25 @@
     .conteudo-com-laterais {
         padding: 0;
     }
+    
+    .anuncio-quadrado {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        max-height: 250px;
+    }
+    
+    .anuncio-quadrado .anuncio-imagem {
+        width: 100%;
+        height: auto;
+        max-height: 250px;
+    }
 }
 
 /* Notificação de sucesso centralizada */
 .notificacao-centralizada {
     position: fixed;
-    top: 180px; /* Posicionado mais abaixo para não sobrepor o cabeçalho e o timer */
+    top: 180px;
     left: 50%;
     transform: translateX(-50%);
     background-color: #22af4c;
@@ -546,7 +809,7 @@
     font-weight: bold;
     z-index: 1100;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    display: none; /* Oculto por padrão, será mostrado via JavaScript */
+    display: none;
     animation: fadeInOut 3s ease-in-out;
 }
 
@@ -559,20 +822,26 @@
 
 /* Botão para mostrar publicidade quando fechado */
 .anuncio-fixo-botao {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
     display: inline-block;
-    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
+    background: linear-gradient(135deg, #12423e, #27b8a8);
     color: white;
     padding: 8px 20px;
     border-radius: 20px;
     text-decoration: none;
     font-weight: bold;
     transition: all 0.3s ease;
-    margin-top: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
 }
 
 .anuncio-fixo-botao:hover {
-    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, #0d322e, #219890);
+    transform: translateX(-50%) translateY(-2px);
     box-shadow: 0 4px 8px rgba(18, 66, 62, 0.3);
 }
 
@@ -582,7 +851,7 @@
     z-index: 900;
     top: 0;
     bottom: 0;
-    width: 160px; /* Reduzindo de 180px para 160px */
+    width: 160px;
     pointer-events: none;
 }
 
@@ -595,7 +864,7 @@
 }
 
 .coluna-lateral .anuncio-lateral {
-    pointer-events: auto; /* Permitir interações com o anúncio */
+    pointer-events: auto;
 }
 
 /* Presente animado - mantido para uso futuro */
@@ -622,7 +891,7 @@
 /* Botão personalizado para o presente - mantido para uso futuro */
 .botao-presente {
     position: relative;
-    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
+    background: linear-gradient(135deg, #12423e, #27b8a8);
     color: white;
     border: none;
     border-radius: 50px;
@@ -634,7 +903,7 @@
 }
 
 .botao-presente:hover {
-    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+    background: linear-gradient(135deg, #0d322e, #219890);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }
@@ -657,13 +926,15 @@
 
 .anuncio-tela-inteira-container {
     position: relative;
-    max-width: 800px;
-    width: 90%;
-    background-color: #222;
+    width: 800px;
+    height: 600px;
+    background-color: transparent;
     border-radius: 8px;
-    padding: 30px;
+    padding: 0;
+    margin: 0;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     text-align: center;
+    overflow: hidden;
 }
 
 .anuncio-tela-inteira-titulo {
@@ -680,15 +951,18 @@
 }
 
 .anuncio-tela-inteira-imagem {
-    max-width: 100%;
-    height: auto;
-    margin: 0 auto 20px;
+    width: 800px;
+    height: 600px;
+    object-fit: cover;
+    margin: 0;
+    padding: 0;
+    border: none;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    display: block;
 }
 
 .anuncio-tela-inteira-botao {
-    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
+    background: linear-gradient(135deg, #12423e, #27b8a8);
     color: white;
     border: none;
     border-radius: 30px;
@@ -701,7 +975,7 @@
 }
 
 .anuncio-tela-inteira-botao:hover {
-    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+    background: linear-gradient(135deg, #0d322e, #219890);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }
@@ -743,23 +1017,18 @@
 }
 
 /* Responsividade para o anúncio de tela inteira */
-@media (max-width: 768px) {
+@media (max-width: 820px) {
     .anuncio-tela-inteira-container {
         width: 95%;
-        padding: 20px;
+        height: auto;
+        max-width: 800px;
+        max-height: 600px;
+        aspect-ratio: 4/3;
     }
     
-    .anuncio-tela-inteira-titulo {
-        font-size: 22px;
-    }
-    
-    .anuncio-tela-inteira-subtitulo {
-        font-size: 16px;
-    }
-    
-    .anuncio-tela-inteira-botao {
-        padding: 10px 20px;
-        font-size: 16px;
+    .anuncio-tela-inteira-imagem {
+        width: 100%;
+        height: 100%;
     }
     
     .anuncio-tela-inteira-fechar {
@@ -767,5 +1036,28 @@
         right: 10px;
         width: 30px;
         height: 30px;
+        font-size: 16px;
     }
+}
+
+@media (max-width: 970px) {
+    .anuncio-fixo-inferior {
+        width: 100%;
+        height: auto;
+        max-height: 90px;
+    }
+    
+    .anuncio-fixo-inferior .anuncio-imagem {
+        width: 100%;
+        height: auto;
+        max-height: 90px;
+    }
+}
+
+.anuncio-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px auto;
+    position: relative;
 } 
