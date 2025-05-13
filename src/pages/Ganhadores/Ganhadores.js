@@ -1,10 +1,12 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next'; // Importar hook de tradução
 import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "../../styles/Ganhadores.css"; // Caminho do CSS
 import Anuncio from "../../components/Anuncio"; // Importando o componente de anúncio
 import PlataformaIcon from "../../components/PlataformaIcon"; // Importando o componente de ícone
 
 function Ganhadores() {
+    const { t } = useTranslation(); // Hook de tradução
     const [historico, setHistorico] = useState([]);
     const [emailVisivel, setEmailVisivel] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -196,23 +198,23 @@ function Ganhadores() {
             
             {/* Espaçamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
             
-            <h2>Histórico de Ganhadores</h2>
+            <h2>{t('ganhadores.title')}</h2>
 
             {/* Botão para instruções */}
             <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
-                {mostrarInstrucoes ? "Fechar Instruções" : "Lista de Ganhadores"}
+                {mostrarInstrucoes ? t('ganhadores.fecharInstrucoes') : t('ganhadores.listaGanhadores')}
             </button>
 
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    <p>•A lista de participantes dos últimos 7 dias pode ser visualizada clicando no ícone de pergaminho (📜) .</p>
-                    <p>• Os vencedores dos últimos 60 sorteios estão disponíveis para visualização nesta página.</p>
+                    <p>{t('ganhadores.instrucoes.info1')}</p>
+                    <p>{t('ganhadores.instrucoes.info2')}</p>
                 </div>
             )}
 
             {/* Botão "Fale Conosco" */}
             <button className="fale-conosco" onClick={() => setEmailVisivel(!emailVisivel)}>
-                {emailVisivel ? "contact@subgg.com" : "Fale Conosco"}
+                {emailVisivel ? "contact@subgg.com" : t('ganhadores.faleConosco')}
             </button>
 
             {/* Anúncio de cursos no topo da tabela */}
@@ -222,22 +224,22 @@ function Ganhadores() {
             {loading ? (
                 <div className="loading-container">
                     <div className="loading-spinner"></div>
-                    <p>🔄 Carregando histórico de sorteios...</p>
+                    <p>{t('ganhadores.carregando')}</p>
                 </div>
             ) : historico.length === 0 ? (
                 <div className="no-data">
-                    <p>Nenhum sorteio realizado até o momento.</p>
+                    <p>{t('ganhadores.nenhumSorteio')}</p>
                 </div>
             ) : (
                 <table className="historico-tabela">
                     <thead>
                         <tr>
-                            <th>Data</th>
-                            <th>N°</th>
-                            <th>Ganhador</th>
-                            <th>Streamer</th>
-                            <th>🎥</th>
-                            <th>Lista</th>
+                            <th>{t('ganhadores.tabela.data')}</th>
+                            <th>{t('ganhadores.tabela.numero')}</th>
+                            <th>{t('ganhadores.tabela.ganhador')}</th>
+                            <th>{t('ganhadores.tabela.streamer')}</th>
+                            <th>{t('ganhadores.tabela.plataforma')}</th>
+                            <th>{t('ganhadores.tabela.lista')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -248,37 +250,30 @@ function Ganhadores() {
                                         timeZone: 'America/Sao_Paulo',
                                         day: '2-digit',
                                         month: '2-digit',
-                                        year: 'numeric'
+                                        year: '2-digit'
                                     })}</td>
-                                    <td>{sorteio.numero}</td>
+                                    <td>{sorteio.numero || '-'}</td>
                                     <td>{sorteio.nome}</td>
                                     <td>{sorteio.streamer}</td>
-                                    <td className="coluna-plataforma">
+                                    <td>
                                         <PlataformaIcon plataforma={sorteio.plataforma_premio || "twitch"} tamanho="pequeno" />
                                     </td>
                                     <td>
-                                        {/* Verificar se os dados do sorteio estão disponíveis (usando o campo do backend) */}
-                                        {sorteio.dados_disponiveis === false ? (
-                                            <button className="botao-bloqueado" disabled>
-                                                🔒
-                                            </button>
-                                        ) : (
-                                            <button onClick={() => buscarParticipantesSorteio(sorteio.id, sorteio.data)}>
+                                        {sorteio.dados_disponiveis !== false && (
+                                            <button 
+                                                className="ver-lista-btn" 
+                                                onClick={() => buscarParticipantesSorteio(sorteio.id, sorteio.data)}
+                                            >
                                                 📜
                                             </button>
                                         )}
                                     </td>
                                 </tr>
-
-                                {/* Adiciona anúncios a cada 10 linhas */}
-                                {(index + 1) % 10 === 0 && index !== historicoPaginado.length - 1 && (
-                                    <tr>
+                                {/* Inserir anúncios a cada 5 linhas */}
+                                {(index + 1) % 5 === 0 && index !== historicoPaginado.length - 1 && (
+                                    <tr className="linha-propaganda">
                                         <td colSpan="6" className="banner-row">
-                                            <Anuncio 
-                                                tipo={index === 9 ? "banner" : ["video", "quadrado", "cursos"][Math.floor(Math.random() * 3)]} 
-                                                posicao="na-tabela" 
-                                                mostrarFechar={true} 
-                                            />
+                                            <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
                                         </td>
                                     </tr>
                                 )}
@@ -288,13 +283,13 @@ function Ganhadores() {
                 </table>
             )}
             
-            {/* Botão Mostrar Mais/Menos */}
-            {historico.length > 10 && (
+            {/* Botão "Mostrar Mais" */}
+            {!loading && historico.length > itensPorPagina && (
                 <button 
-                    className={`botao-mostrar-mais ${!temMaisSorteios ? 'mostrar-menos' : ''}`} 
+                    className="mostrar-mais-btn" 
                     onClick={alternarMostrarMais}
                 >
-                    {temMaisSorteios ? "Mostrar Mais" : "Mostrar Menos"}
+                    {temMaisSorteios ? t('ganhadores.mostrarMais') : t('ganhadores.mostrarMenos')}
                 </button>
             )}
             
@@ -302,38 +297,38 @@ function Ganhadores() {
             {sorteioSelecionado && (
                 <div className="modal-overlay" onClick={handleModalOverlayClick}>
                     <div className="modal-content">
-                        <div className="modal-header">
-                            <h3>Lista de Participantes - Sorteio {new Date(sorteioSelecionado.data).toLocaleDateString('pt-BR', {
+                        <h3>{t('ganhadores.listaParticipantes')}</h3>
+                        <p>
+                            {new Date(sorteioSelecionado.data).toLocaleDateString('pt-BR', {
                                 timeZone: 'America/Sao_Paulo',
                                 day: '2-digit',
                                 month: '2-digit',
-                                year: 'numeric'
-                            })}</h3>
-                            <button className="fechar-modal" onClick={fecharListaParticipantes}>×</button>
-                        </div>
+                                year: '2-digit'
+                            })}
+                        </p>
                         
-                        {/* Anúncio dentro do modal */}
-                        <Anuncio tipo="quadrado" posicao="topo" mostrarFechar={true} />
+                        <button className="fechar-modal-btn" onClick={fecharListaParticipantes}>
+                            {t('ganhadores.fecharLista')}
+                        </button>
                         
                         {loadingLista ? (
                             <div className="loading-container">
                                 <div className="loading-spinner"></div>
-                                <p>Carregando lista de participantes...</p>
+                                <p>{t('ganhadores.carregandoLista')}</p>
                             </div>
                         ) : listaParticipantes.length === 0 ? (
                             <div className="no-data">
-                                <p>Nenhum registro de participantes encontrado para este sorteio.</p>
+                                <p>{t('ganhadores.nenhumParticipante')}</p>
                             </div>
                         ) : (
-                            <div className="lista-participantes-container">
-                                <p className="total-participantes">Total de participantes: {listaParticipantes.length}</p>
+                            <>
                                 <table className="participantes-tabela">
                                     <thead>
                                         <tr>
-                                            <th>Nº</th>
-                                            <th>Nome</th>
-                                            <th>Streamer</th>
-                                            <th>🎥</th>
+                                            <th>N°</th>
+                                            <th>{t('listaSorteio.nome')}</th>
+                                            <th>{t('listaSorteio.streamer')}</th>
+                                            <th>{t('listaSorteio.plataforma')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -341,16 +336,16 @@ function Ganhadores() {
                                     </tbody>
                                 </table>
                                 
-                                {/* Botão Mostrar Mais/Menos para a lista de participantes */}
-                                {listaParticipantes.length > 10 && (
+                                {/* Botão "Mostrar Mais" para participantes */}
+                                {listaParticipantes.length > itensPorPaginaParticipantes && (
                                     <button 
-                                        className={`botao-mostrar-mais ${!temMaisParticipantes ? 'mostrar-menos' : ''}`} 
+                                        className="mostrar-mais-btn" 
                                         onClick={alternarMostrarMaisParticipantes}
                                     >
-                                        {temMaisParticipantes ? "Mostrar Mais" : "Mostrar Menos"}
+                                        {temMaisParticipantes ? t('ganhadores.mostrarMais') : t('ganhadores.mostrarMenos')}
                                     </button>
                                 )}
-                            </div>
+                            </>
                         )}
                     </div>
                 </div>

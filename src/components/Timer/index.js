@@ -1,7 +1,9 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next'; // Importar hook de tradução
 import "./Timer.css"; // Importa o CSS do Timer
 
 function Timer({ listaReiniciada }) {
+    const { t } = useTranslation(); // Hook de tradução
     // Estado para armazenar o tempo restante
     const [tempoRestante, setTempoRestante] = useState(calcularTempoRestante());
 
@@ -42,7 +44,7 @@ function Timer({ listaReiniciada }) {
 
     return (
         <div className="timer">
-            <span>⏳ Sorteio em: {tempoRestante}</span>
+            <span>⏳ {t('timer.sorteioEm')}: {tempoRestante}</span>
         </div>
     );
 }

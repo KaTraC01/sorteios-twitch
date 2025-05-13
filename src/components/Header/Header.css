@@ -77,6 +77,7 @@
 .menu {
     display: flex;
     gap: 20px;
+    align-items: center;
 }
 
 .menu a {
@@ -174,4 +175,9 @@
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
+}
+
+/* Ajuste para o seletor de idioma */
+.menu .language-switcher {
+    margin-left: 10px;
 }

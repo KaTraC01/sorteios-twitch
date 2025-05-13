@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next'; // Importar hook de tradução
 import { supabase } from "../../config/supabaseClient"; // Importando Supabase
 import "./ListaSorteio.css"; // Importando o CSS
 import Anuncio from "../Anuncio"; // Importando o componente de anúncio
@@ -18,6 +19,7 @@ const sanitizarEntrada = (texto) => {
 };
 
 function ListaSorteio({ onReiniciarLista }) {
+    const { t } = useTranslation(); // Hook de tradução
     const [participantes, setParticipantes] = useState([]);
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "", plataforma: "twitch" });
     const [tempoEspera, setTempoEspera] = useState(0);
@@ -190,7 +192,7 @@ function ListaSorteio({ onReiniciarLista }) {
     // 🎲 **Função para realizar o sorteio - Mantida apenas para uso manual pela interface administrativa**
     const realizarSorteio = async () => {
         if (participantes.length === 0) {
-            mostrarFeedback("Nenhum participante na lista. O sorteio foi cancelado.", "erro");
+            mostrarFeedback(t('listaSorteio.nenhumParticipante'), "erro");
             return;
         }
 
@@ -313,7 +315,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
         
         // Exibe mensagem informando que a lista foi resetada
-        mostrarFeedback("Lista resetada para o próximo sorteio! O último vencedor continua visível.", "sucesso");
+        mostrarFeedback(t('listaSorteio.listaResetada'), "sucesso");
         
         // Força uma atualização dos dados
         fetchParticipantes();
@@ -332,7 +334,7 @@ function ListaSorteio({ onReiniciarLista }) {
     const adicionarParticipante = async () => {
         // Validações básicas
         if (!novoParticipante.nome || !novoParticipante.streamer) {
-            mostrarFeedback("Por favor, preencha todos os campos.", "erro");
+            mostrarFeedback(t('listaSorteio.preenchaTodosCampos'), "erro");
             return;
         }
 
@@ -355,7 +357,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
             if (error) {
                 console.error("Erro detalhado ao adicionar participante:", error);
-                mostrarFeedback(`Erro ao adicionar: ${error.message}`, "erro");
+                mostrarFeedback(`${t('listaSorteio.erroDetalhado')}: ${error.message}`, "erro");
                 return;
             }
 
@@ -373,28 +375,28 @@ function ListaSorteio({ onReiniciarLista }) {
             await fetchParticipantes();
 
             // Mostrar feedback de sucesso
-            mostrarFeedback("Participante adicionado com sucesso!", "sucesso");
+            mostrarFeedback(t('listaSorteio.participanteAdicionado'), "sucesso");
 
         } catch (error) {
             console.error("Erro ao adicionar participante:", error);
-            mostrarFeedback(`Erro inesperado: ${error.message}`, "erro");
+            mostrarFeedback(`${t('listaSorteio.erro')}: ${error.message}`, "erro");
         }
     };
 
     // Função para adicionar participantes de uma vez - atualizada para mostrar anúncio de tela inteira
     const adicionarDezParticipantes = async () => {
         if (!novoParticipante.nome || !novoParticipante.streamer) {
-            mostrarFeedback("Por favor, preencha todos os campos.", "erro");
+            mostrarFeedback(t('listaSorteio.preenchaTodosCampos'), "erro");
             return;
         }
 
         if (listaCongelada) {
-            mostrarFeedback("A lista foi congelada! Você não pode mais adicionar nomes.", "erro");
+            mostrarFeedback(t('listaSorteio.listaCongelada'), "erro");
             return;
         }
 
         if (tempoEspera > 0) {
-            mostrarFeedback(`Aguarde ${tempoEspera} segundos antes de adicionar mais participantes.`, "aviso");
+            mostrarFeedback(t('listaSorteio.aguarde', { segundos: tempoEspera }), "aviso");
             return;
         }
 
@@ -405,7 +407,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
         try {
             // Mostrar feedback inicial
-            mostrarFeedback("Adicionando participações, aguarde...", "aviso");
+            mostrarFeedback(t('listaSorteio.adicionandoParticipacoes'), "aviso");
             
             // Chamar a função RPC do Supabase para adicionar participantes sem números
             const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
@@ -418,7 +420,7 @@ function ListaSorteio({ onReiniciarLista }) {
             if (error) {
                 console.error("Erro ao adicionar participantes em lote:", error);
                 // FALLBACK: Se a RPC falhar, inserir manualmente os participantes
-                mostrarFeedback("Usando método alternativo de inserção...", "aviso");
+                mostrarFeedback(t('listaSorteio.metodoAlternativo'), "aviso");
                 await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 10, plataformaSelecionada);
             } else {
                 // Processamento normal se a RPC funcionou
@@ -433,12 +435,12 @@ function ListaSorteio({ onReiniciarLista }) {
                 // Mostrar mensagem de sucesso com o número real de inserções
                 if (data && data.sucesso) {
                     const quantidade = data.inseridos || 10;
-                    mostrarFeedback(`Participante adicionado com sucesso! ${quantidade} participações foram registradas.`, "sucesso");
+                    mostrarFeedback(t('listaSorteio.participacoesRegistradas', { quantidade }), "sucesso");
                 } else if (data) {
                     // Se a operação falhou mas retornou uma mensagem
-                    mostrarFeedback(data.mensagem || "Erro ao adicionar participantes", "erro");
+                    mostrarFeedback(data.mensagem || t('listaSorteio.erroAdicionarParticipantes'), "erro");
                 } else {
-                    mostrarFeedback("Participante adicionado com sucesso! 10 participações foram registradas.", "sucesso");
+                    mostrarFeedback(t('listaSorteio.dezParticipacoesRegistradas'), "sucesso");
                 }
             }
             
@@ -447,7 +449,7 @@ function ListaSorteio({ onReiniciarLista }) {
             
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
-            mostrarFeedback(`Erro: ${error.message}`, "erro");
+            mostrarFeedback(`${t('listaSorteio.erro')}: ${error.message}`, "erro");
         }
 
         // Mostrar anúncio de tela inteira após processar as entradas
@@ -523,14 +525,14 @@ function ListaSorteio({ onReiniciarLista }) {
             setTempoEspera(30);
             
             if (inseridos > 0) {
-                mostrarFeedback(`Participante adicionado com sucesso! ${inseridos} participações foram registradas.`, "sucesso");
+                mostrarFeedback(t('listaSorteio.participacoesRegistradas', { quantidade: inseridos }), "sucesso");
             } else {
-                mostrarFeedback("Não foi possível adicionar participantes. Tente novamente mais tarde.", "erro");
+                mostrarFeedback(t('listaSorteio.naoFoiPossivelAdicionar'), "erro");
                 console.error("Erros durante inserção manual:", mensagensErro);
             }
         } catch (error) {
             console.error("Erro na inserção manual:", error);
-            mostrarFeedback("Erro ao adicionar participantes manualmente.", "erro");
+            mostrarFeedback(t('listaSorteio.erroAdicionarParticipantesManualmente'), "erro");
         }
         
         return inseridos;
@@ -582,7 +584,7 @@ function ListaSorteio({ onReiniciarLista }) {
         if (!participantesPaginados || participantesPaginados.length === 0) {
             return (
                 <tr>
-                    <td colSpan="4">Nenhum participante encontrado</td>
+                    <td colSpan="4">{t('listaSorteio.nenhumParticipanteEncontrado')}</td>
                 </tr>
             );
         }
@@ -640,7 +642,7 @@ function ListaSorteio({ onReiniciarLista }) {
         <div className="lista-sorteio">
             {/* Notificação de sucesso centralizada */}
             <div id="notificacao-sucesso" className="notificacao-centralizada">
-                Participante adicionado com sucesso!
+                {t('listaSorteio.participanteAdicionado')}
             </div>
             
             {/* Espaçamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
@@ -650,26 +652,26 @@ function ListaSorteio({ onReiniciarLista }) {
                 <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
             </div>
             
-            <h2>Participantes do Sorteio</h2>
+            <h2>{t('listaSorteio.participantes')}</h2>
             
             {ultimoVencedor && (
                 <div className="vencedor-info">
-                    <h3><span className="icon-trophy">🏆</span> Último Vencedor: {ultimoVencedor.nome}</h3>
+                    <h3><span className="icon-trophy">🏆</span> {t('listaSorteio.ultimoVencedor')}: {ultimoVencedor.nome}</h3>
                     <div className="vencedor-detalhes">
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-streamer">🎥</span> Streamer</div>
+                            <div className="detalhe-label"><span className="icon-streamer">🎥</span> {t('listaSorteio.streamer')}</div>
                             <div className="detalhe-valor">{ultimoVencedor.streamer}</div>
                         </div>
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-number">🔢</span> Número Sorteado</div>
+                            <div className="detalhe-label"><span className="icon-number">🔢</span> {t('listaSorteio.numeroSorteado')}</div>
                             <div className="detalhe-valor">{ultimoVencedor.numero}</div>
                         </div>
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-date">📅</span> Data</div>
+                            <div className="detalhe-label"><span className="icon-date">📅</span> {t('listaSorteio.data')}</div>
                             <div className="detalhe-valor">{ultimoVencedor.data}</div>
                         </div>
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-platform">🎥</span> Plataforma</div>
+                            <div className="detalhe-label"><span className="icon-platform">🎥</span> {t('listaSorteio.plataforma')}</div>
                             <div className="detalhe-valor">
                                 {ultimoVencedor.plataforma || "twitch"}
                                 <span className="plataforma-emoji">
@@ -686,29 +688,24 @@ function ListaSorteio({ onReiniciarLista }) {
             )}
 
             <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
-                {mostrarInstrucoes ? "Fechar Instruções" : "Como Participar"}
+                {mostrarInstrucoes ? t('listaSorteio.fecharInstrucoes') : t('listaSorteio.instrucoes.title')}
             </button>
 
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    <p>• Inscreva-se diariamente: Preencha corretamente o formulário com seu Nickname de usuário da Twitch e o nome do Streamer que você escolhe apoiar. </p>                    
-                    <p>• Verifique se seu nome está na lista de participantes após se inscrever.</p>
-                    <p>• Atenção: o nome do vencedor será retirado diretamente desta lista. Por isso, caso haja erro de digitação, ele não poderá ser corrigido e o prêmio poderá não ser entregue, pois o vencedor não será localizado.</p>
-                    <p>• Insira apenas um Nickname e um Streamer por vez — o prêmio será entregue a um único Usuario e Streamer por sorteio.</p>
-                    <p>• Você pode participar várias vezes no mesmo dia para aumentar suas chances de ganhar.</p>
-                    <p>• É permitido escolher streamers diferentes a cada participação.</p>
-                    <p>• Os sorteios acontecem todos os dias, de forma aleatória, entre 21:00 horas e 22:00 horas.</p>
-                    <p>• O vencedor é selecionado aleatoriamente e anunciado no painel Último Vencedor.</p>
-                    <p>• A lista de participantes é reiniciada após cada sorteio.</p>
+                    <p>{t('listaSorteio.instrucoes.info1')}</p>
+                    <p>{t('listaSorteio.instrucoes.info2')}</p>
+                    <p>{t('listaSorteio.instrucoes.info3')}</p>
+                    <p>{t('listaSorteio.instrucoes.info4')}</p>
                 </div>
             )}
 
-            <h2>Lista de Participantes {listaCongelada && "(❄️ Lista Congelada ❄️)"}</h2>
+            <h2>{t('listaSorteio.participantes')} {listaCongelada && `(❄️ ${t('listaSorteio.listaCongelada')} ❄️)`}</h2>
 
             <div className="formulario form-horizontal">
                 <input
                     type="text"
-                    placeholder="Nickname"
+                    placeholder={t('listaSorteio.nome')}
                     value={novoParticipante.nome}
                     onChange={(e) => handleInputChange(e, 'nome')}
                     disabled={listaCongelada}
@@ -716,7 +713,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 />
                 <input
                     type="text"
-                    placeholder="Streamer"
+                    placeholder={t('listaSorteio.streamer')}
                     value={novoParticipante.streamer}
                     onChange={(e) => handleInputChange(e, 'streamer')}
                     disabled={listaCongelada}
@@ -737,10 +734,10 @@ function ListaSorteio({ onReiniciarLista }) {
                     */}
                 </select>
                 <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
-                    {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "Confirmar"}
+                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ❄️` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionarParticipante')}
                 </button>
                 <button onClick={adicionarDezParticipantes} disabled={tempoEspera > 0 || listaCongelada}>
-                    {listaCongelada ? "Lista Congelada ❄️" : tempoEspera > 0 ? `Aguarde ${tempoEspera}s` : "+10"}
+                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ❄️` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionar10Participantes')}
                 </button>
             </div>
 
@@ -751,8 +748,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Nome na Twitch</th>
-                        <th>Streamer</th>
+                        <th>{t('listaSorteio.nome')}</th>
+                        <th>{t('listaSorteio.streamer')}</th>
                         <th>🎥</th>
                     </tr>
                 </thead>
@@ -766,7 +763,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     className={`botao-mostrar-mais ${!temMaisParticipantes ? 'mostrar-menos' : ''}`} 
                     onClick={alternarMostrarMais}
                 >
-                    {temMaisParticipantes ? "Mostrar Mais" : "Mostrar Menos"}
+                    {temMaisParticipantes ? t('listaSorteio.mostrarMais') : t('listaSorteio.mostrarMenos')}
                 </button>
             )}
 

@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { useTranslation } from 'react-i18next'; // Importar hook de tradução
 import Header from "./components/Header";
 import Timer from "./components/Timer";
 import ListaSorteio from "./components/ListaSorteio";
@@ -7,6 +8,7 @@ import Ganhadores from "./pages/Ganhadores/Ganhadores"; // Caminho corrigido
 import Anuncio from "./components/Anuncio"; // Importando o componente de anúncio
 
 function App() {
+    const { t } = useTranslation(); // Hook de tradução
     // Estado para controlar quando a lista for reiniciada
     const [listaReiniciada, setListaReiniciada] = useState(false);
     // Estado para controlar se os anúncios laterais foram fechados
@@ -76,8 +78,8 @@ function App() {
                             {/* Rota para a Lista de Sorteios */}
                             <Route path="/" element={
                                 <>
-                                    <h1>Site de Sorteios</h1>
-                                    <p>Bem-vindo ao site de sorteios! 🚀</p>
+                                    <h1>{t('home.title')}</h1>
+                                    <p>{t('home.welcome')}</p>
                                     <ListaSorteio onReiniciarLista={handleReiniciarLista} />
                                 </>
                             } />
@@ -107,7 +109,7 @@ function App() {
                 
                 {!adsVisible.fixoInferior && (
                     <div className="anuncio-fixo-botao" onClick={() => setAdsVisible(prev => ({ ...prev, fixoInferior: true }))}>
-                        Mostrar publicidade
+                        {t('anuncio.mostrarPublicidade')}
                     </div>
                 )}
             </div>
