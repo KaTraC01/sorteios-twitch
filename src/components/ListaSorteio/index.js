@@ -691,11 +691,15 @@ function ListaSorteio({ onReiniciarLista }) {
 
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    <p>• Preencha com seu nickname da Twitch e o nome do Streamer que você deseja apoiar.</p>
-                    <p>• Selecione em qual plataforma deseja receber o prêmio, caso seja sorteado (seu prêmio será entregue nesta plataforma).</p>
-                    <p>• Você pode participar várias vezes.</p>
+                    <p>• Inscreva-se diariamente: Preencha corretamente o formulário com seu Nickname de usuário da Twitch e o nome do Streamer que você escolhe apoiar. </p>                    
+                    <p>• Verifique se seu nome está na lista de participantes após se inscrever.</p>
+                    <p>• Atenção: o nome do vencedor será retirado diretamente desta lista. Por isso, caso haja erro de digitação, ele não poderá ser corrigido e o prêmio poderá não ser entregue, pois o vencedor não será localizado.</p>
+                    <p>• Insira apenas um Nickname e um Streamer por vez — o prêmio será entregue a um único Usuario e Streamer por sorteio.</p>
+                    <p>• Você pode participar várias vezes no mesmo dia para aumentar suas chances de ganhar.</p>
                     <p>• É permitido escolher streamers diferentes a cada participação.</p>
-                    <p>• Os sorteios acontecem todos os dias, de forma aleatória, entre 21h e 22h.</p>
+                    <p>• Os sorteios acontecem todos os dias, de forma aleatória, entre 21:00 horas e 22:00 horas.</p>
+                    <p>• O vencedor é selecionado aleatoriamente e anunciado no painel Último Vencedor.</p>
+                    <p>• A lista de participantes é reiniciada após cada sorteio.</p>
                 </div>
             )}
 

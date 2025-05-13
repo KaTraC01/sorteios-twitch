@@ -200,19 +200,19 @@ function Ganhadores() {
 
             {/* Botão para instruções */}
             <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
-                {mostrarInstrucoes ? "Fechar Instruções" : "Como Funcionam os Sorteios"}
+                {mostrarInstrucoes ? "Fechar Instruções" : "Lista de Ganhadores"}
             </button>
 
             {mostrarInstrucoes && (
                 <div className="instrucoes">
-                    <p>• O histórico completo dos sorteios mais recentes é mantido nesta página.</p>
-                    <p>• O histórico completo dos sorteios mais recentes é mantido nesta página.</p>
+                    <p>•A lista de participantes dos últimos 7 dias pode ser visualizada clicando no ícone de pergaminho (📜) .</p>
+                    <p>• Os vencedores dos últimos 60 sorteios estão disponíveis para visualização nesta página.</p>
                 </div>
             )}
 
             {/* Botão "Fale Conosco" */}
             <button className="fale-conosco" onClick={() => setEmailVisivel(!emailVisivel)}>
-                {emailVisivel ? "emaildecontato@contato.com" : "Fale Conosco"}
+                {emailVisivel ? "contact@subgg.com" : "Fale Conosco"}
             </button>
 
             {/* Anúncio de cursos no topo da tabela */}
