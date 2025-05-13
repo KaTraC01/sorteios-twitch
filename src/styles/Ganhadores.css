@@ -413,6 +413,25 @@
     color: #19b5a5;
 }
 
+/* Estilo para o botão fechar-modal-btn */
+.fechar-modal-btn {
+    background: linear-gradient(135deg, #12423e, #27b8a8);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px 0;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.fechar-modal-btn:hover {
+    background: linear-gradient(135deg, #0d322e, #219890);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
+}
+
 .lista-participantes-container {
     padding: 15px;
     width: 100%;

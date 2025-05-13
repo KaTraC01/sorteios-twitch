@@ -269,8 +269,8 @@ function Ganhadores() {
                                         )}
                                     </td>
                                 </tr>
-                                {/* Inserir anúncios a cada 5 linhas */}
-                                {(index + 1) % 5 === 0 && index !== historicoPaginado.length - 1 && (
+                                {/* Adiciona anúncios a cada 10 linhas */}
+                                {(index + 1) % 10 === 0 && index !== historicoPaginado.length - 1 && (
                                     <tr className="linha-propaganda">
                                         <td colSpan="6" className="banner-row">
                                             <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
@@ -286,7 +286,7 @@ function Ganhadores() {
             {/* Botão "Mostrar Mais" */}
             {!loading && historico.length > itensPorPagina && (
                 <button 
-                    className="mostrar-mais-btn" 
+                    className={`botao-mostrar-mais ${!temMaisSorteios ? 'mostrar-menos' : ''}`} 
                     onClick={alternarMostrarMais}
                 >
                     {temMaisSorteios ? t('ganhadores.mostrarMais') : t('ganhadores.mostrarMenos')}
@@ -339,7 +339,7 @@ function Ganhadores() {
                                 {/* Botão "Mostrar Mais" para participantes */}
                                 {listaParticipantes.length > itensPorPaginaParticipantes && (
                                     <button 
-                                        className="mostrar-mais-btn" 
+                                        className={`botao-mostrar-mais ${!temMaisParticipantes ? 'mostrar-menos' : ''}`} 
                                         onClick={alternarMostrarMaisParticipantes}
                                     >
                                         {temMaisParticipantes ? t('ganhadores.mostrarMais') : t('ganhadores.mostrarMenos')}
