@@ -50,7 +50,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. Executar limpeza manual
+    // 3. Executar limpeza manual de participantes antigos
     let registrosRemovidos = 0;
     try {
       const { data, error } = await supabase.rpc('limpar_historico_participantes_antigos');
@@ -66,7 +66,23 @@ export default async function handler(req, res) {
       // Continue mesmo com erro
     }
 
-    // 4. Verificar sorteios recentes
+    // 4. Executar limpeza manual de sorteios antigos (mais de 60 dias)
+    let sorteiosRemovidos = 0;
+    try {
+      const { data, error } = await supabase.rpc('limpar_sorteios_antigos');
+      if (error) {
+        console.error('Erro ao limpar sorteios antigos:', error);
+        // Continue mesmo com erro
+      } else {
+        sorteiosRemovidos = data || 0;
+        console.log(`${sorteiosRemovidos} sorteios antigos removidos`);
+      }
+    } catch (e) {
+      console.error('Erro ao limpar sorteios antigos:', e);
+      // Continue mesmo com erro
+    }
+
+    // 5. Verificar sorteios recentes
     const { data: sorteiosRecentes, error: errorConsulta } = await supabase
       .from('sorteios')
       .select(`
@@ -86,13 +102,14 @@ export default async function handler(req, res) {
     // Retornar resposta de sucesso
     return res.status(200).json({
       success: true,
-      message: 'Limpeza de participantes antigos concluída com sucesso',
+      message: 'Limpeza de dados antigos concluída com sucesso',
       registrosRemovidos,
+      sorteiosRemovidos,
       sorteiosRecentes: sorteiosRecentes || []
     });
 
   } catch (error) {
-    console.error('Erro geral na limpeza de participantes antigos:', error);
+    console.error('Erro geral na limpeza de dados antigos:', error);
     return res.status(500).json({ 
       error: 'Erro ao processar a solicitação', 
       details: error.message 

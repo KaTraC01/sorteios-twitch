@@ -73,6 +73,7 @@ A arquitetura do sistema é baseada em:
 | `reset_participantes_ativos()` | Trigger function que é executada após um sorteio. | **Ativo** - Trigger automático. |
 | `reset_apos_sorteio()` | Função wrapper para reset seguro após sorteio. | **Ativo** - Usado como alternativa ao trigger. |
 | `limpar_historico_participantes_antigos()` | Remove dados antigos do histórico (mais de 7 dias). | **Ativo** - Usado automaticamente. |
+| `limpar_sorteios_antigos()` | Remove sorteios antigos (mais de 60 dias). | **Ativo** - Usado automaticamente e via API. |
 
 ### 2.4 Funções de Manutenção e Diagnóstico
 
