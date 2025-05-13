@@ -1,7 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm install --legacy-peer-deps && npm run build",
-  "installCommand": "npm install --legacy-peer-deps",
   "outputDirectory": "build",
   "functions": {
     "api/**/*.js": {
