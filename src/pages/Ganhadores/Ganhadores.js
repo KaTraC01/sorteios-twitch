@@ -328,7 +328,7 @@ function Ganhadores() {
                                             <th>N°</th>
                                             <th>{t('listaSorteio.nome')}</th>
                                             <th>{t('listaSorteio.streamer')}</th>
-                                            <th>{t('listaSorteio.plataforma')}</th>
+                                            <th>🎥</th>
                                         </tr>
                                     </thead>
                                     <tbody>
