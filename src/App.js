@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Timer from "./components/Timer";
 import ListaSorteio from "./components/ListaSorteio";
 import Ganhadores from "./pages/Ganhadores/Ganhadores"; // Caminho corrigido
+import RelatorioAnuncios from "./pages/RelatorioAnuncios"; // Nova página de relatórios
 import Anuncio from "./components/Anuncio"; // Importando o componente de anúncio
 
 function App() {
@@ -86,6 +87,9 @@ function App() {
 
                             {/* Rota para a página de Ganhadores */}
                             <Route path="/ganhadores" element={<Ganhadores />} />
+                            
+                            {/* Rota para a página de Relatórios de Anúncios */}
+                            <Route path="/relatorio-anuncios" element={<RelatorioAnuncios />} />
                         </Routes>
                     </main>
                 </div>

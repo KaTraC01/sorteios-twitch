@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Anuncio.css';
+import AdTracker from '../AdTracker';
+import { supabase } from '../../config/supabaseClient';
 
 const Anuncio = ({ 
   tipo = 'reservado', 
@@ -20,6 +22,8 @@ const Anuncio = ({
 }) => {
   const [fechado, setFechado] = useState(false);
   const [anuncioConfig, setAnuncioConfig] = useState(null);
+  const [anuncioId, setAnuncioId] = useState(null);
+  const [paginaId, setPaginaId] = useState(null);
   
   // Carregar o arquivo de configuração de anúncios
   useEffect(() => {
@@ -53,6 +57,97 @@ const Anuncio = ({
         console.error("Erro ao carregar configuração de anúncios:", error);
       });
   }, [tipo, posicao]);
+
+  // Obter ou criar IDs para anúncio e página ao montar o componente
+  useEffect(() => {
+    async function obterOuCriarAnuncio() {
+      // Primeiro, verificar se já temos um anúncio correspondente
+      const anuncioNome = anuncioConfig?.titulo || titulo || `Anúncio ${tipo} ${posicao}`;
+      const anuncioUrl = anuncioConfig?.urlDestino || urlDestino;
+      
+      const { data: anuncios, error: erroConsulta } = await supabase
+        .from('anuncios')
+        .select('id')
+        .eq('nome', anuncioNome)
+        .eq('tipo_anuncio', tipo)
+        .limit(1);
+      
+      if (erroConsulta) {
+        console.error("Erro ao consultar anúncio:", erroConsulta);
+        return;
+      }
+      
+      if (anuncios && anuncios.length > 0) {
+        setAnuncioId(anuncios[0].id);
+      } else {
+        // Criar novo anúncio se não existir
+        const { data: novoAnuncio, error: erroInsercao } = await supabase
+          .from('anuncios')
+          .insert([{
+            nome: anuncioNome,
+            url_destino: anuncioUrl,
+            tipo_anuncio: tipo,
+            tamanho: posicao,
+            status: 'ativo'
+          }])
+          .select();
+        
+        if (erroInsercao) {
+          console.error("Erro ao criar anúncio:", erroInsercao);
+          return;
+        }
+        
+        if (novoAnuncio && novoAnuncio.length > 0) {
+          setAnuncioId(novoAnuncio[0].id);
+        }
+      }
+    }
+    
+    async function obterOuCriarPagina() {
+      const paginaUrl = window.location.pathname;
+      const paginaTitulo = document.title;
+      
+      const { data: paginas, error: erroConsulta } = await supabase
+        .from('paginas')
+        .select('id')
+        .eq('url', paginaUrl)
+        .limit(1);
+      
+      if (erroConsulta) {
+        console.error("Erro ao consultar página:", erroConsulta);
+        return;
+      }
+      
+      if (paginas && paginas.length > 0) {
+        setPaginaId(paginas[0].id);
+      } else {
+        // Criar nova página se não existir
+        const { data: novaPagina, error: erroInsercao } = await supabase
+          .from('paginas')
+          .insert([{
+            url: paginaUrl,
+            titulo: paginaTitulo,
+            categoria: 'principal',
+            secao: posicao
+          }])
+          .select();
+        
+        if (erroInsercao) {
+          console.error("Erro ao criar página:", erroInsercao);
+          return;
+        }
+        
+        if (novaPagina && novaPagina.length > 0) {
+          setPaginaId(novaPagina[0].id);
+        }
+      }
+    }
+    
+    if (anuncioConfig || (tipo && posicao)) {
+      obterOuCriarAnuncio();
+      obterOuCriarPagina();
+    }
+  }, [anuncioConfig, tipo, posicao, titulo, urlDestino]);
   
   useEffect(() => {
     if (fechado) {
@@ -77,75 +172,41 @@ const Anuncio = ({
     return null;
   }
   
-  // Se houver conteúdo personalizado, renderize-o diretamente
-  if (conteudoPersonalizado) {
-    return (
-      <div className={`anuncio anuncio-${tipo} anuncio-${posicao}`}>
-        {mostrarFechar && (
-          <button className="anuncio-fechar" onClick={handleFechar}>
-            X
-          </button>
-        )}
-        {conteudoPersonalizado}
-      </div>
-    );
-  }
-  
-  // Usar dados do anuncioConfig se estiver disponível, caso contrário usar props
-  const anuncioTitulo = anuncioConfig?.titulo || titulo;
-  const anuncioDescricao = anuncioConfig?.descricao || descricao;
-  const anuncioUrlDestino = anuncioConfig?.urlDestino || urlDestino;
-  const anuncioImagemSrc = anuncioConfig?.imagem || imagemSrc;
-  const anuncioAvisos = anuncioConfig?.avisos || avisos;
-  const anuncioPosicao = anuncioConfig?.posicao || posicao;
-  
-  const estiloPersonalizado = {
-    backgroundColor: cor || '#222',
-    color: corTexto || '#ffffff'
-  };
-  
-  // Renderiza o anúncio de acordo com o tipo
-  switch(tipo) {
-    case 'banner':
+  // Renderizar o conteúdo do anúncio
+  const renderConteudoAnuncio = () => {
+    // Se houver conteúdo personalizado, renderize-o diretamente
+    if (conteudoPersonalizado) {
       return (
-        <div 
-          className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`} 
-          style={estiloPersonalizado}
-        >
+        <div className={`anuncio anuncio-${tipo} anuncio-${posicao}`}>
           {mostrarFechar && (
             <button className="anuncio-fechar" onClick={handleFechar}>
               X
             </button>
           )}
-          <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
-            {/* Quando há imagem, mostrar apenas ela */}
-            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
-            
-            {/* Quando não há imagem, mostrar o conteúdo tradicional */}
-            {!anuncioImagemSrc && (
-              <>
-                <div className="anuncio-conteudo">
-                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
-                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
-                  {idade && <span className="anuncio-tag">+{idade}</span>}
-                  {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
-                  {mostrarPresente && (
-                    <button className="botao-presente">Clique para abrir!</button>
-                  )}
-                </div>
-                {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
-                {mostrarPresente && <img src="/presente.png" alt="Presente" className="presente-animado" />}
-              </>
-            )}
-          </a>
+          {conteudoPersonalizado}
         </div>
       );
+    }
     
-    case 'fixo-superior':
-      return (
-        <div className="anuncio-container-superior">
+    // Usar dados do anuncioConfig se estiver disponível, caso contrário usar props
+    const anuncioTitulo = anuncioConfig?.titulo || titulo;
+    const anuncioDescricao = anuncioConfig?.descricao || descricao;
+    const anuncioUrlDestino = anuncioConfig?.urlDestino || urlDestino;
+    const anuncioImagemSrc = anuncioConfig?.imagem || imagemSrc;
+    const anuncioAvisos = anuncioConfig?.avisos || avisos;
+    const anuncioPosicao = anuncioConfig?.posicao || posicao;
+    
+    const estiloPersonalizado = {
+      backgroundColor: cor || '#222',
+      color: corTexto || '#ffffff'
+    };
+    
+    // Renderiza o anúncio de acordo com o tipo
+    switch(tipo) {
+      case 'banner':
+        return (
           <div 
-            className={`anuncio anuncio-fixo-superior`} 
+            className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`} 
             style={estiloPersonalizado}
           >
             {mostrarFechar && (
@@ -165,217 +226,159 @@ const Anuncio = ({
                     {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
                     {idade && <span className="anuncio-tag">+{idade}</span>}
                     {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                    {mostrarPresente && (
+                      <button className="botao-presente">Clique para abrir!</button>
+                    )}
                   </div>
                   {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                  {mostrarPresente && <img src="/presente.png" alt="Presente" className="presente-animado" />}
                 </>
               )}
             </a>
           </div>
-        </div>
-      );
-    
-    case 'lateral':
-      return (
-        <div 
-          className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`}
-          style={estiloPersonalizado}
-        >
-          {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
-            </button>
-          )}
-          <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
-            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
-            {!anuncioImagemSrc && (
-              <>
-                <div className="anuncio-tag">PUBLICIDADE</div>
-                {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
-                <div className="anuncio-conteudo">
-                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
-                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
-                  {idade && <span className="anuncio-tag">+{idade}</span>}
-                  {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
-                  {mostrarPresente && (
-                    <button className="botao-presente">Clique para abrir!</button>
-                  )}
-                </div>
-                {mostrarPresente && <img src="/presente.png" alt="Presente" className="presente-animado" />}
-              </>
-            )}
-          </a>
-        </div>
-      );
-    
-    case 'quadrado':
-      return (
-        <div 
-          className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`}
-          style={estiloPersonalizado}
-        >
-          {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
-            </button>
-          )}
-          <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
-            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
-            {!anuncioImagemSrc && (
-              <>
-                <div className="anuncio-tag">PUBLICIDADE</div>
-                {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
-                <div className="anuncio-conteudo">
-                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
-                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
-                  {idade && <span className="anuncio-tag">+{idade}</span>}
-                  {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
-                  {mostrarPresente && (
-                    <button className="botao-presente">Clique para abrir!</button>
-                  )}
-                </div>
-                {mostrarPresente && <img src="/presente.png" alt="Presente" className="presente-animado" />}
-              </>
-            )}
-          </a>
-        </div>
-      );
-    
-    case 'video':
-      return (
-        <div 
-          className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`}
-          style={estiloPersonalizado}
-        >
-          {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
-            </button>
-          )}
-          <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
-            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
-            {!anuncioImagemSrc && (
-              <>
-                <div className="anuncio-tag">PUBLICIDADE</div>
-                {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
-                <div className="anuncio-conteudo">
-                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
-                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
-                  {idade && <span className="anuncio-tag">+{idade}</span>}
-                  {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
-                </div>
-              </>
-            )}
-          </a>
-        </div>
-      );
-    
-    case 'fixo-inferior':
-      return (
-        <div className={`anuncio-fixo-inferior`}>
-          {mostrarFechar && (
-            <button className="anuncio-fechar-grande" onClick={handleFechar}>
-              ✖
-            </button>
-          )}
-          <a href={anuncioUrlDestino} target="_blank" rel="noopener noreferrer" className="anuncio-link">
-            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
-          </a>
-        </div>
-      );
-    
-    case 'tela-inteira':
-      return (
-        <div className="anuncio-tela-inteira">
-          <div className="anuncio-tela-inteira-container">
+        );
+      
+      case 'fixo-superior':
+        return (
+          <div className="anuncio-container-superior">
+            <div 
+              className={`anuncio anuncio-fixo-superior`} 
+              style={estiloPersonalizado}
+            >
+              {mostrarFechar && (
+                <button className="anuncio-fechar" onClick={handleFechar}>
+                  X
+                </button>
+              )}
+              <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+                {/* Quando há imagem, mostrar apenas ela */}
+                {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
+                
+                {/* Quando não há imagem, mostrar o conteúdo tradicional */}
+                {!anuncioImagemSrc && (
+                  <>
+                    <div className="anuncio-conteudo">
+                      {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                      {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                      {idade && <span className="anuncio-tag">+{idade}</span>}
+                      {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                    </div>
+                    {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                  </>
+                )}
+              </a>
+            </div>
+          </div>
+        );
+      
+      case 'lateral':
+        return (
+          <div 
+            className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`}
+            style={estiloPersonalizado}
+          >
             {mostrarFechar && (
-              <button className="anuncio-tela-inteira-fechar" onClick={handleFechar}>
-                ✖
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
               </button>
             )}
-            
-            <a 
-              href={anuncioUrlDestino} 
-              className="anuncio-link" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              onClick={(e) => {
-                e.preventDefault();
-                if (onFechar && typeof onFechar === 'function') {
-                  onFechar();
-                } else {
-                  window.open(anuncioUrlDestino, '_blank');
-                }
-              }}
-            >
-              <img 
-                src={anuncioImagemSrc} 
-                alt={anuncioTitulo || "Anúncio"} 
-                className="anuncio-tela-inteira-imagem" 
-              />
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
+              {!anuncioImagemSrc && (
+                <>
+                  <div className="anuncio-tag">PUBLICIDADE</div>
+                  {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                  <div className="anuncio-conteudo">
+                    {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                    {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                    {idade && <span className="anuncio-tag">+{idade}</span>}
+                    {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                    {mostrarPresente && (
+                      <button className="botao-presente">Clique para abrir!</button>
+                    )}
+                  </div>
+                  {mostrarPresente && <img src="/presente.png" alt="Presente" className="presente-animado" />}
+                </>
+              )}
             </a>
           </div>
-        </div>
-      );
-    
-    case 'cursos':
-      // Obter propriedades específicas do tipo cursos
-      const subtitulo = anuncioConfig?.subtitulo || '';
-      const botaoTexto = anuncioConfig?.botaoTexto || 'SABER MAIS';
-      const corFundo = anuncioConfig?.corFundo || '#ff5722';
-      const corBotao = anuncioConfig?.corTexto || '#ffffff';
+        );
       
-      return (
-        <div 
-          className={`anuncio anuncio-${tipo}`}
-        >
-          {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
-            </button>
-          )}
-          <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
-            {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
-          </a>
-        </div>
-      );
-    
-    case 'logos':
-      const logoTamanho = anuncioConfig?.tamanho || 'medio';
+      case 'fixo-inferior':
+        return (
+          <div 
+            className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`}
+            style={estiloPersonalizado}
+          >
+            {mostrarFechar && (
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
+              </button>
+            )}
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
+              {!anuncioImagemSrc && (
+                <>
+                  <div className="anuncio-tag">PUBLICIDADE</div>
+                  {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                  <div className="anuncio-conteudo">
+                    {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                    {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                    {idade && <span className="anuncio-tag">+{idade}</span>}
+                    {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                  </div>
+                </>
+              )}
+            </a>
+          </div>
+        );
       
-      return (
-        <div className={`anuncio anuncio-logos anuncio-logos-${logoTamanho}`}>
-          {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
-            </button>
-          )}
-          <a href={anuncioUrlDestino} target="_blank" rel="noopener noreferrer">
-            <img 
-              src={anuncioImagemSrc} 
-              alt={anuncioTitulo || 'Patrocinador'} 
-              className="anuncio-logos-imagem" 
-            />
-          </a>
-        </div>
-      );
-    
-    // Caso padrão para espaço reservado para anúncios
-    default:
-      return (
-        <div 
-          className={`anuncio anuncio-padrao anuncio-${anuncioPosicao}`}
-          style={estiloPersonalizado}
-        >
-          <div className="anuncio-tag">PUBLICIDADE</div>
-          <p>Espaço reservado para anúncio</p>
-          {mostrarFechar && (
-            <button className="anuncio-fechar" onClick={handleFechar}>
-              X
-            </button>
-          )}
-        </div>
-      );
+      default:
+        return (
+          <div 
+            className={`anuncio anuncio-padrao anuncio-${anuncioPosicao}`}
+            style={estiloPersonalizado}
+          >
+            {mostrarFechar && (
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
+              </button>
+            )}
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
+              {!anuncioImagemSrc && (
+                <>
+                  <div className="anuncio-tag">PUBLICIDADE</div>
+                  {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                  <div className="anuncio-conteudo">
+                    {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                    {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                    {idade && <span className="anuncio-tag">+{idade}</span>}
+                    {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                  </div>
+                </>
+              )}
+            </a>
+          </div>
+        );
+    }
+  };
+  
+  // Se não temos IDs ainda, renderizar sem o tracker
+  if (!anuncioId || !paginaId) {
+    return renderConteudoAnuncio();
   }
+  
+  // Renderizar com o tracker quando temos os IDs
+  return (
+    <AdTracker 
+      adId={anuncioId} 
+      pageId={paginaId} 
+      tipo={tipo}
+    >
+      {renderConteudoAnuncio()}
+    </AdTracker>
+  );
 };
 
 export default Anuncio;
