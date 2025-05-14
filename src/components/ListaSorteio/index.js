@@ -733,11 +733,11 @@ function ListaSorteio({ onReiniciarLista }) {
                     <option value="playstation">PlayStation</option>
                     */}
                 </select>
-                <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
-                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ❄️` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionarParticipante')}
-                </button>
                 <button onClick={adicionarDezParticipantes} disabled={tempoEspera > 0 || listaCongelada}>
                     {listaCongelada ? `${t('listaSorteio.listaCongelada')} ❄️` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionar10Participantes')}
+                </button>
+                <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
+                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ❄️` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionarParticipante')}
                 </button>
             </div>
 
