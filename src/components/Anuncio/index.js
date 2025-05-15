@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Anuncio.css';
 import AdTracker from '../AdTracker';
-import { supabase } from '../../config/supabaseClient';
+import { supabase } from '../../utils/supabaseClient';
 
 const Anuncio = ({ 
   tipo = 'reservado', 
@@ -61,85 +61,59 @@ const Anuncio = ({
   // Obter ou criar IDs para anúncio e página ao montar o componente
   useEffect(() => {
     async function obterOuCriarAnuncio() {
-      // Primeiro, verificar se já temos um anúncio correspondente
-      const anuncioNome = anuncioConfig?.titulo || titulo || `Anúncio ${tipo} ${posicao}`;
-      const anuncioUrl = anuncioConfig?.urlDestino || urlDestino;
-      
-      const { data: anuncios, error: erroConsulta } = await supabase
-        .from('anuncios')
-        .select('id')
-        .eq('nome', anuncioNome)
-        .eq('tipo_anuncio', tipo)
-        .limit(1);
-      
-      if (erroConsulta) {
-        console.error("Erro ao consultar anúncio:", erroConsulta);
-        return;
-      }
-      
-      if (anuncios && anuncios.length > 0) {
-        setAnuncioId(anuncios[0].id);
-      } else {
-        // Criar novo anúncio se não existir
-        const { data: novoAnuncio, error: erroInsercao } = await supabase
-          .from('anuncios')
-          .insert([{
-            nome: anuncioNome,
-            url_destino: anuncioUrl,
-            tipo_anuncio: tipo,
-            tamanho: posicao,
-            status: 'ativo'
-          }])
-          .select();
+      try {
+        // Primeiro, verificar se já temos um anúncio correspondente
+        const anuncioNome = anuncioConfig?.titulo || titulo || `Anúncio ${tipo} ${posicao}`;
+        const anuncioUrl = anuncioConfig?.urlDestino || urlDestino;
         
-        if (erroInsercao) {
-          console.error("Erro ao criar anúncio:", erroInsercao);
+        // Usar a função RPC para obter ou criar o anúncio
+        const { data, error } = await supabase.rpc(
+          'obter_ou_criar_anuncio',
+          {
+            p_nome: anuncioNome,
+            p_url_destino: anuncioUrl,
+            p_tipo_anuncio: tipo,
+            p_tamanho: posicao
+          }
+        );
+        
+        if (error) {
+          console.error("Erro ao obter ou criar anúncio:", error);
           return;
         }
         
-        if (novoAnuncio && novoAnuncio.length > 0) {
-          setAnuncioId(novoAnuncio[0].id);
-        }
+        // A função RPC retorna diretamente o ID do anúncio
+        setAnuncioId(data);
+      } catch (err) {
+        console.error("Erro inesperado ao processar anúncio:", err);
       }
     }
     
     async function obterOuCriarPagina() {
-      const paginaUrl = window.location.pathname;
-      const paginaTitulo = document.title;
-      
-      const { data: paginas, error: erroConsulta } = await supabase
-        .from('paginas')
-        .select('id')
-        .eq('url', paginaUrl)
-        .limit(1);
-      
-      if (erroConsulta) {
-        console.error("Erro ao consultar página:", erroConsulta);
-        return;
-      }
-      
-      if (paginas && paginas.length > 0) {
-        setPaginaId(paginas[0].id);
-      } else {
-        // Criar nova página se não existir
-        const { data: novaPagina, error: erroInsercao } = await supabase
-          .from('paginas')
-          .insert([{
-            url: paginaUrl,
-            titulo: paginaTitulo,
-            categoria: 'principal',
-            secao: posicao
-          }])
-          .select();
+      try {
+        const paginaUrl = window.location.pathname;
+        const paginaTitulo = document.title;
         
-        if (erroInsercao) {
-          console.error("Erro ao criar página:", erroInsercao);
+        // Usar a função RPC para obter ou criar a página
+        const { data, error } = await supabase.rpc(
+          'obter_ou_criar_pagina',
+          {
+            p_url: paginaUrl,
+            p_titulo: paginaTitulo,
+            p_categoria: 'principal',
+            p_secao: posicao
+          }
+        );
+        
+        if (error) {
+          console.error("Erro ao obter ou criar página:", error);
           return;
         }
         
-        if (novaPagina && novaPagina.length > 0) {
-          setPaginaId(novaPagina[0].id);
-        }
+        // A função RPC retorna diretamente o ID da página
+        setPaginaId(data);
+      } catch (err) {
+        console.error("Erro inesperado ao processar página:", err);
       }
     }
     
