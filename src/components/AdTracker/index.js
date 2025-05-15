@@ -163,7 +163,7 @@ const AdTracker = ({ adId, pageId, tipo, onLoad, children }) => {
       // Enviar para o Supabase usando a função RPC
       const { data, error } = await supabase.rpc(
         'inserir_eventos_anuncios_lote',
-        { eventos: JSON.stringify(eventsToSend) }
+        { eventos: eventsToSend }
       );
       
       if (error) {
