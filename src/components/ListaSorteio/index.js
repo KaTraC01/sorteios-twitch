@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next'; // Importar hook de tradução
-import { supabase } from "../../config/supabaseClient"; // Importando Supabase
+import { supabase } from "../../utils/supabaseClient"; // Importando Supabase
 import "./ListaSorteio.css"; // Importando o CSS
 import Anuncio from "../Anuncio"; // Importando o componente de anúncio
 import PlataformaIcon from "../PlataformaIcon"; // Importando o componente de ícone de plataforma

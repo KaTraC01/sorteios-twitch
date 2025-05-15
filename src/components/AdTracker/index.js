@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../config/supabaseClient';
+import { supabase } from '../../utils/supabaseClient';
 
 /**
  * Componente para rastrear métricas de anúncios com IntersectionObserver
