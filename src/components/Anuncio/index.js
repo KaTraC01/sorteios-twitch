@@ -212,6 +212,32 @@ const Anuncio = ({
           </div>
         );
       
+      case 'tela-inteira':
+        return (
+          <div className="anuncio-tela-inteira">
+            <div className="anuncio-tela-inteira-container">
+              {mostrarFechar && (
+                <button className="anuncio-tela-inteira-fechar" onClick={handleFechar}>
+                  X
+                </button>
+              )}
+              <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+                {anuncioImagemSrc && (
+                  <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-tela-inteira-imagem" />
+                )}
+                {!anuncioImagemSrc && (
+                  <>
+                    {anuncioTitulo && <h2 className="anuncio-tela-inteira-titulo">{anuncioTitulo}</h2>}
+                    {anuncioDescricao && <p className="anuncio-tela-inteira-subtitulo">{anuncioDescricao}</p>}
+                    <button className="anuncio-tela-inteira-botao">Clique Aqui</button>
+                    {anuncioAvisos && <div className="anuncio-tela-inteira-aviso">{anuncioAvisos}</div>}
+                  </>
+                )}
+              </a>
+            </div>
+          </div>
+        );
+      
       case 'fixo-superior':
         return (
           <div className="anuncio-container-superior">

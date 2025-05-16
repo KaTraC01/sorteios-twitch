@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../utils/supabaseClient';
+import './AdTracker.css'; // Importar o CSS caso não esteja já importado
 
 /**
  * Componente para rastrear métricas de anúncios com IntersectionObserver
@@ -199,6 +200,20 @@ const AdTracker = ({ adId, pageId, tipo, onLoad, children }) => {
     };
   }, [isVisible, visibleSince, events]);
 
+  // Para anúncios de tela inteira, usar uma div transparente para manter a estrutura original
+  if (tipo === 'tela-inteira') {
+    return (
+      <div 
+        ref={adRef} 
+        onClick={handleClick}
+        className="adtracker adtracker-tela-inteira"
+      >
+        {children}
+      </div>
+    );
+  }
+  
+  // Para todos os outros tipos de anúncios, manter o comportamento atual
   return (
     <div 
       ref={adRef} 
