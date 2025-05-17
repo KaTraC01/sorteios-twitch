@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabaseClient';
+import AnuncioDemo from '../../components/AnuncioDemo';
 import './RelatorioAnuncios.css';
 
 const RelatorioAnuncios = () => {
@@ -293,11 +294,11 @@ const RelatorioAnuncios = () => {
             {metricasPorAnuncio.map(metrica => (
               <tr key={metrica.anuncioId}>
                 <td>{metrica.nome}</td>
-                <td>{metrica.impressoes.toLocaleString()}</td>
-                <td>{metrica.cliques.toLocaleString()}</td>
-                <td>{metrica.ctr.toFixed(2)}%</td>
-                <td>{metrica.tempoMedio.toFixed(1)}s</td>
-                <td>{metrica.visibilidade.toFixed(1)}%</td>
+                <td className="metrica-impressoes">{metrica.impressoes.toLocaleString()}</td>
+                <td className="metrica-cliques">{metrica.cliques.toLocaleString()}</td>
+                <td className="metrica-ctr">{metrica.ctr.toFixed(2)}%</td>
+                <td className="metrica-tempo">{metrica.tempoMedio.toFixed(1)}s</td>
+                <td className="metrica-visibilidade">{metrica.visibilidade.toFixed(1)}%</td>
               </tr>
             ))}
             {metricasPorAnuncio.length === 0 && (
@@ -331,9 +332,9 @@ const RelatorioAnuncios = () => {
             {metricasPorPagina.map(metrica => (
               <tr key={metrica.paginaId}>
                 <td>{metrica.url}</td>
-                <td>{metrica.impressoes.toLocaleString()}</td>
-                <td>{metrica.cliques.toLocaleString()}</td>
-                <td>{metrica.ctr.toFixed(2)}%</td>
+                <td className="metrica-impressoes">{metrica.impressoes.toLocaleString()}</td>
+                <td className="metrica-cliques">{metrica.cliques.toLocaleString()}</td>
+                <td className="metrica-ctr">{metrica.ctr.toFixed(2)}%</td>
               </tr>
             ))}
             {metricasPorPagina.length === 0 && (
@@ -353,26 +354,32 @@ const RelatorioAnuncios = () => {
       
       <div className="relatorio-controles">
         <div className="relatorio-filtros">
-          <select 
-            value={periodoSelecionado} 
-            onChange={(e) => setPeriodoSelecionado(e.target.value)}
-            className="relatorio-select"
-          >
-            <option value="7d">Últimos 7 dias</option>
-            <option value="30d">Últimos 30 dias</option>
-            <option value="90d">Últimos 90 dias</option>
-            <option value="1a">Último ano</option>
-          </select>
+          <div className="relatorio-select-container">
+            <div className="relatorio-select-header">Período</div>
+            <select 
+              value={periodoSelecionado} 
+              onChange={(e) => setPeriodoSelecionado(e.target.value)}
+              className="relatorio-select"
+            >
+              <option value="7d">Últimos 7 dias</option>
+              <option value="30d">Últimos 30 dias</option>
+              <option value="90d">Últimos 90 dias</option>
+              <option value="1a">Último ano</option>
+            </select>
+          </div>
           
-          <select 
-            value={tipoRelatorio} 
-            onChange={(e) => setTipoRelatorio(e.target.value)}
-            className="relatorio-select"
-          >
-            <option value="impressoes">Visão Geral</option>
-            <option value="anuncios">Por Anúncio</option>
-            <option value="paginas">Por Página</option>
-          </select>
+          <div className="relatorio-select-container">
+            <div className="relatorio-select-header">Relatório</div>
+            <select 
+              value={tipoRelatorio} 
+              onChange={(e) => setTipoRelatorio(e.target.value)}
+              className="relatorio-select"
+            >
+              <option value="impressoes">Visão Geral</option>
+              <option value="anuncios">Por Anúncio</option>
+              <option value="paginas">Por Página</option>
+            </select>
+          </div>
           
           <button 
             onClick={carregarDados} 
@@ -410,6 +417,13 @@ const RelatorioAnuncios = () => {
           {/* Mostrar relatório por página se selecionado */}
           {(tipoRelatorio === 'paginas' || tipoRelatorio === 'impressoes') && 
             renderizarRelatorioPorPagina()}
+            
+          {/* Exemplo de anúncio */}
+          <div className="relatorio-exemplo-anuncio">
+            <h2>Exemplo de Formato de Anúncio</h2>
+            <p>Este é um exemplo do formato de anúncio banner (970×90)</p>
+            <AnuncioDemo tamanho="banner" />
+          </div>
         </div>
       )}
     </div>
