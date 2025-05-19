@@ -31,18 +31,6 @@ const RelatorioAnuncios = () => {
         .order('data_criacao', { ascending: false });
         
       if (erroAnuncios) throw erroAnuncios;
-      
-      // Verificar dados de anúncios (especialmente os tipos)
-      console.log('Anúncios carregados:', dadosAnuncios);
-      if (dadosAnuncios && dadosAnuncios.length > 0) {
-        console.log('Exemplo de tipos de anúncios:');
-        dadosAnuncios.slice(0, 5).forEach(a => {
-          console.log(`ID: ${a.id}, Nome: ${a.nome}, Tipo: ${a.tipo_anuncio || 'NÃO DEFINIDO'}`);
-        });
-      } else {
-        console.warn('Nenhum anúncio encontrado!');
-      }
-      
       setAnuncios(dadosAnuncios || []);
       
       // Buscar páginas
@@ -63,18 +51,6 @@ const RelatorioAnuncios = () => {
         .gte('data', dataInicio.toISOString());
         
       if (erroResumo) throw erroResumo;
-      
-      // Verificar dados de resumo diário
-      console.log('Métricas de resumo carregadas:', dadosResumo?.length || 0, 'registros');
-      if (dadosResumo && dadosResumo.length > 0) {
-        console.log('Exemplo de métricas de resumo:');
-        dadosResumo.slice(0, 3).forEach(m => {
-          console.log(`Data: ${m.data}, Anúncio ID: ${m.anuncio_id}, Impressões: ${m.contagem_impressoes}, Cliques: ${m.contagem_cliques}`);
-        });
-      } else {
-        console.warn('Nenhuma métrica de resumo encontrada!');
-      }
-      
       setResumoDiario(dadosResumo || []);
       
       // Buscar eventos detalhados
@@ -138,8 +114,8 @@ const RelatorioAnuncios = () => {
     if (!anuncio) return 'Desconhecido';
     
     // Formatar o tipo de anúncio (primeira letra maiúscula e hífen substituído por espaço)
-    const tipo = anuncio.tipo_anuncio || 'desconhecido';
-    return tipo.charAt(0).toUpperCase() + tipo.slice(1).replace(/-/g, ' ');
+    const tipo = anuncio.tipo_anuncio;
+    return tipo.charAt(0).toUpperCase() + tipo.slice(1).replace('-', ' ');
   };
   
   // Função para obter URL da página pelo ID
@@ -195,27 +171,18 @@ const RelatorioAnuncios = () => {
   
   // Agrupar métricas por tipo de anúncio para o relatório de desempenho
   const agruparMetricasPorAnuncio = () => {
-    // Modificada para agrupar por tipo de anúncio em vez de ID de anúncio
+    // Modificação: vamos completamente reconstruir a função para garantir agrupamento por tipo
     const metricasPorTipo = {};
     
-    // Verificar se temos dados suficientes para processar
-    if (!anuncios || anuncios.length === 0) {
-      console.warn('Sem anúncios para agrupar métricas por tipo');
+    // Verificar se temos anúncios carregados
+    if (anuncios.length === 0 || resumoDiario.length === 0) {
       return [];
     }
-    
-    if (!resumoDiario || resumoDiario.length === 0) {
-      console.warn('Sem métricas de resumo para agrupar');
-      return [];
-    }
-    
-    console.log(`Tentando agrupar métricas por tipo. Anúncios: ${anuncios.length}, Resumo: ${resumoDiario.length}`);
     
     // Primeiro, mapeamos cada anúncio para seu tipo
     const mapaTipos = {};
     anuncios.forEach(anuncio => {
-      // Garantir que tipo_anuncio existe e não é vazio
-      mapaTipos[anuncio.id] = anuncio.tipo_anuncio || 'desconhecido';
+      mapaTipos[anuncio.id] = anuncio.tipo_anuncio;
     });
     
     // DEBUG: verificar o mapa de tipos
@@ -443,7 +410,7 @@ const RelatorioAnuncios = () => {
               className="relatorio-select"
             >
               <option value="impressoes">Visão Geral</option>
-              <option value="anuncios">Por Tipo de Anúncio</option>
+              <option value="anuncios">Por Anúncio</option>
               <option value="paginas">Por Página</option>
             </select>
           </div>
