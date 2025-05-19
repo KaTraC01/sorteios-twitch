@@ -1,0 +1,80 @@
+INVESTIGAÇÃO DIRETA NO BANCO DE DADOS
+
+Para verificar diretamente no banco de dados se existem métricas para anúncios do tipo "banner", você pode executar as seguintes consultas SQL no Supabase:
+
+1. VERIFICAR ANÚNCIOS DO TIPO "BANNER"
+
+```sql
+SELECT id, nome, tipo_anuncio, ativo, data_criacao
+FROM anuncios
+WHERE tipo_anuncio = 'banner';
+```
+
+Esta consulta mostrará todos os anúncios do tipo "banner" no banco de dados.
+
+2. VERIFICAR SE EXISTEM EVENTOS DE IMPRESSÃO PARA ANÚNCIOS DO TIPO "BANNER"
+
+```sql
+SELECT e.anuncio_id, e.data_hora, e.tipo_evento, a.nome, a.tipo_anuncio
+FROM eventos_anuncios e
+JOIN anuncios a ON e.anuncio_id = a.id
+WHERE a.tipo_anuncio = 'banner'
+ORDER BY e.data_hora DESC
+LIMIT 100;
+```
+
+Esta consulta mostrará os últimos 100 eventos (impressões, cliques) registrados para anúncios do tipo "banner".
+
+3. VERIFICAR SE EXISTEM MÉTRICAS RESUMIDAS PARA ANÚNCIOS DO TIPO "BANNER"
+
+```sql
+SELECT m.anuncio_id, m.data, m.contagem_impressoes, m.contagem_cliques, a.nome, a.tipo_anuncio
+FROM metricas_resumo_diarias m
+JOIN anuncios a ON m.anuncio_id = a.id
+WHERE a.tipo_anuncio = 'banner'
+ORDER BY m.data DESC
+LIMIT 100;
+```
+
+Esta consulta mostrará as métricas diárias resumidas para anúncios do tipo "banner".
+
+4. COMPARAR COM MÉTRICAS DE OUTROS TIPOS DE ANÚNCIOS
+
+```sql
+SELECT a.tipo_anuncio, COUNT(DISTINCT m.anuncio_id) as qtd_anuncios, 
+       SUM(m.contagem_impressoes) as total_impressoes,
+       SUM(m.contagem_cliques) as total_cliques
+FROM metricas_resumo_diarias m
+JOIN anuncios a ON m.anuncio_id = a.id
+GROUP BY a.tipo_anuncio
+ORDER BY total_impressoes DESC;
+```
+
+Esta consulta comparará as métricas totais entre todos os tipos de anúncios, permitindo identificar se os anúncios do tipo "banner" têm métricas ou não.
+
+5. VERIFICAR BANNERS ESPECÍFICOS
+
+Se você identificou anúncios "banner" específicos nos passos anteriores, pode verificar suas métricas diretamente:
+
+```sql
+-- Substituir [ID_DO_BANNER] pelo ID real encontrado na primeira consulta
+SELECT m.data, m.contagem_impressoes, m.contagem_cliques
+FROM metricas_resumo_diarias m
+WHERE m.anuncio_id = '[ID_DO_BANNER]'
+ORDER BY m.data DESC;
+```
+
+Esta consulta mostrará todas as métricas registradas para um anúncio específico do tipo "banner".
+
+Executando estas consultas, você poderá determinar:
+
+1. Se existem anúncios do tipo "banner" cadastrados no banco
+2. Se existem eventos brutos registrados para esses anúncios
+3. Se existem métricas resumidas para esses anúncios
+4. Como as métricas de banner se comparam com outros tipos de anúncios
+
+Estas informações ajudarão a identificar em qual parte do processo está ocorrendo o problema:
+- No cadastro de anúncios
+- No rastreamento de eventos
+- No processamento de eventos para métricas resumidas
+- Na exibição das métricas no relatório 
