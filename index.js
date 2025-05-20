@@ -96,7 +96,7 @@ const RelatorioAnuncios = () => {
     return dataInicio;
   };
   
-  // Função para formatar data
+  // Função para formatar data.
   const formatarData = (dataString) => {
     const data = new Date(dataString);
     return data.toLocaleDateString('pt-BR');
