@@ -91,6 +91,33 @@ const AdTracker = ({ adId, pageId, tipo, onLoad, children }) => {
       }
     );
     
+    // Verificar se o anúncio já está visível inicialmente
+    // Isso é importante para anúncios que já estão na viewport quando a página carrega
+    if (!impressionRegistered && !visibleSince) {
+      // Verificamos com setTimeout para dar tempo do DOM renderizar completamente
+      setTimeout(() => {
+        // Verificar se o componente ainda existe
+        if (node && document.body.contains(node)) {
+          // Verificar se o elemento está visível na viewport
+          const rect = node.getBoundingClientRect();
+          const isInitiallyVisible = (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+          );
+          
+          if (isInitiallyVisible) {
+            setIsVisible(true);
+            setVisibleSince(Date.now());
+            addEvent('impressao');
+            setImpressionRegistered(true);
+          }
+        }
+      }, 100);
+    }
+    
+    // Iniciar rastreamento de visibilidade
     observer.observe(node);
     
     return () => {
@@ -130,8 +157,12 @@ const AdTracker = ({ adId, pageId, tipo, onLoad, children }) => {
       anuncio_id: adId,
       pagina_id: pageId,
       tipo_evento: tipoEvento,
-      tempo_exposto: tipoEvento === 'impressao' ? 0 : timeVisible,
-      visivel: isVisible,
+      // O tempo de exposição deve ser 0 inicialmente para impressões
+      // Eventos subsequentes de impressão terão o tempo acumulado
+      tempo_exposto: timeVisible,
+      // Eventos de impressão devem SEMPRE ser marcados como visíveis (true)
+      // pois só registramos impressão quando o anúncio se torna visível
+      visivel: tipoEvento === 'impressao' ? true : isVisible,
       origem_trafego: detectTrafficSource(),
       dispositivo_info: getUserInfo(),
       user_session_id: localStorage.getItem('userSessionId') || 
