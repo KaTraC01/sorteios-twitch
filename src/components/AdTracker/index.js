@@ -57,18 +57,18 @@ const AdTracker = ({ adId, pageId, tipo, onLoad, children }) => {
 
   // Configurar IntersectionObserver para detectar visibilidade
   useEffect(() => {
-    if (!adRef.current) return;
+    const node = adRef.current;
+    if (!node) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        const wasVisible = isVisible;
+      ([entry]) => {
         const nowVisible = entry.isIntersecting;
-        
+        const visibility = entry.intersectionRatio;
+
         setIsVisible(nowVisible);
-        
+
         // Se ficou visível agora
-        if (!wasVisible && nowVisible) {
+        if (!isVisible && nowVisible) {
           setVisibleSince(Date.now());
           
           // Registrar impressão se ainda não foi registrada
@@ -79,26 +79,25 @@ const AdTracker = ({ adId, pageId, tipo, onLoad, children }) => {
         }
         
         // Se estava visível e agora não está mais
-        if (wasVisible && !nowVisible && visibleSince) {
+        if (isVisible && !nowVisible && visibleSince) {
           const duration = Math.floor((Date.now() - visibleSince) / 1000); // segundos
           setTimeVisible(prev => prev + duration);
           setVisibleSince(null);
         }
       },
       {
-        threshold: 0.5, // Considera visível quando pelo menos 50% do anúncio está visível
+        threshold: 0.1, // Considera visível quando pelo menos 10% do anúncio está visível
         rootMargin: '0px'
       }
     );
     
-    observer.observe(adRef.current);
+    observer.observe(node);
     
     return () => {
-      if (adRef.current) {
-        observer.unobserve(adRef.current);
-      }
+      observer.unobserve(node);
+      observer.disconnect();
     };
-  }, [isVisible, impressionRegistered, visibleSince]);
+  }, [adRef, isVisible, impressionRegistered, visibleSince]);
 
   // Timer para atualizar tempo visível durante a visibilidade contínua
   useEffect(() => {
@@ -200,27 +199,34 @@ const AdTracker = ({ adId, pageId, tipo, onLoad, children }) => {
     };
   }, [isVisible, visibleSince, events]);
 
-  // Para anúncios de tela inteira, usar uma div transparente para manter a estrutura original
+  // Estrutura recomendada para corrigir problemas de IntersectionObserver
+  // Usando um contêiner externo com display:block para o ref e um contêiner interno para preservar o layout
   if (tipo === 'tela-inteira') {
     return (
       <div 
-        ref={adRef} 
+        ref={adRef}
         onClick={handleClick}
-        className="adtracker adtracker-tela-inteira"
+        className="adtracker adtracker-tela-inteira" 
+        style={{ display: 'block', position: 'relative' }}
       >
-        {children}
+        <div>
+          {children}
+        </div>
       </div>
     );
   }
   
-  // Para todos os outros tipos de anúncios, manter o comportamento atual
+  // Para todos os outros tipos de anúncios, usar a mesma estrutura recomendada
   return (
     <div 
-      ref={adRef} 
+      ref={adRef}
       onClick={handleClick}
-      style={{ display: 'contents' }}
+      className="adtracker"
+      style={{ display: 'block', position: 'relative' }}
     >
-      {children}
+      <div style={{ display: 'contents' }}>
+        {children}
+      </div>
     </div>
   );
 };
