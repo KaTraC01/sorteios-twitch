@@ -1,0 +1,80 @@
+{
+  "header": {
+    "sorteio": "Sorteio",
+    "ganhadores": "Ganhadores"
+  },
+  "timer": {
+    "sorteioEm": "Sorteio em"
+  },
+  "home": {
+    "title": "Site de Sorteios",
+    "welcome": "Bem-vindo ao site de sorteios! 🚀"
+  },
+  "listaSorteio": {
+    "adicionarParticipante": "Adicionar Participante",
+    "adicionar10Participantes": "+10",
+    "resetarLista": "Resetar Lista",
+    "nome": "Nome",
+    "streamer": "Streamer",
+    "plataforma": "Plataforma",
+    "participantes": "Participantes do Sorteio",
+    "ultimoVencedor": "Último Vencedor",
+    "numeroSorteado": "Número Sorteado",
+    "data": "Data",
+    "fecharInstrucoes": "Fechar Instruções",
+    "instrucoes": {
+      "title": "Como Participar",
+      "info1": "• Inscreva-se diariamente: Preencha corretamente o formulário com seu Nickname de usuário da Twitch e o nome do Streamer que você escolhe apoiar.",
+      "info2": "• Verifique se seu nome está na lista de participantes após se inscrever. Atenção: o nome do vencedor será retirado diretamente desta lista.",
+      "info3": "• Insira apenas um Nickname e um Streamer por vez — o prêmio será entregue a um único Usuario e Streamer por sorteio.",
+      "info4": "• Os sorteios acontecem todos os dias às 21:00. O vencedor é selecionado aleatoriamente."
+    },
+    "mostrarMais": "Mostrar Mais",
+    "mostrarMenos": "Mostrar Menos",
+    "aguarde": "Aguarde {{segundos}}s",
+    "listaCongelada": "Lista Congelada",
+    "nenhumParticipante": "Nenhum participante na lista. O sorteio foi cancelado.",
+    "listaResetada": "Lista resetada para o próximo sorteio! O último vencedor continua visível.",
+    "preenchaTodosCampos": "Por favor, preencha todos os campos.",
+    "participanteAdicionado": "Participante adicionado com sucesso!",
+    "erroDetalhado": "Erro ao adicionar",
+    "erro": "Erro",
+    "adicionandoParticipacoes": "Adicionando participações, aguarde...",
+    "metodoAlternativo": "Usando método alternativo de inserção...",
+    "participacoesRegistradas": "Participante adicionado com sucesso! {{quantidade}} participações foram registradas.",
+    "dezParticipacoesRegistradas": "Participante adicionado com sucesso! 10 participações foram registradas.",
+    "erroAdicionarParticipantes": "Erro ao adicionar participantes",
+    "naoFoiPossivelAdicionar": "Não foi possível adicionar participantes. Tente novamente mais tarde.",
+    "erroAdicionarParticipantesManualmente": "Erro ao adicionar participantes manualmente.",
+    "nenhumParticipanteEncontrado": "Nenhum participante encontrado"
+  },
+  "ganhadores": {
+    "title": "Histórico de Ganhadores",
+    "listaGanhadores": "Lista de Ganhadores",
+    "fecharInstrucoes": "Fechar Instruções",
+    "instrucoes": {
+      "info1": "• A lista de participantes dos últimos 7 dias pode ser visualizada clicando no ícone de pergaminho (📜).",
+      "info2": "• Os vencedores dos últimos 60 sorteios estão disponíveis para visualização nesta página."
+    },
+    "faleConosco": "Fale Conosco",
+    "carregando": "🔄 Carregando histórico de sorteios...",
+    "nenhumSorteio": "Nenhum sorteio realizado até o momento.",
+    "tabela": {
+      "data": "Data",
+      "numero": "N°",
+      "ganhador": "Ganhador",
+      "streamer": "Streamer",
+      "plataforma": "🎥",
+      "lista": "Lista"
+    },
+    "listaParticipantes": "Lista de Participantes",
+    "fecharLista": "Fechar",
+    "carregandoLista": "Carregando lista de participantes...",
+    "nenhumParticipante": "Nenhum participante registrado para este sorteio.",
+    "mostrarMais": "Mostrar Mais",
+    "mostrarMenos": "Mostrar Menos"
+  },
+  "anuncio": {
+    "mostrarPublicidade": "Mostrar publicidade"
+  }
+} 

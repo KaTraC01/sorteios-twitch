@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Anuncio.css';
+import AdTracker from '../AdTracker';
+import { supabase } from '../../utils/supabaseClient';
 
 const Anuncio = ({ 
   tipo = 'reservado', 
@@ -20,6 +22,8 @@ const Anuncio = ({
 }) => {
   const [fechado, setFechado] = useState(false);
   const [anuncioConfig, setAnuncioConfig] = useState(null);
+  const [anuncioId, setAnuncioId] = useState(null);
+  const [paginaId, setPaginaId] = useState(null);
   
   // Carregar o arquivo de configuração de anúncios
   useEffect(() => {
@@ -53,6 +57,71 @@ const Anuncio = ({
         console.error("Erro ao carregar configuração de anúncios:", error);
       });
   }, [tipo, posicao]);
+
+  // Obter ou criar IDs para anúncio e página ao montar o componente
+  useEffect(() => {
+    async function obterOuCriarAnuncio() {
+      try {
+        // Primeiro, verificar se já temos um anúncio correspondente
+        const anuncioNome = anuncioConfig?.titulo || titulo || `Anúncio ${tipo} ${posicao}`;
+        const anuncioUrl = anuncioConfig?.urlDestino || urlDestino;
+        
+        // Usar a função RPC para obter ou criar o anúncio
+        const { data, error } = await supabase.rpc(
+          'obter_ou_criar_anuncio',
+          {
+            p_nome: anuncioNome,
+            p_url_destino: anuncioUrl,
+            p_tipo_anuncio: tipo,
+            p_tamanho: posicao
+          }
+        );
+        
+        if (error) {
+          console.error("Erro ao obter ou criar anúncio:", error);
+          return;
+        }
+        
+        // A função RPC retorna diretamente o ID do anúncio
+        setAnuncioId(data);
+      } catch (err) {
+        console.error("Erro inesperado ao processar anúncio:", err);
+      }
+    }
+    
+    async function obterOuCriarPagina() {
+      try {
+        const paginaUrl = window.location.pathname;
+        const paginaTitulo = document.title;
+        
+        // Usar a função RPC para obter ou criar a página
+        const { data, error } = await supabase.rpc(
+          'obter_ou_criar_pagina',
+          {
+            p_url: paginaUrl,
+            p_titulo: paginaTitulo,
+            p_categoria: 'principal',
+            p_secao: posicao
+          }
+        );
+        
+        if (error) {
+          console.error("Erro ao obter ou criar página:", error);
+          return;
+        }
+        
+        // A função RPC retorna diretamente o ID da página
+        setPaginaId(data);
+      } catch (err) {
+        console.error("Erro inesperado ao processar página:", err);
+      }
+    }
+    
+    if (anuncioConfig || (tipo && posicao)) {
+      obterOuCriarAnuncio();
+      obterOuCriarPagina();
+    }
+  }, [anuncioConfig, tipo, posicao, titulo, urlDestino]);
   
   useEffect(() => {
     if (fechado) {
@@ -295,8 +364,21 @@ const Anuncio = ({
     }
   };
   
-  // Renderizar o anúncio sem o tracker
-  return renderConteudoAnuncio();
+  // Se não temos IDs ainda, renderizar sem o tracker
+  if (!anuncioId || !paginaId) {
+    return renderConteudoAnuncio();
+  }
+  
+  // Renderizar com o tracker quando temos os IDs
+  return (
+    <AdTracker 
+      adId={anuncioId} 
+      pageId={paginaId} 
+      tipo={tipo}
+    >
+      {renderConteudoAnuncio()}
+    </AdTracker>
+  );
 };
 
 export default Anuncio;

@@ -1,0 +1,558 @@
+.ganhadores-container {
+    max-width: 1800px;
+    width: 100%;
+    margin: 120px auto 20px;
+    padding: 25px;
+    text-align: center;
+    color: white;
+    background-color: rgba(25, 25, 25, 0.8);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ganhadores-container h2 {
+    color: #19b5a5;
+    margin-top: 10px;
+    margin-bottom: 25px;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.fale-conosco {
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.fale-conosco:hover {
+    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
+}
+
+.historico-tabela {
+    width: 100%;
+    min-width: 600px;
+    border-collapse: collapse;
+    margin-top: 25px;
+    background: rgba(40, 40, 40, 0.9);
+    color: white;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+/* Ajustar largura das colunas da tabela */
+.historico-tabela th:nth-child(1), 
+.historico-tabela td:nth-child(1) {
+    width: 9%; /* Data - mantido */
+    min-width: 65px;
+    word-break: break-word;
+}
+
+.historico-tabela th:nth-child(2), 
+.historico-tabela td:nth-child(2) {
+    width: 5%; /* Número - mantido */
+    min-width: 40px;
+}
+
+.historico-tabela th:nth-child(3), 
+.historico-tabela td:nth-child(3),
+.historico-tabela th:nth-child(4), 
+.historico-tabela td:nth-child(4) {
+    width: 25%; /* Nome e Streamer - aumentado de 20% para 25% */
+    word-break: break-word;
+}
+
+.historico-tabela th:nth-child(5), 
+.historico-tabela td:nth-child(5) {
+    width: 5%; /* Plataforma - mantido */
+    min-width: 40px;
+}
+
+.historico-tabela th:nth-child(6), 
+.historico-tabela td:nth-child(6) {
+    width: 4%; /* Ver Lista - mantido */
+    min-width: 40px;
+}
+
+.historico-tabela th, 
+.historico-tabela td {
+    border: 1px solid #444;
+    padding: 10px 8px; /* Aumentado para dar mais espaço */
+    text-align: center;
+}
+
+.historico-tabela th {
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
+    color: white;
+    font-weight: bold;
+}
+
+.historico-tabela tr:nth-child(even) {
+    background-color: rgba(50, 50, 50, 0.7);
+}
+
+.historico-tabela tr:hover {
+    background-color: rgba(70, 70, 70, 0.8);
+}
+
+.banner-row {
+    background-color: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.banner-row td {
+    padding: 5px !important;
+}
+
+/* Botão Ver Lista */
+.historico-tabela button {
+    background-color: #19b5a5;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 18px; /* Igualando ao tamanho do botão de cadeado */
+}
+
+.historico-tabela button:hover {
+    background-color: #14a090;
+}
+
+/* Estilo para botão bloqueado (sorteios com mais de 7 dias) */
+.botao-bloqueado {
+    background-color: #777 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+    font-size: 18px !important;
+}
+
+.botao-bloqueado:hover {
+    background-color: #777 !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .ganhadores-container {
+        margin-top: 150px;
+        padding: 15px 5px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto; /* Adicionar rolagem horizontal apenas em tablets e celulares */
+    }
+    
+    .ganhadores-container h2 {
+        margin-top: 10px;
+    }
+    
+    .modal-content {
+        width: 98%;
+        padding-bottom: 15px;
+    }
+    
+    .historico-tabela {
+        min-width: 350px; /* Reduzido ainda mais */
+    }
+    
+    .participantes-tabela {
+        min-width: 280px; /* Reduzido para melhor visualização em celulares */
+    }
+    
+    .historico-tabela th, 
+    .historico-tabela td {
+        padding: 3px 2px;
+        font-size: 11px;
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-header h3 {
+        font-size: 18px;
+    }
+    
+    .lista-participantes-container {
+        padding: 15px;
+    }
+    
+    .fale-conosco,
+    .como-participar-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .coluna-plataforma {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ganhadores-container {
+        margin-top: 140px;
+        padding: 10px 2px;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+    }
+    
+    .ganhadores-container h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+    
+    .modal-content {
+        width: 100%;
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: 0;
+    }
+    
+    .modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .historico-tabela {
+        min-width: 300px; /* Reduzido ainda mais para celulares pequenos */
+    }
+    
+    .historico-tabela th, 
+    .historico-tabela td {
+        padding: 2px 1px;
+        font-size: 10px;
+    }
+    
+    .participantes-tabela {
+        min-width: 240px; /* Reduzido ainda mais para celulares pequenos */
+    }
+    
+    .participantes-tabela th,
+    .participantes-tabela td {
+        padding: 3px 2px;
+        font-size: 11px;
+        overflow-wrap: break-word;
+    }
+    
+    /* Manter proporções das colunas em telas pequenas */
+    .participantes-tabela th:nth-child(1),
+    .participantes-tabela td:nth-child(1) {
+        width: 15%; /* Manter proporção igual à tela grande */
+        min-width: 40px;
+        white-space: nowrap;
+    }
+    
+    .participantes-tabela th:nth-child(2),
+    .participantes-tabela td:nth-child(2),
+    .participantes-tabela th:nth-child(3),
+    .participantes-tabela td:nth-child(3) {
+        width: 37.5%; /* Manter proporção igual à tela grande */
+    }
+    
+    .lista-participantes-container {
+        padding: 12px;
+    }
+    
+    .total-participantes {
+        font-size: 14px;
+    }
+    
+    /* Ajustar o botão "Ver Lista" para caber melhor */
+    .historico-tabela button {
+        padding: 3px 4px;
+        font-size: 18px; /* Mantendo o mesmo tamanho de fonte do desktop */
+    }
+    
+    .coluna-plataforma {
+        font-size: 12px;
+    }
+    
+    .modal-overlay {
+        padding: 0;
+    }
+}
+
+/* Adicionando estilos para os novos elementos */
+
+.como-participar-btn {
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.como-participar-btn:hover {
+    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
+}
+
+.instrucoes {
+    background-color: rgba(40, 40, 40, 0.7);
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 4px solid #19b5a5;
+    text-align: left;
+}
+
+.instrucoes p {
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #19b5a5;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.no-data {
+    background-color: rgba(40, 40, 40, 0.7);
+    padding: 20px;
+    border-radius: 5px;
+    margin: 30px 0;
+}
+
+.footer-info {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #444;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.footer-info p {
+    margin: 5px 0;
+}
+
+/* Estilos para o modal de lista de participantes */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background-color: #222;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 1100px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid #444;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid #444;
+    background-color: #333;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #19b5a5;
+    font-size: 20px;
+}
+
+.fechar-modal {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.fechar-modal:hover {
+    color: #19b5a5;
+}
+
+/* Estilo para o botão fechar-modal-btn */
+.fechar-modal-btn {
+    background: linear-gradient(135deg, #12423e, #27b8a8);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px 0;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.fechar-modal-btn:hover {
+    background: linear-gradient(135deg, #0d322e, #219890);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
+}
+
+.lista-participantes-container {
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.total-participantes {
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #19b5a5;
+}
+
+.participantes-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px; /* Aumentado para melhor espaçamento */
+}
+
+.participantes-tabela th,
+.participantes-tabela td {
+    border: 1px solid #444;
+    padding: 8px 6px;
+    text-align: center;
+}
+
+/* Ajustar largura das colunas da tabela de participantes */
+.participantes-tabela th:nth-child(1),
+.participantes-tabela td:nth-child(1) {
+    width: 15%; /* Aumentado de 10% para 15% para comportar números de até 4 dígitos */
+    min-width: 50px; /* Garantir um tamanho mínimo */
+    white-space: nowrap; /* Evitar quebra de linha nos números */
+}
+
+.participantes-tabela th:nth-child(2),
+.participantes-tabela td:nth-child(2) {
+    width: 37.5%; /* Reduzido de 40% para 37.5% */
+    word-break: break-word;
+}
+
+.participantes-tabela th:nth-child(3),
+.participantes-tabela td:nth-child(3) {
+    width: 37.5%; /* Reduzido de 40% para 37.5% */
+    word-break: break-word;
+}
+
+.participantes-tabela th:nth-child(4),
+.participantes-tabela td:nth-child(4) {
+    width: 10%;
+}
+
+.participantes-tabela th {
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
+    color: white;
+}
+
+.participantes-tabela tr:nth-child(even) {
+    background-color: rgba(50, 50, 50, 0.7);
+}
+
+.participantes-tabela tr:hover {
+    background-color: rgba(70, 70, 70, 0.8);
+}
+
+.vencedor-row {
+    background-color: rgba(25, 181, 165, 0.2) !important;
+    font-weight: bold;
+}
+
+.vencedor-row td {
+    border-color: #19b5a5;
+}
+
+/* Estilo para a coluna de plataforma */
+.coluna-plataforma {
+    font-size: 16px;
+    text-align: center;
+}
+
+.botao-mostrar-mais {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as mesmas cores do botão Mostrar Menos */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.botao-mostrar-mais:hover {
+    background: linear-gradient(135deg, #0d322e, #219890); /* Versão mais escura do gradiente */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
+}
+
+/* Estilo específico para o botão "Mostrar Menos" */
+.botao-mostrar-mais.mostrar-menos {
+    background: linear-gradient(135deg, #12423e, #27b8a8);
+}
+
+.botao-mostrar-mais.mostrar-menos:hover {
+    background: linear-gradient(135deg, #0d322e, #219890);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
+}
+
+/* Linhas de propaganda na tabela de participantes */
+.participantes-tabela .linha-propaganda {
+    background-color: transparent !important;
+    border: none;
+}
+
+.participantes-tabela .linha-propaganda td {
+    padding: 5px !important;
+    border: none;
+}
+
+.participantes-tabela .banner-row {
+    padding: 0 !important;
+    border: none !important;
+    background-color: transparent !important;
+}

@@ -1,0 +1,9 @@
+// Este é um backup do componente ListaSorteio original
+// Salvo em: src/components/ListaSorteio/index.js.backup
+
+// Para restaurar, copie o conteúdo deste arquivo para src/components/ListaSorteio/index.js
+// O problema deste código é que ele tenta criar sorteios diretamente, o que pode conflitar
+// com o cron job que também está tentando criar sorteios.
+
+// O código contém as funções realizarSorteio e resetarLista, que foram substituídas
+// por verificarSorteio e verificarResetLista na versão corrigida. 

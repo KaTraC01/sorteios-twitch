@@ -1,0 +1,19 @@
+.timer {
+    background-color: #2d2d2d; /* Tom de cinza escuro */
+    color: white;
+    text-align: center;
+    padding: 20px 10px; /* Aumentando o padding vertical para ter espaço igual em cima e embaixo */
+    font-size: 18px;
+    font-weight: bold;
+    position: fixed; /* Mantendo fixed para que fique abaixo do header */
+    top: 70px; /* Posição abaixo do header */
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    border-bottom: 2px solid #19b5a5; /* Borda com a cor de identidade */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil para dar profundidade */
+    display: flex; /* Adicionando flexbox para centralizar verticalmente */
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    height: 30px; /* Definindo uma altura fixa para o container */
+}

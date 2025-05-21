@@ -1,0 +1,56 @@
+{
+  "name": "site-sorteio",
+  "version": "1.0.0",
+  "description": "Site de sorteios dinâmico inspirado na Twitch, onde usuários podem participar de sorteios diários",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "prebuild": "node scripts/build-env.js",
+    "build": "CI=false react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "keywords": [
+    "sorteio",
+    "twitch",
+    "react",
+    "supabase"
+  ],
+  "author": "Seu Nome",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/server-postgres": "^0.6.2",
+    "@supabase/supabase-js": "2.48.1",
+    "html-loader": "^4.2.0",
+    "i18next": "22.4.9",
+    "i18next-browser-languagedetector": "^7.0.1",
+    "node-fetch": "2.6.9",
+    "nth-check": "2.1.1",
+    "postcss": "8.4.31",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-i18next": "12.2.0",
+    "react-router-dom": "6.22.1",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "5.17.0",
+    "@testing-library/react": "14.0.0",
+    "@testing-library/user-event": "14.4.3",
+    "svgo": "3.3.2",
+    "typescript": "4.9.5"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

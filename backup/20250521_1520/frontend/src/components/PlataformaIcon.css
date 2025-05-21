@@ -1,0 +1,62 @@
+.plataforma-icon-container {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.plataforma-icon {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+/* Tamanhos disponíveis */
+.plataforma-icon-pequeno {
+  width: 20px;
+  height: 20px;
+}
+
+.plataforma-icon-medio {
+  width: 24px;
+  height: 24px;
+}
+
+.plataforma-icon-grande {
+  width: 32px;
+  height: 32px;
+}
+
+/* Para telas menores, reduzir um pouco o tamanho */
+@media (max-width: 768px) {
+  .plataforma-icon-pequeno {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .plataforma-icon-medio {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .plataforma-icon-grande {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .plataforma-icon-pequeno {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .plataforma-icon-medio {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .plataforma-icon-grande {
+    width: 20px;
+    height: 20px;
+  }
+} 

@@ -91,6 +91,45 @@ export default async function handler(req, res) {
       };
     }
     
+    // Função para atualizar métricas resumidas de anúncios
+    async function atualizarMetricasResumo() {
+      try {
+        // Chamar a função RPC do Supabase para atualizar as métricas resumidas
+        const { data, error } = await supabase.rpc('atualizar_metricas_resumo');
+        
+        if (error) {
+          console.error("Erro ao atualizar métricas resumidas:", error);
+          throw error;
+        }
+        
+        // Registrar log do sucesso da atualização
+        await supabase
+          .from('logs')
+          .insert([{
+            descricao: `Métricas de anúncios atualizadas pelo cron job.`
+          }]);
+        
+        return {
+          sucesso: true,
+          mensagem: "Métricas de anúncios atualizadas com sucesso"
+        };
+      } catch (error) {
+        console.error("Erro na atualização de métricas:", error);
+        
+        // Registrar erro em logs
+        await supabase
+          .from('logs')
+          .insert([{
+            descricao: `ERRO ao atualizar métricas de anúncios: ${error.message}`
+          }]);
+        
+        return {
+          sucesso: false,
+          mensagem: `Erro na atualização de métricas: ${error.message}`
+        };
+      }
+    }
+    
     // Executar o sorteio
     const resultado = await verificarERealizarSorteio();
     
@@ -102,10 +141,14 @@ export default async function handler(req, res) {
           ? `Cron job executado com sucesso: sorteio realizado`
           : `Cron job executado: ${resultado.mensagem}`
       }]);
+    
+    // Atualizar métricas de anúncios após o sorteio
+    const resultadoMetricas = await atualizarMetricasResumo();
       
     return res.status(200).json({
       success: true,
-      resultado: resultado
+      resultado: resultado,
+      metricas: resultadoMetricas
     });
   } catch (error) {
     console.error("Erro no cron job de sorteio:", error);

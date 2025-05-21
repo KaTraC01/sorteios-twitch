@@ -1,0 +1,25 @@
+.language-switcher {
+  display: flex;
+  gap: 5px;
+  margin: 0 10px;
+}
+
+.language-btn {
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.language-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.language-btn.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: #fff;
+} 
