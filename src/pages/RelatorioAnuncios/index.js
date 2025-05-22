@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../utils/supabaseClient'; // Importando o cliente Supabase já configurado
 import AnuncioDemo from '../../components/AnuncioDemo';
 import './RelatorioAnuncios.css';
-
-// Obter o cliente Supabase
-const getSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return createClient(supabaseUrl, supabaseAnonKey);
-};
 
 const RelatorioAnuncios = () => {
   const [metricas, setMetricas] = useState([]);
@@ -55,7 +48,7 @@ const RelatorioAnuncios = () => {
     setErroCarregamento(null);
     
     try {
-      const supabase = getSupabaseClient();
+      // Usar o cliente Supabase importado diretamente
       
       // Determinar data de início com base no período
       const dataInicio = obterDataInicio(periodoSelecionado);
