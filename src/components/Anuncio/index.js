@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Anuncio.css';
+import AdTracker from '../AdTracker';
 
 const Anuncio = ({ 
   tipo = 'reservado', 
@@ -16,7 +17,8 @@ const Anuncio = ({
   corTexto,
   mostrarFechar = true,
   mostrarPresente = false,
-  onFechar = null
+  onFechar = null,
+  preservarLayout = true
 }) => {
   const [fechado, setFechado] = useState(false);
   const [anuncioConfig, setAnuncioConfig] = useState(null);
@@ -264,7 +266,120 @@ const Anuncio = ({
           </div>
         );
       
+      case 'cursos':
+        return (
+          <div 
+            className="anuncio anuncio-cursos"
+            style={{
+              backgroundColor: anuncioConfig?.corFundo || cor || '#ff5722',
+              color: anuncioConfig?.corTexto || corTexto || '#ffffff'
+            }}
+          >
+            {mostrarFechar && (
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
+              </button>
+            )}
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {anuncioImagemSrc ? (
+                <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Curso'} className="anuncio-imagem" />
+              ) : (
+                <>
+                  <div className="anuncio-tag">CURSO</div>
+                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                  {anuncioConfig?.subtitulo && <h4>{anuncioConfig.subtitulo}</h4>}
+                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                  <button className="anuncio-button">
+                    {anuncioConfig?.botaoTexto || "MATRICULAR AGORA"}
+                  </button>
+                </>
+              )}
+            </a>
+          </div>
+        );
+      
+      case 'video':
+        return (
+          <div className="anuncio anuncio-video">
+            {mostrarFechar && (
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
+              </button>
+            )}
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {anuncioImagemSrc && (
+                <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Vídeo'} className="anuncio-imagem" />
+              )}
+              <div className="anuncio-info">
+                {idade && <span className="anuncio-valor">+{idade}</span>}
+              </div>
+              {!anuncioImagemSrc && (
+                <div className="anuncio-conteudo">
+                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                  <div className="anuncio-play">▶</div>
+                </div>
+              )}
+            </a>
+          </div>
+        );
+      
+      case 'quadrado':
+        return (
+          <div className="anuncio anuncio-quadrado">
+            {mostrarFechar && (
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
+              </button>
+            )}
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {anuncioImagemSrc ? (
+                <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />
+              ) : (
+                <>
+                  <div className="anuncio-tag">PUBLICIDADE</div>
+                  {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                  {anuncioAvisos && <small className="anuncio-avisos">{anuncioAvisos}</small>}
+                </>
+              )}
+            </a>
+          </div>
+        );
+      
+      case 'logos':
+        const tamanho = anuncioConfig?.tamanho || 'medio';
+        return (
+          <div className={`anuncio anuncio-logos anuncio-logos-${tamanho}`}>
+            {mostrarFechar && (
+              <button className="anuncio-fechar" onClick={handleFechar}>
+                X
+              </button>
+            )}
+            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+              {anuncioImagemSrc ? (
+                <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Patrocinador'} className="anuncio-logos-imagem" />
+              ) : (
+                <div className="anuncio-conteudo">
+                  <div className="anuncio-tag">PARCEIRO</div>
+                  {logo && <img src={logo} alt="Logo" className="anuncio-logo" />}
+                  {anuncioTitulo && <h3>{anuncioTitulo}</h3>}
+                  {anuncioDescricao && <p className="anuncio-descricao">{anuncioDescricao}</p>}
+                </div>
+              )}
+            </a>
+          </div>
+        );
+      
       default:
+        // Verificar se o tipo não é um dos que já tratamos acima
+        if (['banner', 'tela-inteira', 'fixo-superior', 'lateral', 'fixo-inferior', 'cursos', 'video', 'quadrado', 'logos'].includes(tipo)) {
+          console.warn(`Tipo de anúncio '${tipo}' foi reconhecido mas não está implementado corretamente.`);
+        } else {
+          console.warn(`Tipo de anúncio '${tipo}' não reconhecido. Usando estilo padrão.`);
+        }
+        
         return (
           <div 
             className={`anuncio anuncio-padrao anuncio-${anuncioPosicao}`}
@@ -295,8 +410,16 @@ const Anuncio = ({
     }
   };
   
-  // Renderizar o anúncio sem o tracker
-  return renderConteudoAnuncio();
+  // Renderizar o anúncio com o tracker
+  return (
+    <AdTracker 
+      anuncioId={anuncioConfig?.id || `${tipo}-${posicao}`} 
+      tipoAnuncio={tipo}
+      preservarLayout={preservarLayout}
+    >
+      {renderConteudoAnuncio()}
+    </AdTracker>
+  );
 };
 
 export default Anuncio;

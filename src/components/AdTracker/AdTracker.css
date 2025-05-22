@@ -1,0 +1,34 @@
+.ad-tracker-container {
+  /* Garantir que o contêiner não interfira no layout do anúncio */
+  display: contents;
+  width: auto;
+  height: auto;
+}
+
+/* Estilo para anúncios que estão dentro de tabelas */
+tr .ad-tracker-container,
+td .ad-tracker-container {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Estilos específicos para anúncios diferentes dentro do tracker */
+.ad-tracker-container > a {
+  /* Preservar cliques */
+  display: inherit;
+  width: inherit;
+  height: inherit;
+  text-decoration: none;
+}
+
+/* Para anúncios em tabelas */
+tr .ad-tracker-container > a,
+td .ad-tracker-container > a {
+  display: block;
+}
+
+/* Garantir que o tracker não afete a visibilidade das imagens */
+.ad-tracker-container img {
+  max-width: inherit;
+} 

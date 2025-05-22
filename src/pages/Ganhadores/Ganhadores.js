@@ -166,20 +166,27 @@ function Ganhadores() {
                 linhasTabela.push(
                     <tr key="propaganda-linha-10-11" className="linha-propaganda">
                         <td colSpan="4" className="banner-row">
-                            <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
+                            <Anuncio 
+                                tipo="cursos" 
+                                posicao="na-tabela" 
+                                mostrarFechar={true} 
+                                preservarLayout={false}
+                            />
                         </td>
                     </tr>
                 );
             }
-            // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda
+            // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda do tipo cursos
             else if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
-                const tiposAnuncios = ['video', 'quadrado', 'cursos'];
-                const tipoAleatorio = tiposAnuncios[Math.floor(Math.random() * tiposAnuncios.length)];
-                
                 linhasTabela.push(
                     <tr key={`propaganda-${index}`} className="linha-propaganda">
                         <td colSpan="4" className="banner-row">
-                            <Anuncio tipo={tipoAleatorio} posicao="na-tabela" mostrarFechar={true} />
+                            <Anuncio 
+                                tipo="cursos" 
+                                posicao="na-tabela" 
+                                mostrarFechar={true} 
+                                preservarLayout={false}
+                            />
                         </td>
                     </tr>
                 );
@@ -193,7 +200,7 @@ function Ganhadores() {
         <div className="ganhadores-container">
             {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
             <div className="anuncio-container-superior">
-                <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
+                <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} preservarLayout={true} />
             </div>
             
             {/* Espaçamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
@@ -218,7 +225,7 @@ function Ganhadores() {
             </button>
 
             {/* Anúncio de cursos no topo da tabela */}
-            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} />
+            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} preservarLayout={true} />
 
             {/* Exibe "Carregando..." enquanto busca os dados */}
             {loading ? (
@@ -269,11 +276,16 @@ function Ganhadores() {
                                         )}
                                     </td>
                                 </tr>
-                                {/* Adiciona anúncios a cada 10 linhas */}
+                                {/* Adiciona anúncios do tipo cursos a cada 10 linhas */}
                                 {(index + 1) % 10 === 0 && index !== historicoPaginado.length - 1 && (
                                     <tr className="linha-propaganda">
                                         <td colSpan="6" className="banner-row">
-                                            <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
+                                            <Anuncio 
+                                                tipo="cursos" 
+                                                posicao="na-tabela" 
+                                                mostrarFechar={true} 
+                                                preservarLayout={false}
+                                            />
                                         </td>
                                     </tr>
                                 )}
@@ -352,7 +364,7 @@ function Ganhadores() {
             )}
             
             {/* Anúncio de vídeo no final da página */}
-            <Anuncio tipo="video" posicao="rodape" mostrarFechar={true} />
+            <Anuncio tipo="video" posicao="rodape" mostrarFechar={true} preservarLayout={true} />
             
             <div className="footer-info">
                 <p>Todos os sorteios são realizados de forma transparente e automática.</p>

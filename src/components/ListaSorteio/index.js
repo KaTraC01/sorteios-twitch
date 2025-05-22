@@ -615,20 +615,27 @@ function ListaSorteio({ onReiniciarLista }) {
                 linhasTabela.push(
                     <tr key="propaganda-linha-10-11" className="linha-propaganda">
                         <td colSpan="4" className="anuncio-entre-linhas">
-                            <Anuncio tipo="banner" posicao="na-tabela" mostrarFechar={true} />
+                            <Anuncio 
+                              tipo="cursos" 
+                              posicao="na-tabela" 
+                              mostrarFechar={true} 
+                              preservarLayout={false} 
+                            />
                         </td>
                     </tr>
                 );
             }
-            // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda
+            // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda do tipo cursos
             else if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
-                const tiposAnuncios = ['video', 'quadrado', 'cursos', 'logos'];
-                const tipoAleatorio = tiposAnuncios[Math.floor(Math.random() * tiposAnuncios.length)];
-                
                 linhasTabela.push(
                     <tr key={`propaganda-${index}`} className="linha-propaganda">
-                        <td colSpan="4">
-                            <Anuncio tipo={tipoAleatorio} posicao="na-tabela" mostrarFechar={true} />
+                        <td colSpan="4" className="anuncio-entre-linhas">
+                            <Anuncio 
+                              tipo="cursos" 
+                              posicao="na-tabela" 
+                              mostrarFechar={true} 
+                              preservarLayout={false} 
+                            />
                         </td>
                     </tr>
                 );
@@ -741,8 +748,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 </button>
             </div>
 
-            {/* Espaço para propaganda principal - estilo cursos antes da tabela */}
-            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} />
+            {/* Banner de anúncio no topo da lista */}
+            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} preservarLayout={true} />
 
             <table>
                 <thead>
