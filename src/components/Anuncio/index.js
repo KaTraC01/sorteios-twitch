@@ -24,6 +24,7 @@ const Anuncio = ({
   const [fechado, setFechado] = useState(false);
   const [anuncioConfig, setAnuncioConfig] = useState(null);
   const [pageId, setPageId] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
   // Gerar um pageId confiável baseado no pathname e outros parâmetros
   useEffect(() => {
@@ -49,6 +50,8 @@ const Anuncio = ({
   
   // Carregar o arquivo de configuração de anúncios
   useEffect(() => {
+    setIsLoading(true);
+    
     fetch('/anuncios/config.json')
       .then(response => response.json())
       .then(data => {
@@ -74,9 +77,11 @@ const Anuncio = ({
             }
           }
         }
+        setIsLoading(false);
       })
       .catch(error => {
         console.error("Erro ao carregar configuração de anúncios:", error);
+        setIsLoading(false);
       });
   }, [tipo, posicao]);
   
@@ -99,7 +104,15 @@ const Anuncio = ({
     }
   };
   
+  if (isLoading) {
+    return null;
+  }
+  
   if (fechado) {
+    return null;
+  }
+  
+  if (!anuncioConfig && !conteudoPersonalizado && !(titulo || imagemSrc)) {
     return null;
   }
   
