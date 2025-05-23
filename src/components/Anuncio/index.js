@@ -25,6 +25,8 @@ const Anuncio = ({
   const [anuncioConfig, setAnuncioConfig] = useState(null);
   const [pageId, setPageId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  // ID de fallback único e consistente para toda a sessão deste componente
+  const [fallbackId] = useState(() => `tmp-${tipo}-${posicao}-${Date.now().toString(36)}`);
   
   // Gerar um pageId confiável baseado no pathname e outros parâmetros
   useEffect(() => {
@@ -451,8 +453,8 @@ const Anuncio = ({
   return pageId ? (
     // Verificar se todos os dados necessários para o rastreamento estão disponíveis
     (() => {
-      // Determinar o ID efetivo do anúncio (real ou gerado)
-      const anuncioIdEfetivo = anuncioConfig?.id || `${tipo}-${posicao}`;
+      // Determinar o ID efetivo do anúncio (real ou gerado como fallback)
+      const anuncioIdEfetivo = anuncioConfig?.id || fallbackId;
       
       // Só renderizar o AdTracker se tivermos dados válidos e completos
       if (!anuncioIdEfetivo || !pageId || !tipo) {
