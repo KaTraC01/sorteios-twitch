@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../utils/supabaseClient';
 import './AdTracker.css';
 
 // Buffer para armazenar eventos antes de enviar para o servidor
@@ -7,13 +7,6 @@ let eventsBuffer = [];
 let bufferTimer = null;
 const BUFFER_TIMEOUT = 10000; // 10 segundos
 const BUFFER_SIZE_LIMIT = 5; // Enviar após 5 eventos
-
-// Obter o cliente Supabase
-const getSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return createClient(supabaseUrl, supabaseAnonKey);
-};
 
 // Função para gerar ou recuperar o session_id do usuário
 const getOrCreateSessionId = () => {
@@ -86,8 +79,6 @@ const flushEventsBuffer = async () => {
   }
 
   try {
-    const supabase = getSupabaseClient();
-    
     await supabase
       .rpc('inserir_eventos_anuncios_lote', {
         eventos: JSON.stringify(events)
