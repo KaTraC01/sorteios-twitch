@@ -52,6 +52,7 @@ function App() {
                             posicao="esquerda" 
                             mostrarFechar={true}
                             onFechar={() => fecharAnuncio('esquerda')}
+                            paginaId={`app_lateral_esquerda`}
                         />
                     )}
                 </div>
@@ -102,13 +103,20 @@ function App() {
                             posicao="direita" 
                             mostrarFechar={true}
                             onFechar={() => fecharAnuncio('direita')}
+                            paginaId={`app_lateral_direita`}
                         />
                     )}
                 </div>
 
                 {/* Anúncio fixo inferior */}
                 {adsVisible.fixoInferior && (
-                    <Anuncio tipo="fixo-inferior" posicao="fixo" mostrarFechar={true} onFechar={() => fecharAnuncio('fixoInferior')} />
+                    <Anuncio 
+                        tipo="fixo-inferior" 
+                        posicao="fixo" 
+                        mostrarFechar={true} 
+                        onFechar={() => fecharAnuncio('fixoInferior')}
+                        paginaId={`app_fixo_inferior`}
+                    />
                 )}
                 
                 {!adsVisible.fixoInferior && (

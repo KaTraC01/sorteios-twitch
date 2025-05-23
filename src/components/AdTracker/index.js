@@ -51,6 +51,15 @@ const getLocation = async () => {
 
 // Função para registrar um evento
 const registerEvent = async (eventData) => {
+  // Verificar se todos os dados essenciais estão presentes
+  if (!eventData.anuncio_id || !eventData.tipo_anuncio || !eventData.pagina) {
+    console.warn('Tentativa de registrar evento sem dados essenciais:', 
+      !eventData.anuncio_id ? 'anuncio_id ausente' : 
+      !eventData.tipo_anuncio ? 'tipo_anuncio ausente' : 
+      'pagina ausente');
+    return; // Não registrar o evento se algum dado essencial estiver faltando
+  }
+
   // Adicionar o evento ao buffer
   eventsBuffer.push(eventData);
   
@@ -98,7 +107,7 @@ const flushEventsBuffer = async () => {
 };
 
 // Componente principal AdTracker
-const AdTracker = ({ children, anuncioId, tipoAnuncio, preservarLayout = true }) => {
+const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout = true }) => {
   const anuncioRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [visibleStartTime, setVisibleStartTime] = useState(null);
@@ -120,10 +129,19 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, preservarLayout = true })
   
   // Configurar a detecção de visibilidade com IntersectionObserver
   useEffect(() => {
-    if (!anuncioRef.current) return;
+    // Verificar se temos todos os dados necessários
+    if (!anuncioId || !tipoAnuncio || !anuncioRef.current) {
+      return; // Não configurar o observer se faltar qualquer dado essencial
+    }
     
+    // Usar o paginaId fornecido ou cair para o pathname como fallback
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-    const pagina = currentPath || '/';
+    const pagina = paginaId || currentPath || '/';
+    
+    // Verificar se a página é válida
+    if (pagina === '/' && !paginaId) {
+      console.warn('AdTracker: usando página padrão "/"');
+    }
     
     const observer = new IntersectionObserver(
       (entries) => {
@@ -211,12 +229,19 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, preservarLayout = true })
         flushEventsBuffer();
       }
     };
-  }, [anuncioId, tipoAnuncio, hasRegisteredImpression, locationInfo, visibleStartTime]);
+  }, [anuncioId, tipoAnuncio, paginaId, hasRegisteredImpression, locationInfo, visibleStartTime]);
   
   // Registrar clique quando o usuário clicar no anúncio
   const handleClick = () => {
+    // Verificar se temos todos os dados necessários
+    if (!anuncioId || !tipoAnuncio) {
+      console.warn('AdTracker: tentativa de registrar clique sem dados essenciais');
+      return; // Não registrar o clique se faltar qualquer dado essencial
+    }
+    
+    // Usar o paginaId fornecido ou cair para o pathname como fallback
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-    const pagina = currentPath || '/';
+    const pagina = paginaId || currentPath || '/';
     
     registerEvent({
       anuncio_id: anuncioId,

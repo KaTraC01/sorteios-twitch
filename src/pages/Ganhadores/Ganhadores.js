@@ -171,6 +171,7 @@ function Ganhadores() {
                                 posicao="na-tabela" 
                                 mostrarFechar={true} 
                                 preservarLayout={false}
+                                paginaId={`ganhadores_participantes_linha-10`}
                             />
                         </td>
                     </tr>
@@ -186,6 +187,7 @@ function Ganhadores() {
                                 posicao="na-tabela" 
                                 mostrarFechar={true} 
                                 preservarLayout={false}
+                                paginaId={`ganhadores_participantes_linha-${index + 1}`}
                             />
                         </td>
                     </tr>
@@ -200,7 +202,13 @@ function Ganhadores() {
         <div className="ganhadores-container">
             {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
             <div className="anuncio-container-superior">
-                <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} preservarLayout={true} />
+                <Anuncio 
+                    tipo="fixo-superior" 
+                    posicao="topo" 
+                    mostrarFechar={true} 
+                    preservarLayout={true}
+                    paginaId="ganhadores_topo" 
+                />
             </div>
             
             {/* Espaçamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
@@ -225,7 +233,13 @@ function Ganhadores() {
             </button>
 
             {/* Anúncio de cursos no topo da tabela */}
-            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} preservarLayout={true} />
+            <Anuncio 
+                tipo="cursos" 
+                posicao="principal" 
+                mostrarFechar={true} 
+                preservarLayout={true}
+                paginaId="ganhadores_principal" 
+            />
 
             {/* Exibe "Carregando..." enquanto busca os dados */}
             {loading ? (
@@ -285,6 +299,7 @@ function Ganhadores() {
                                                 posicao="na-tabela" 
                                                 mostrarFechar={true} 
                                                 preservarLayout={false}
+                                                paginaId={`ganhadores_historico_linha-${index + 1}`}
                                             />
                                         </td>
                                     </tr>
@@ -364,7 +379,13 @@ function Ganhadores() {
             )}
             
             {/* Anúncio de vídeo no final da página */}
-            <Anuncio tipo="video" posicao="rodape" mostrarFechar={true} preservarLayout={true} />
+            <Anuncio 
+                tipo="video" 
+                posicao="rodape" 
+                mostrarFechar={true} 
+                preservarLayout={true}
+                paginaId="ganhadores_rodape" 
+            />
             
             <div className="footer-info">
                 <p>Todos os sorteios são realizados de forma transparente e automática.</p>

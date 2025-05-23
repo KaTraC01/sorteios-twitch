@@ -18,10 +18,34 @@ const Anuncio = ({
   mostrarFechar = true,
   mostrarPresente = false,
   onFechar = null,
-  preservarLayout = true
+  preservarLayout = true,
+  paginaId = ''
 }) => {
   const [fechado, setFechado] = useState(false);
   const [anuncioConfig, setAnuncioConfig] = useState(null);
+  const [pageId, setPageId] = useState('');
+  
+  // Gerar um pageId confiável baseado no pathname e outros parâmetros
+  useEffect(() => {
+    // Se um paginaId for fornecido via props, use-o
+    if (paginaId) {
+      setPageId(paginaId);
+    } else {
+      // Caso contrário, construa um pageId baseado no pathname e outros parâmetros
+      try {
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+        // Extrair o nome da página da URL (último segmento ou 'home' se vazio)
+        const pageName = pathname.split('/').filter(Boolean).pop() || 'home';
+        // Criar identificador sem timestamp para consistência entre recarregamentos
+        const uniquePageId = `${pageName}_${tipo}_${posicao}`;
+        setPageId(uniquePageId);
+      } catch (error) {
+        // Em caso de erro, gerar um ID padrão, mas logar o erro
+        console.error('Erro ao gerar pageId:', error);
+        setPageId(`fallback_${tipo}_${posicao}`);
+      }
+    }
+  }, [paginaId, tipo, posicao]);
   
   // Carregar o arquivo de configuração de anúncios
   useEffect(() => {
@@ -411,15 +435,32 @@ const Anuncio = ({
   };
   
   // Renderizar o anúncio com o tracker
-  return (
-    <AdTracker 
-      anuncioId={anuncioConfig?.id || `${tipo}-${posicao}`} 
-      tipoAnuncio={tipo}
-      preservarLayout={preservarLayout}
-    >
-      {renderConteudoAnuncio()}
-    </AdTracker>
-  );
+  return pageId ? (
+    // Verificar se todos os dados necessários para o rastreamento estão disponíveis
+    (() => {
+      // Determinar o ID efetivo do anúncio (real ou gerado)
+      const anuncioIdEfetivo = anuncioConfig?.id || `${tipo}-${posicao}`;
+      
+      // Só renderizar o AdTracker se tivermos dados válidos e completos
+      if (!anuncioIdEfetivo || !pageId || !tipo) {
+        // Se algum dado essencial estiver faltando, renderizar apenas o conteúdo sem o tracker
+        console.warn(`AdTracker não renderizado para ${tipo}-${posicao}: dados incompletos`);
+        return renderConteudoAnuncio();
+      }
+      
+      // Todos os dados necessários estão disponíveis, então renderizar com o AdTracker
+      return (
+        <AdTracker 
+          anuncioId={anuncioIdEfetivo} 
+          tipoAnuncio={tipo}
+          paginaId={pageId}
+          preservarLayout={preservarLayout}
+        >
+          {renderConteudoAnuncio()}
+        </AdTracker>
+      );
+    })()
+  ) : renderConteudoAnuncio(); // Se pageId não estiver pronto, renderizar apenas o conteúdo
 };
 
 export default Anuncio;

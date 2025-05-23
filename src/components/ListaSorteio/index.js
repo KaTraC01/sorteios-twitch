@@ -619,7 +619,8 @@ function ListaSorteio({ onReiniciarLista }) {
                               tipo="cursos" 
                               posicao="na-tabela" 
                               mostrarFechar={true} 
-                              preservarLayout={false} 
+                              preservarLayout={false}
+                              paginaId="lista-sorteio_tabela_linha-10" 
                             />
                         </td>
                     </tr>
@@ -634,7 +635,8 @@ function ListaSorteio({ onReiniciarLista }) {
                               tipo="cursos" 
                               posicao="na-tabela" 
                               mostrarFechar={true} 
-                              preservarLayout={false} 
+                              preservarLayout={false}
+                              paginaId={`lista-sorteio_tabela_linha-${index + 1}`} 
                             />
                         </td>
                     </tr>
@@ -656,7 +658,12 @@ function ListaSorteio({ onReiniciarLista }) {
             
             {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
             <div className="anuncio-container-superior">
-                <Anuncio tipo="fixo-superior" posicao="topo" mostrarFechar={true} />
+                <Anuncio 
+                  tipo="fixo-superior" 
+                  posicao="topo" 
+                  mostrarFechar={true}
+                  paginaId="lista-sorteio_topo" 
+                />
             </div>
             
             <h2>{t('listaSorteio.participantes')}</h2>
@@ -749,7 +756,13 @@ function ListaSorteio({ onReiniciarLista }) {
             </div>
 
             {/* Banner de anúncio no topo da lista */}
-            <Anuncio tipo="cursos" posicao="principal" mostrarFechar={true} preservarLayout={true} />
+            <Anuncio 
+              tipo="cursos" 
+              posicao="principal" 
+              mostrarFechar={true} 
+              preservarLayout={true}
+              paginaId="lista-sorteio_principal" 
+            />
 
             <table>
                 <thead>
@@ -775,7 +788,12 @@ function ListaSorteio({ onReiniciarLista }) {
             )}
 
             {/* Anúncio de vídeo no final da lista */}
-            <Anuncio tipo="video" posicao="rodape" mostrarFechar={true} />
+            <Anuncio 
+              tipo="video" 
+              posicao="rodape" 
+              mostrarFechar={true}
+              paginaId="lista-sorteio_rodape" 
+            />
 
             {/* Anúncio de tela inteira quando o botão +10 é clicado */}
             {mostrarAnuncioTelaInteira && (
