@@ -16,16 +16,28 @@ if (typeof window !== 'undefined') {
       try {
         // Processar valores numéricos antes de salvar
         const processedEvents = eventsBuffer.map(event => {
+          // Criar uma cópia para não alterar o original
+          const processedEvent = { ...event };
+          
           // Garantir que tempo_exposto seja um número válido
-          if (event.tempo_exposto !== undefined) {
-            event.tempo_exposto = Number(event.tempo_exposto);
-            
-            // Se NaN, definir como 0
-            if (isNaN(event.tempo_exposto)) {
-              event.tempo_exposto = 0;
+          if (processedEvent.tempo_exposto !== undefined) {
+            try {
+              // Forçar conversão para número
+              const tempNumber = Number(processedEvent.tempo_exposto);
+              if (isNaN(tempNumber)) {
+                processedEvent.tempo_exposto = 0;
+              } else {
+                // Arredondar para duas casas decimais
+                processedEvent.tempo_exposto = Math.round(tempNumber * 100) / 100;
+              }
+            } catch (e) {
+              processedEvent.tempo_exposto = 0;
             }
+          } else {
+            processedEvent.tempo_exposto = 0;
           }
-          return event;
+          
+          return processedEvent;
         });
         
         // Salvar eventos pendentes no localStorage
@@ -116,8 +128,19 @@ const registerEvent = async (eventData) => {
     return; // Não registrar o evento se algum dado essencial estiver faltando
   }
 
+  // Tratar tempo exposto para garantir que seja um número decimal válido
+  let tempoExposto = 0;
+  if (eventData.tempo_exposto !== undefined && eventData.tempo_exposto !== null) {
+    // Converter para número e garantir que seja um valor válido
+    tempoExposto = Number(eventData.tempo_exposto);
+    if (isNaN(tempoExposto)) {
+      console.warn('Valor inválido para tempo_exposto, definindo como 0');
+      tempoExposto = 0;
+    }
+  }
+
   console.log('Registrando evento de anúncio:', eventData.tipo_evento, eventData.anuncio_id, 
-    'tempo_exposto:', eventData.tempo_exposto);
+    'tempo_exposto:', tempoExposto, typeof tempoExposto);
   
   // Mapear os dados para corresponder exatamente ao formato esperado pela tabela
   const mappedEvent = {
@@ -125,7 +148,7 @@ const registerEvent = async (eventData) => {
     tipo_anuncio: eventData.tipo_anuncio,
     pagina: eventData.pagina,
     tipo_evento: eventData.tipo_evento,
-    tempo_exposto: Number(eventData.tempo_exposto || 0), // Garantir que seja número
+    tempo_exposto: tempoExposto, // Usar a variável tratada
     visivel: eventData.visivel !== undefined ? eventData.visivel : true,
     dispositivo: eventData.dispositivo || getDeviceInfo(),
     pais: eventData.pais || 'Brasil',
@@ -162,20 +185,38 @@ const flushEventsBuffer = async () => {
   
   // Verificar e corrigir valores numéricos antes de enviar
   const events = eventsBuffer.map(event => {
+    // Criar uma cópia do evento para não modificar o original
+    const processedEvent = { ...event };
+    
     // Garantir que tempo_exposto seja um número válido
-    if (event.tempo_exposto !== undefined) {
-      event.tempo_exposto = Number(event.tempo_exposto);
-      
-      // Se NaN, definir como 0
-      if (isNaN(event.tempo_exposto)) {
-        console.warn('Valor inválido para tempo_exposto, definindo como 0');
-        event.tempo_exposto = 0;
+    if (processedEvent.tempo_exposto !== undefined) {
+      try {
+        // Forçar conversão para número
+        const tempNumber = Number(processedEvent.tempo_exposto);
+        if (isNaN(tempNumber)) {
+          console.warn(`Valor inválido para tempo_exposto (${processedEvent.tempo_exposto}), definindo como 0`);
+          processedEvent.tempo_exposto = 0;
+        } else {
+          // Arredondar para duas casas decimais e garantir que seja number
+          processedEvent.tempo_exposto = Math.round(tempNumber * 100) / 100;
+        }
+      } catch (e) {
+        console.error('Erro ao processar tempo_exposto:', e);
+        processedEvent.tempo_exposto = 0;
       }
+    } else {
+      processedEvent.tempo_exposto = 0;
     }
-    return event;
+    
+    console.log(`Evento processado para envio:`, {
+      tipo_evento: processedEvent.tipo_evento,
+      anuncio_id: processedEvent.anuncio_id,
+      tempo_exposto: processedEvent.tempo_exposto,
+      tipo_tempo_exposto: typeof processedEvent.tempo_exposto
+    });
+    
+    return processedEvent;
   });
-  
-  console.log('Eventos formatados para envio:', events);
   
   eventsBuffer = [];
   
@@ -186,7 +227,8 @@ const flushEventsBuffer = async () => {
   }
 
   try {
-    console.log('Enviando eventos para o Supabase:', events);
+    console.log('Enviando eventos para o Supabase com payload:', 
+      JSON.stringify({ eventos: events }, null, 2));
     
     // IMPORTANTE: A função RPC espera receber um array JSON, não uma string JSON
     const { data, error } = await supabase
