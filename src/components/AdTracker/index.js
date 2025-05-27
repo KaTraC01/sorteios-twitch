@@ -39,9 +39,7 @@ if (typeof window !== 'undefined') {
           // URL completa com parâmetros de consulta
           const fullUrl = `${url}?${params.toString()}`;
           
-          // Como sendBeacon não permite definir cabeçalhos, não podemos adicionar 
-          // o cabeçalho Authorization. No entanto, o apikey como parâmetro 
-          // de consulta deve ser suficiente para autenticação anônima.
+          // Enviar a requisição via sendBeacon
           const enviado = navigator.sendBeacon(fullUrl, blob);
           console.log('Eventos enviados via sendBeacon:', enviado);
         }
@@ -109,17 +107,17 @@ const registerEvent = async (eventData) => {
   // Mapear os dados para corresponder exatamente ao formato esperado pela tabela
   const mappedEvent = {
     anuncio_id: eventData.anuncio_id,
-    pagina: eventData.pagina,  // usar pagina em vez de pagina_id
+    tipo_anuncio: eventData.tipo_anuncio,
+    pagina: eventData.pagina,
     tipo_evento: eventData.tipo_evento,
     tempo_exposto: eventData.tempo_exposto || 0,
     visivel: eventData.visivel !== undefined ? eventData.visivel : true,
-    origem_trafego: eventData.origem_trafego || null,
-    geolocalizacao: eventData.pais || 'Brasil',  // Usar país como geolocalização
-    dispositivo_info: {
-      tipo: eventData.dispositivo || 'desconhecido',
-      regiao: eventData.regiao || 'Desconhecido'
-    },
-    user_session_id: eventData.session_id || 'desconhecido'
+    dispositivo: eventData.dispositivo || getDeviceInfo(),
+    pais: eventData.pais || 'Brasil',
+    regiao: eventData.regiao || 'Desconhecido',
+    session_id: eventData.session_id || sessionId.current,
+    timestamp: new Date().toISOString()
+    // processado será definido como FALSE por padrão no servidor
   };
   
   // Adicionar o evento ao buffer
@@ -305,7 +303,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
-              pagina,
+              pagina: pagina,
               tipo_evento: 'impressao',
               tempo_exposto: 0,
               visivel: true,
@@ -335,7 +333,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
-              pagina,
+              pagina: pagina,
               tipo_evento: 'impressao',
               tempo_exposto: Math.round(timeVisible),
               visivel: false,
@@ -392,7 +390,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     registerEvent({
       anuncio_id: anuncioId,
       tipo_anuncio: tipoAnuncio,
-      pagina,
+      pagina: pagina,
       tipo_evento: 'clique',
       tempo_exposto: exposureTime,
       visivel: isVisible,
