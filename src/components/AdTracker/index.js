@@ -7,6 +7,32 @@ let eventsBuffer = [];
 let bufferTimer = null;
 const BUFFER_TIMEOUT = 10000; // 10 segundos
 const BUFFER_SIZE_LIMIT = 5; // Enviar após 5 eventos
+const BUFFER_STORAGE_KEY = 'pending_ad_events'; // Chave para localStorage
+
+// Adicionar listener para quando a página for fechada
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (eventsBuffer.length > 0) {
+      try {
+        // Salvar eventos pendentes no localStorage
+        console.log(`Salvando ${eventsBuffer.length} eventos pendentes antes de fechar a página`);
+        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
+        
+        // Tentar enviar com sendBeacon se disponível (mais confiável)
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify({ eventos: JSON.stringify(eventsBuffer) })], {
+            type: 'application/json'
+          });
+          const url = `${supabase.supabaseUrl}/rest/v1/rpc/inserir_eventos_anuncios_lote`;
+          const enviado = navigator.sendBeacon(url, blob);
+          console.log('Eventos enviados via sendBeacon:', enviado);
+        }
+      } catch (e) {
+        console.error('Erro ao salvar eventos pendentes:', e);
+      }
+    }
+  });
+}
 
 // Função para gerar ou recuperar o session_id do usuário
 const getOrCreateSessionId = () => {
@@ -60,23 +86,32 @@ const registerEvent = async (eventData) => {
     return; // Não registrar o evento se algum dado essencial estiver faltando
   }
 
+  console.log('Registrando evento de anúncio:', eventData.tipo_evento, eventData.anuncio_id);
+  
   // Adicionar o evento ao buffer
   eventsBuffer.push(eventData);
   
   // Se atingimos o limite de tamanho do buffer, enviar imediatamente
   if (eventsBuffer.length >= BUFFER_SIZE_LIMIT) {
+    console.log(`Buffer atingiu limite de ${BUFFER_SIZE_LIMIT} eventos. Enviando...`);
     await flushEventsBuffer();
   }
   
   // Se não houver um timer em execução, iniciar um novo
   if (!bufferTimer) {
     bufferTimer = setTimeout(flushEventsBuffer, BUFFER_TIMEOUT);
+    console.log(`Timer de envio configurado para ${BUFFER_TIMEOUT}ms`);
   }
 };
 
 // Função para enviar eventos em lote para o servidor
 const flushEventsBuffer = async () => {
-  if (eventsBuffer.length === 0) return;
+  if (eventsBuffer.length === 0) {
+    console.log('Buffer vazio, nada para enviar.');
+    return false;
+  }
+  
+  console.log(`Preparando para enviar ${eventsBuffer.length} eventos do buffer...`);
   
   const events = [...eventsBuffer];
   eventsBuffer = [];
@@ -88,21 +123,74 @@ const flushEventsBuffer = async () => {
   }
 
   try {
-    await supabase
+    console.log('Enviando eventos para o Supabase:', events);
+    
+    const { data, error } = await supabase
       .rpc('inserir_eventos_anuncios_lote', {
         eventos: JSON.stringify(events)
       });
       
-    // console.log(`Enviados ${events.length} eventos de anúncios`);
+    if (error) {
+      throw error;
+    }
+    
+    console.log(`Sucesso! ${events.length} eventos enviados.`, data);
+    
+    // Remover eventos do localStorage se eles existirem lá
+    try {
+      const pendingEvents = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
+      if (pendingEvents.length > 0) {
+        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify([]));
+      }
+    } catch (e) {
+      console.error('Erro ao limpar eventos pendentes:', e);
+    }
+    
+    return true;
   } catch (error) {
-    console.error('Erro ao enviar eventos:', error);
+    console.error('Erro ao enviar eventos para o Supabase:', error);
+    
     // Adicionar de volta ao buffer em caso de falha
     eventsBuffer = [...eventsBuffer, ...events];
     
+    // Salvar no localStorage como backup
+    try {
+      localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
+      console.log(`${eventsBuffer.length} eventos salvos no localStorage para recuperação posterior`);
+    } catch (storageError) {
+      console.error('Erro ao salvar eventos no localStorage:', storageError);
+    }
+    
     // Tentar novamente em 30 segundos
     if (!bufferTimer) {
+      console.log('Agendando nova tentativa em 30 segundos...');
       bufferTimer = setTimeout(flushEventsBuffer, 30000);
     }
+    
+    return false;
+  }
+};
+
+// Função para recuperar eventos pendentes do localStorage
+const recoverPendingEvents = () => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const pendingEventsString = localStorage.getItem(BUFFER_STORAGE_KEY);
+    if (!pendingEventsString) return;
+    
+    const pendingEvents = JSON.parse(pendingEventsString);
+    if (Array.isArray(pendingEvents) && pendingEvents.length > 0) {
+      console.log(`Recuperados ${pendingEvents.length} eventos pendentes do localStorage`);
+      eventsBuffer = [...eventsBuffer, ...pendingEvents];
+      
+      // Tentar enviar imediatamente
+      flushEventsBuffer();
+    }
+  } catch (error) {
+    console.error('Erro ao recuperar eventos pendentes do localStorage:', error);
+    // Limpar o item para evitar erros futuros
+    localStorage.removeItem(BUFFER_STORAGE_KEY);
   }
 };
 
@@ -116,6 +204,16 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   const [exposureTime, setExposureTime] = useState(0);
   const exposureTimerRef = useRef(null);
   const sessionId = useRef(getOrCreateSessionId());
+  const [initialized, setInitialized] = useState(false);
+  
+  // Efeito para recuperar eventos pendentes
+  useEffect(() => {
+    if (!initialized) {
+      console.log('Inicializando AdTracker e verificando eventos pendentes...');
+      recoverPendingEvents();
+      setInitialized(true);
+    }
+  }, [initialized]);
   
   // Efeito para obter localização
   useEffect(() => {
@@ -131,6 +229,9 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   useEffect(() => {
     // Verificar se temos todos os dados necessários
     if (!anuncioId || !tipoAnuncio || !anuncioRef.current) {
+      console.warn('AdTracker: Não foi possível configurar a detecção de visibilidade - dados incompletos', {
+        anuncioId, tipoAnuncio, refExiste: !!anuncioRef.current
+      });
       return; // Não configurar o observer se faltar qualquer dado essencial
     }
     
@@ -143,12 +244,17 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       console.warn('AdTracker: usando página padrão "/"');
     }
     
+    console.log(`AdTracker: Configurando IntersectionObserver para anúncio ${anuncioId} do tipo ${tipoAnuncio} na página ${pagina}`);
+    
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        setIsVisible(entry.isIntersecting);
+        const isNowVisible = entry.isIntersecting;
         
-        if (entry.isIntersecting) {
+        console.log(`AdTracker: Anúncio ${anuncioId} ${isNowVisible ? 'visível' : 'invisível'} (${Math.round(entry.intersectionRatio * 100)}%)`);
+        setIsVisible(isNowVisible);
+        
+        if (isNowVisible) {
           // Anúncio acabou de ficar visível
           setVisibleStartTime(Date.now());
           
@@ -189,6 +295,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           
           // Atualizar o tempo de exposição
           if (timeVisible > 1) { // Apenas registrar se ficou visível por mais de 1 segundo
+            console.log(`AdTracker: Anúncio ${anuncioId} ficou visível por ${timeVisible.toFixed(1)} segundos`);
+            
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
@@ -226,6 +334,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       
       // Força o envio de eventos restantes quando o componente é desmontado
       if (eventsBuffer.length > 0) {
+        console.log(`AdTracker: Componente desmontado, enviando ${eventsBuffer.length} eventos pendentes`);
         flushEventsBuffer();
       }
     };
@@ -242,6 +351,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     // Usar o paginaId fornecido ou cair para o pathname como fallback
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const pagina = paginaId || currentPath || '/';
+    
+    console.log(`AdTracker: Clique detectado no anúncio ${anuncioId}`);
     
     registerEvent({
       anuncio_id: anuncioId,
@@ -272,6 +383,9 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       ref={anuncioRef} 
       onClick={handleClick}
       style={trackerStyle}
+      data-ad-id={anuncioId}
+      data-ad-type={tipoAnuncio}
+      data-page-id={paginaId}
     >
       {children}
     </div>
