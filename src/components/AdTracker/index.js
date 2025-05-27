@@ -20,11 +20,29 @@ if (typeof window !== 'undefined') {
         
         // Tentar enviar com sendBeacon se disponível (mais confiável)
         if (navigator.sendBeacon) {
-          const blob = new Blob([JSON.stringify({ eventos: JSON.stringify(eventsBuffer) })], {
+          // Formato correto: enviar o objeto como ele é esperado pela função RPC
+          const blob = new Blob([JSON.stringify({
+            eventos: eventsBuffer // Enviar array diretamente, sem stringify adicional
+          })], {
             type: 'application/json'
           });
+          
+          // Obter a URL correta para a API do Supabase
           const url = `${supabase.supabaseUrl}/rest/v1/rpc/inserir_eventos_anuncios_lote`;
-          const enviado = navigator.sendBeacon(url, blob);
+          
+          // Criar um objeto URLSearchParams para os parâmetros de consulta
+          const params = new URLSearchParams();
+          
+          // Adicionar a chave de API anônima como parâmetro de consulta
+          params.append('apikey', supabase.supabaseKey);
+          
+          // URL completa com parâmetros de consulta
+          const fullUrl = `${url}?${params.toString()}`;
+          
+          // Como sendBeacon não permite definir cabeçalhos, não podemos adicionar 
+          // o cabeçalho Authorization. No entanto, o apikey como parâmetro 
+          // de consulta deve ser suficiente para autenticação anônima.
+          const enviado = navigator.sendBeacon(fullUrl, blob);
           console.log('Eventos enviados via sendBeacon:', enviado);
         }
       } catch (e) {
@@ -88,8 +106,24 @@ const registerEvent = async (eventData) => {
 
   console.log('Registrando evento de anúncio:', eventData.tipo_evento, eventData.anuncio_id);
   
+  // Mapear os dados para corresponder exatamente ao formato esperado pela tabela
+  const mappedEvent = {
+    anuncio_id: eventData.anuncio_id,
+    pagina_id: eventData.pagina,  // usar o valor da pagina como pagina_id
+    tipo_evento: eventData.tipo_evento,
+    tempo_exposto: eventData.tempo_exposto || 0,
+    visivel: eventData.visivel !== undefined ? eventData.visivel : true,
+    origem_trafego: eventData.origem_trafego || null,
+    geolocalizacao: eventData.pais || 'Brasil',  // Usar país como geolocalização
+    dispositivo_info: {
+      tipo: eventData.dispositivo || 'desconhecido',
+      regiao: eventData.regiao || 'Desconhecido'
+    },
+    user_session_id: eventData.session_id || 'desconhecido'
+  };
+  
   // Adicionar o evento ao buffer
-  eventsBuffer.push(eventData);
+  eventsBuffer.push(mappedEvent);
   
   // Se atingimos o limite de tamanho do buffer, enviar imediatamente
   if (eventsBuffer.length >= BUFFER_SIZE_LIMIT) {
@@ -125,9 +159,10 @@ const flushEventsBuffer = async () => {
   try {
     console.log('Enviando eventos para o Supabase:', events);
     
+    // IMPORTANTE: A função RPC espera receber um array JSON, não uma string JSON
     const { data, error } = await supabase
       .rpc('inserir_eventos_anuncios_lote', {
-        eventos: JSON.stringify(events)
+        eventos: events // Enviar o array diretamente, não uma string JSON
       });
       
     if (error) {
