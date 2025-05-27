@@ -34,11 +34,11 @@ const getDeviceInfo = () => {
 // Função para obter a localização do usuário
 const getLocation = async () => {
   try {
-    const response = await fetch('https://ip-api.com/json/?fields=country,regionName');
-    const data = await response.json();
+    // Removida a chamada à API ip-api.com que estava causando erros 403
+    // Usando valores padrão para evitar chamadas bloqueadas
     return {
-      pais: data.country || 'desconhecido',
-      regiao: data.regionName || 'desconhecido'
+      pais: 'Brasil',
+      regiao: 'Desconhecido'
     };
   } catch (error) {
     console.error('Erro ao obter localização:', error);
