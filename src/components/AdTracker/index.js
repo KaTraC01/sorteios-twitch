@@ -269,17 +269,43 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   const exposureTimerRef = useRef(null);
   const sessionId = useRef(getOrCreateSessionId());
   const [initialized, setInitialized] = useState(false);
+  const observerRef = useRef(null); // Ref para guardar o observer
+  const componentIdRef = useRef(`ad_${anuncioId}_${Math.random().toString(36).substring(2, 9)}`); // ID único para identificar instâncias
   
-  // Efeito para recuperar eventos pendentes
+  // Efeito para recuperar eventos pendentes - executa apenas uma vez
   useEffect(() => {
     if (!initialized) {
-      console.log('Inicializando AdTracker e verificando eventos pendentes...');
+      console.log(`AdTracker [${componentIdRef.current}]: Inicializando e verificando eventos pendentes...`);
       recoverPendingEvents();
       setInitialized(true);
     }
-  }, [initialized]);
+    
+    // Limpeza ao desmontar completamente
+    return () => {
+      const id = componentIdRef.current;
+      console.log(`AdTracker [${id}]: Desmontando componente`);
+      
+      // Limpar o observer na desmontagem
+      if (observerRef.current && anuncioRef.current) {
+        observerRef.current.unobserve(anuncioRef.current);
+        observerRef.current = null;
+      }
+      
+      // Limpar temporizador
+      if (exposureTimerRef.current) {
+        clearInterval(exposureTimerRef.current);
+        exposureTimerRef.current = null;
+      }
+      
+      // Verificar se há eventos para enviar
+      if (eventsBuffer.length > 0) {
+        console.log(`AdTracker [${id}]: Componente desmontado, enviando ${eventsBuffer.length} eventos pendentes`);
+        flushEventsBuffer();
+      }
+    };
+  }, []);
   
-  // Efeito para obter localização
+  // Efeito para obter localização - executa apenas uma vez
   useEffect(() => {
     const fetchLocation = async () => {
       const location = await getLocation();
@@ -291,45 +317,57 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   
   // Configurar a detecção de visibilidade com IntersectionObserver
   useEffect(() => {
+    const componentId = componentIdRef.current;
+    
     // Verificar se temos todos os dados necessários
     if (!anuncioId || !tipoAnuncio || !anuncioRef.current) {
-      console.warn('AdTracker: Não foi possível configurar a detecção de visibilidade - dados incompletos', {
+      console.warn(`AdTracker [${componentId}]: Dados incompletos para configurar detecção de visibilidade`, {
         anuncioId, tipoAnuncio, refExiste: !!anuncioRef.current
       });
       return; // Não configurar o observer se faltar qualquer dado essencial
+    }
+    
+    // Limpar observer anterior se existir
+    if (observerRef.current && anuncioRef.current) {
+      observerRef.current.unobserve(anuncioRef.current);
+      observerRef.current = null;
     }
     
     // Usar o paginaId fornecido ou cair para o pathname como fallback
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const pagina = paginaId || currentPath || '/';
     
-    // Verificar se a página é válida
-    if (pagina === '/' && !paginaId) {
-      console.warn('AdTracker: usando página padrão "/"');
-    }
+    console.log(`AdTracker [${componentId}]: Configurando observer para anúncio ${anuncioId} (${tipoAnuncio}) em ${pagina}`);
     
-    console.log(`AdTracker: Configurando IntersectionObserver para anúncio ${anuncioId} do tipo ${tipoAnuncio} na página ${pagina}`);
-    
-    const observer = new IntersectionObserver(
+    // Criar um novo observer
+    observerRef.current = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         const isNowVisible = entry.isIntersecting;
+        const visibilityPercentage = Math.round(entry.intersectionRatio * 100);
         
-        console.log(`AdTracker: Anúncio ${anuncioId} ${isNowVisible ? 'visível' : 'invisível'} (${Math.round(entry.intersectionRatio * 100)}%)`);
+        // Evitar atualizações redundantes
+        if (isNowVisible === isVisible) {
+          return;
+        }
+        
         setIsVisible(isNowVisible);
         
         if (isNowVisible) {
           // Anúncio acabou de ficar visível
           const currentTime = Date.now();
           setVisibleStartTime(currentTime);
-          console.log(`AdTracker: Anúncio ${anuncioId} começou a ser exibido em ${new Date(currentTime).toISOString()}`);
+          console.log(`AdTracker [${componentId}]: Anúncio visível (${visibilityPercentage}%)`);
           
           // Iniciar o cronômetro para rastrear tempo exposto
           if (!exposureTimerRef.current) {
             exposureTimerRef.current = setInterval(() => {
               setExposureTime(prev => {
                 const newValue = prev + 1;
-                console.log(`AdTracker: Anúncio ${anuncioId} exposto por ${newValue} segundos`);
+                // Reduzir frequência de logs (apenas a cada 10 segundos)
+                if (newValue % 10 === 0) {
+                  console.log(`AdTracker [${componentId}]: Tempo exposto: ${newValue}s`);
+                }
                 return newValue;
               });
             }, 1000);
@@ -359,6 +397,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           const timeVisible = (currentTime - visibleStartTime) / 1000; // em segundos
           const roundedTime = Math.round(timeVisible * 100) / 100; // Arredondar para 2 casas decimais
           
+          console.log(`AdTracker [${componentId}]: Anúncio não visível. Tempo exposto: ${roundedTime.toFixed(2)}s`);
+          
           // Parar o cronômetro
           if (exposureTimerRef.current) {
             clearInterval(exposureTimerRef.current);
@@ -367,8 +407,6 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           
           // Atualizar o tempo de exposição
           if (timeVisible > 1) { // Apenas registrar se ficou visível por mais de 1 segundo
-            console.log(`AdTracker: Anúncio ${anuncioId} ficou visível por ${roundedTime.toFixed(2)} segundos`);
-            
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
@@ -394,54 +432,55 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       }
     );
     
-    observer.observe(anuncioRef.current);
+    // Observar o elemento
+    observerRef.current.observe(anuncioRef.current);
     
+    // Função de limpeza
     return () => {
+      // Este cleanup só ocorre quando as dependências mudam, não no desmonte final
       if (exposureTimerRef.current) {
         clearInterval(exposureTimerRef.current);
+        exposureTimerRef.current = null;
       }
       
-      if (anuncioRef.current) {
-        observer.unobserve(anuncioRef.current);
-      }
-      
-      // Se o componente for desmontado enquanto estiver visível, registrar o tempo de exposição
-      if (visibleStartTime) {
-        const finalTimeVisible = (Date.now() - visibleStartTime) / 1000;
-        const roundedFinalTime = Math.round(finalTimeVisible * 100) / 100;
+      if (observerRef.current && anuncioRef.current) {
+        observerRef.current.unobserve(anuncioRef.current);
+        observerRef.current = null;
         
-        if (finalTimeVisible > 1) {
-          console.log(`AdTracker: Componente desmontado enquanto visível. Tempo total: ${roundedFinalTime.toFixed(2)} segundos`);
+        // Se o componente for reinicializado enquanto estiver visível, registrar o tempo de exposição
+        if (visibleStartTime) {
+          const finalTimeVisible = (Date.now() - visibleStartTime) / 1000;
+          const roundedFinalTime = Math.round(finalTimeVisible * 100) / 100;
           
-          registerEvent({
-            anuncio_id: anuncioId,
-            tipo_anuncio: tipoAnuncio,
-            pagina: pagina,
-            tipo_evento: 'impressao',
-            tempo_exposto: roundedFinalTime,
-            visivel: false,
-            dispositivo: getDeviceInfo(),
-            pais: locationInfo.pais,
-            regiao: locationInfo.regiao,
-            session_id: sessionId.current,
-            timestamp: new Date().toISOString()
-          });
+          if (finalTimeVisible > 1) {
+            console.log(`AdTracker [${componentId}]: Reconfigurando enquanto visível. Tempo: ${roundedFinalTime.toFixed(2)}s`);
+            
+            registerEvent({
+              anuncio_id: anuncioId,
+              tipo_anuncio: tipoAnuncio,
+              pagina: pagina,
+              tipo_evento: 'impressao',
+              tempo_exposto: roundedFinalTime,
+              visivel: false,
+              dispositivo: getDeviceInfo(),
+              pais: locationInfo.pais,
+              regiao: locationInfo.regiao,
+              session_id: sessionId.current,
+              timestamp: new Date().toISOString()
+            });
+          }
         }
       }
-      
-      // Força o envio de eventos restantes quando o componente é desmontado
-      if (eventsBuffer.length > 0) {
-        console.log(`AdTracker: Componente desmontado, enviando ${eventsBuffer.length} eventos pendentes`);
-        flushEventsBuffer();
-      }
     };
-  }, [anuncioId, tipoAnuncio, paginaId, hasRegisteredImpression, locationInfo, visibleStartTime]);
+  }, [anuncioId, tipoAnuncio, paginaId, hasRegisteredImpression, locationInfo, isVisible]);
   
   // Registrar clique quando o usuário clicar no anúncio
   const handleClick = () => {
+    const componentId = componentIdRef.current;
+    
     // Verificar se temos todos os dados necessários
     if (!anuncioId || !tipoAnuncio) {
-      console.warn('AdTracker: tentativa de registrar clique sem dados essenciais');
+      console.warn(`AdTracker [${componentId}]: Tentativa de registrar clique sem dados essenciais`);
       return; // Não registrar o clique se faltar qualquer dado essencial
     }
     
@@ -456,7 +495,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       tempoAtual = Math.round(tempoVisivel * 100) / 100;
     }
     
-    console.log(`AdTracker: Clique detectado no anúncio ${anuncioId}. Tempo exposto: ${tempoAtual.toFixed(2)} segundos`);
+    console.log(`AdTracker [${componentId}]: Clique detectado. Tempo exposto: ${tempoAtual.toFixed(2)}s`);
     
     registerEvent({
       anuncio_id: anuncioId,
