@@ -109,7 +109,7 @@ const registerEvent = async (eventData) => {
   // Mapear os dados para corresponder exatamente ao formato esperado pela tabela
   const mappedEvent = {
     anuncio_id: eventData.anuncio_id,
-    pagina_id: eventData.pagina,  // usar o valor da pagina como pagina_id
+    pagina: eventData.pagina,  // usar pagina em vez de pagina_id
     tipo_evento: eventData.tipo_evento,
     tempo_exposto: eventData.tempo_exposto || 0,
     visivel: eventData.visivel !== undefined ? eventData.visivel : true,
