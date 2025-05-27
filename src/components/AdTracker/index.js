@@ -14,15 +14,29 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     if (eventsBuffer.length > 0) {
       try {
+        // Processar valores numéricos antes de salvar
+        const processedEvents = eventsBuffer.map(event => {
+          // Garantir que tempo_exposto seja um número válido
+          if (event.tempo_exposto !== undefined) {
+            event.tempo_exposto = Number(event.tempo_exposto);
+            
+            // Se NaN, definir como 0
+            if (isNaN(event.tempo_exposto)) {
+              event.tempo_exposto = 0;
+            }
+          }
+          return event;
+        });
+        
         // Salvar eventos pendentes no localStorage
-        console.log(`Salvando ${eventsBuffer.length} eventos pendentes antes de fechar a página`);
-        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
+        console.log(`Salvando ${processedEvents.length} eventos pendentes antes de fechar a página`);
+        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(processedEvents));
         
         // Tentar enviar com sendBeacon se disponível (mais confiável)
         if (navigator.sendBeacon) {
           // Formato correto: enviar o objeto como ele é esperado pela função RPC
           const blob = new Blob([JSON.stringify({
-            eventos: eventsBuffer // Enviar array diretamente, sem stringify adicional
+            eventos: processedEvents // Enviar array processado
           })], {
             type: 'application/json'
           });
@@ -102,7 +116,8 @@ const registerEvent = async (eventData) => {
     return; // Não registrar o evento se algum dado essencial estiver faltando
   }
 
-  console.log('Registrando evento de anúncio:', eventData.tipo_evento, eventData.anuncio_id);
+  console.log('Registrando evento de anúncio:', eventData.tipo_evento, eventData.anuncio_id, 
+    'tempo_exposto:', eventData.tempo_exposto);
   
   // Mapear os dados para corresponder exatamente ao formato esperado pela tabela
   const mappedEvent = {
@@ -110,7 +125,7 @@ const registerEvent = async (eventData) => {
     tipo_anuncio: eventData.tipo_anuncio,
     pagina: eventData.pagina,
     tipo_evento: eventData.tipo_evento,
-    tempo_exposto: eventData.tempo_exposto || 0,
+    tempo_exposto: Number(eventData.tempo_exposto || 0), // Garantir que seja número
     visivel: eventData.visivel !== undefined ? eventData.visivel : true,
     dispositivo: eventData.dispositivo || getDeviceInfo(),
     pais: eventData.pais || 'Brasil',
@@ -145,7 +160,23 @@ const flushEventsBuffer = async () => {
   
   console.log(`Preparando para enviar ${eventsBuffer.length} eventos do buffer...`);
   
-  const events = [...eventsBuffer];
+  // Verificar e corrigir valores numéricos antes de enviar
+  const events = eventsBuffer.map(event => {
+    // Garantir que tempo_exposto seja um número válido
+    if (event.tempo_exposto !== undefined) {
+      event.tempo_exposto = Number(event.tempo_exposto);
+      
+      // Se NaN, definir como 0
+      if (isNaN(event.tempo_exposto)) {
+        console.warn('Valor inválido para tempo_exposto, definindo como 0');
+        event.tempo_exposto = 0;
+      }
+    }
+    return event;
+  });
+  
+  console.log('Eventos formatados para envio:', events);
+  
   eventsBuffer = [];
   
   // Limpar o timer
@@ -289,12 +320,18 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         
         if (isNowVisible) {
           // Anúncio acabou de ficar visível
-          setVisibleStartTime(Date.now());
+          const currentTime = Date.now();
+          setVisibleStartTime(currentTime);
+          console.log(`AdTracker: Anúncio ${anuncioId} começou a ser exibido em ${new Date(currentTime).toISOString()}`);
           
           // Iniciar o cronômetro para rastrear tempo exposto
           if (!exposureTimerRef.current) {
             exposureTimerRef.current = setInterval(() => {
-              setExposureTime(prev => prev + 1);
+              setExposureTime(prev => {
+                const newValue = prev + 1;
+                console.log(`AdTracker: Anúncio ${anuncioId} exposto por ${newValue} segundos`);
+                return newValue;
+              });
             }, 1000);
           }
           
@@ -318,7 +355,9 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           }
         } else if (visibleStartTime) {
           // Anúncio acabou de ficar invisível
-          const timeVisible = (Date.now() - visibleStartTime) / 1000; // em segundos
+          const currentTime = Date.now();
+          const timeVisible = (currentTime - visibleStartTime) / 1000; // em segundos
+          const roundedTime = Math.round(timeVisible * 100) / 100; // Arredondar para 2 casas decimais
           
           // Parar o cronômetro
           if (exposureTimerRef.current) {
@@ -328,14 +367,14 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           
           // Atualizar o tempo de exposição
           if (timeVisible > 1) { // Apenas registrar se ficou visível por mais de 1 segundo
-            console.log(`AdTracker: Anúncio ${anuncioId} ficou visível por ${timeVisible.toFixed(1)} segundos`);
+            console.log(`AdTracker: Anúncio ${anuncioId} ficou visível por ${roundedTime.toFixed(2)} segundos`);
             
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
               tipo_evento: 'impressao',
-              tempo_exposto: Math.round(timeVisible),
+              tempo_exposto: roundedTime, // Enviar o valor com precisão decimal
               visivel: false,
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
@@ -346,6 +385,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           }
           
           setVisibleStartTime(null);
+          setExposureTime(0); // Resetar contador
         }
       },
       {
@@ -363,6 +403,30 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       
       if (anuncioRef.current) {
         observer.unobserve(anuncioRef.current);
+      }
+      
+      // Se o componente for desmontado enquanto estiver visível, registrar o tempo de exposição
+      if (visibleStartTime) {
+        const finalTimeVisible = (Date.now() - visibleStartTime) / 1000;
+        const roundedFinalTime = Math.round(finalTimeVisible * 100) / 100;
+        
+        if (finalTimeVisible > 1) {
+          console.log(`AdTracker: Componente desmontado enquanto visível. Tempo total: ${roundedFinalTime.toFixed(2)} segundos`);
+          
+          registerEvent({
+            anuncio_id: anuncioId,
+            tipo_anuncio: tipoAnuncio,
+            pagina: pagina,
+            tipo_evento: 'impressao',
+            tempo_exposto: roundedFinalTime,
+            visivel: false,
+            dispositivo: getDeviceInfo(),
+            pais: locationInfo.pais,
+            regiao: locationInfo.regiao,
+            session_id: sessionId.current,
+            timestamp: new Date().toISOString()
+          });
+        }
       }
       
       // Força o envio de eventos restantes quando o componente é desmontado
@@ -385,14 +449,21 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const pagina = paginaId || currentPath || '/';
     
-    console.log(`AdTracker: Clique detectado no anúncio ${anuncioId}`);
+    // Calcular o tempo atual de exposição se o anúncio estiver visível
+    let tempoAtual = exposureTime;
+    if (visibleStartTime) {
+      const tempoVisivel = (Date.now() - visibleStartTime) / 1000;
+      tempoAtual = Math.round(tempoVisivel * 100) / 100;
+    }
+    
+    console.log(`AdTracker: Clique detectado no anúncio ${anuncioId}. Tempo exposto: ${tempoAtual.toFixed(2)} segundos`);
     
     registerEvent({
       anuncio_id: anuncioId,
       tipo_anuncio: tipoAnuncio,
       pagina: pagina,
       tipo_evento: 'clique',
-      tempo_exposto: exposureTime,
+      tempo_exposto: tempoAtual,
       visivel: isVisible,
       dispositivo: getDeviceInfo(),
       pais: locationInfo.pais,
