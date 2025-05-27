@@ -145,11 +145,11 @@ const RelatorioAnuncios = () => {
       resumoDiario.forEach(metrica => {
         impressoesTotal += metrica.total_impressoes || 0;
         cliquesTotal += metrica.total_cliques || 0;
-        
+          
         if (metrica.tempo_medio_visivel) {
           tempoTotalExposicao += metrica.tempo_medio_visivel * (metrica.total_impressoes || 0);
-        }
-        
+          }
+          
         alcanceTotal.add(metrica.alcance || 0);
       });
       
@@ -432,18 +432,18 @@ const RelatorioAnuncios = () => {
       <div className="controles">
         <div className="seletor-periodo">
           <label htmlFor="periodo">Período:</label>
-          <select 
+            <select 
             id="periodo" 
-            value={periodoSelecionado} 
-            onChange={(e) => setPeriodoSelecionado(e.target.value)}
-          >
-            <option value="7d">Últimos 7 dias</option>
-            <option value="30d">Últimos 30 dias</option>
-            <option value="90d">Últimos 90 dias</option>
-            <option value="1a">Último ano</option>
-          </select>
-        </div>
-        
+              value={periodoSelecionado} 
+              onChange={(e) => setPeriodoSelecionado(e.target.value)}
+            >
+              <option value="7d">Últimos 7 dias</option>
+              <option value="30d">Últimos 30 dias</option>
+              <option value="90d">Últimos 90 dias</option>
+              <option value="1a">Último ano</option>
+            </select>
+          </div>
+          
         <div className="seletor-relatorio">
           <button 
             className={tipoRelatorio === 'impressoes' ? 'ativo' : ''} 
@@ -467,16 +467,16 @@ const RelatorioAnuncios = () => {
       </div>
       
       <div className="conteudo-relatorio">
-        {carregando ? (
+      {carregando ? (
           <div className="carregando">Carregando dados...</div>
-        ) : (
+      ) : (
           <>
             {tipoRelatorio === 'impressoes' && renderizarRelatorioImpressoes()}
             {tipoRelatorio === 'por-anuncio' && renderizarRelatorioPorAnuncio()}
             {tipoRelatorio === 'por-pagina' && renderizarRelatorioPorPagina()}
           </>
         )}
-      </div>
+        </div>
     </div>
   );
 };

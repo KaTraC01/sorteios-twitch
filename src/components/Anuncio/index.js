@@ -460,7 +460,7 @@ const Anuncio = ({
       if (!anuncioIdEfetivo || !pageId || !tipo) {
         // Se algum dado essencial estiver faltando, renderizar apenas o conteúdo sem o tracker
         console.warn(`AdTracker não renderizado para ${tipo}-${posicao}: dados incompletos`);
-        return renderConteudoAnuncio();
+  return renderConteudoAnuncio();
       }
       
       // Todos os dados necessários estão disponíveis, então renderizar com o AdTracker
