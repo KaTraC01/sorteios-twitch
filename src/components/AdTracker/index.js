@@ -374,6 +374,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   const observerRef = useRef(null); // Ref para guardar o observer
   const componentIdRef = useRef(`ad_${anuncioId}_${Math.random().toString(36).substring(2, 9)}`); // ID único para identificar instâncias
   const hasReportedRef = useRef(false); // Ref para controlar se já reportamos (persistente entre re-renders)
+  const mountTimeRef = useRef(Date.now()); // Ref para armazenar o momento em que o componente foi montado
   
   // Efeito para recuperar eventos pendentes - executa apenas uma vez
   useEffect(() => {
@@ -381,6 +382,29 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       console.log(`AdTracker [${componentIdRef.current}]: Inicializando e verificando eventos pendentes...`);
       recoverPendingEvents();
       setInitialized(true);
+      
+      // Inicializar o tempo de montagem
+      mountTimeRef.current = Date.now();
+      
+      // Para anúncios de tela inteira, iniciar o cronômetro imediatamente
+      if (tipoAnuncio === 'tela-inteira') {
+        console.log(`AdTracker [${componentIdRef.current}]: Anúncio de tela inteira - iniciando cronômetro imediatamente`);
+        setVisibleStartTime(Date.now());
+        setIsVisible(true);
+        
+        // Iniciar o cronômetro para rastrear tempo exposto
+        if (!exposureTimerRef.current) {
+          exposureTimerRef.current = setInterval(() => {
+            setExposureTime(prev => {
+              const newValue = prev + 1;
+              if (newValue % 10 === 0) {
+                console.log(`AdTracker [${componentIdRef.current}]: Tempo exposto (tela inteira): ${newValue}s`);
+              }
+              return newValue;
+            });
+          }, 1000);
+        }
+      }
     }
     
     // Limpeza ao desmontar completamente
@@ -390,10 +414,19 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       
       // Se o componente estiver visível, registrar o tempo antes de desmontar
       // mas APENAS se ainda não enviamos um evento
-      if (visibleStartTime && !hasReportedRef.current && hasRegisteredImpression) {
-        const finalVisibleTime = (Date.now() - visibleStartTime) / 1000;
+      if ((visibleStartTime || tipoAnuncio === 'tela-inteira') && !hasReportedRef.current && hasRegisteredImpression) {
+        let finalVisibleTime;
         
-        if (finalVisibleTime > 0.5) {
+        if (visibleStartTime) {
+          finalVisibleTime = (Date.now() - visibleStartTime) / 1000;
+        } else if (tipoAnuncio === 'tela-inteira') {
+          // Para anúncios de tela inteira, usar o tempo desde a montagem
+          finalVisibleTime = (Date.now() - mountTimeRef.current) / 1000;
+        } else {
+          finalVisibleTime = exposureTime;
+        }
+        
+        if (finalVisibleTime > 0.1 || tipoAnuncio === 'tela-inteira') {
           console.log(`AdTracker [${id}]: Registrando impressão final na desmontagem. Tempo: ${finalVisibleTime.toFixed(2)}s`);
           
           // Marcar que já reportamos para este anúncio
@@ -644,12 +677,23 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const pagina = paginaId || currentPath || '/';
     
-    // Calcular o tempo atual de exposição se o anúncio estiver visível
-    let tempoAtual = exposureTime;
-    if (visibleStartTime) {
-      const tempoVisivel = (Date.now() - visibleStartTime) / 1000;
-      tempoAtual = Math.round(tempoVisivel * 100) / 100;
+    // Calcular o tempo atual de exposição
+    let tempoAtual;
+    
+    if (tipoAnuncio === 'tela-inteira') {
+      // Para anúncios de tela inteira, calcular desde a montagem
+      tempoAtual = (Date.now() - mountTimeRef.current) / 1000;
+      console.log(`AdTracker [${componentId}]: Tempo de exposição para tela inteira calculado desde a montagem: ${tempoAtual.toFixed(2)}s`);
+    } else if (visibleStartTime) {
+      // Para outros anúncios, calcular desde que ficou visível
+      tempoAtual = (Date.now() - visibleStartTime) / 1000;
+    } else {
+      // Fallback para o valor do estado
+      tempoAtual = exposureTime;
     }
+    
+    // Garantir que o tempo seja um número válido e arredondado
+    tempoAtual = Math.max(0.1, Math.round(tempoAtual * 100) / 100);
     
     console.log(`AdTracker [${componentId}]: Clique detectado. Tempo exposto: ${tempoAtual.toFixed(2)}s`);
     
@@ -659,7 +703,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       pagina: pagina,
       tipo_evento: 'clique',
       tempo_exposto: tempoAtual,
-      visivel: true, // Modificado: TRUE para eventos de clique também
+      visivel: true,
       dispositivo: getDeviceInfo(),
       pais: locationInfo.pais,
       regiao: locationInfo.regiao,
