@@ -415,22 +415,12 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             }, 1000);
           }
           
-          // Registrar impressão apenas uma vez
+          // Registrar impressão apenas uma vez e somente se não foi registrada ainda
           if (!hasRegisteredImpression) {
-            registerEvent({
-              anuncio_id: anuncioId,
-              tipo_anuncio: tipoAnuncio,
-              pagina: pagina,
-              tipo_evento: 'impressao',
-              tempo_exposto: 0,
-              visivel: true,
-              dispositivo: getDeviceInfo(),
-              pais: locationInfo.pais,
-              regiao: locationInfo.regiao,
-              session_id: sessionId.current,
-              timestamp: new Date().toISOString()
-            });
+            console.log(`AdTracker [${componentId}]: Registrando impressão inicial`);
             
+            // Registramos apenas o início da visualização, sem enviar evento de tempo zero
+            // Isso evita um registro redundante
             setHasRegisteredImpression(true);
           }
         } else if (visibleStartTime) {
@@ -448,7 +438,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           }
           
           // Atualizar o tempo de exposição
-          if (timeVisible > 1) { // Apenas registrar se ficou visível por mais de 1 segundo
+          if (timeVisible > 0.5) { // Registrar apenas se ficou visível por mais de meio segundo
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
@@ -494,8 +484,12 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           const finalTimeVisible = (Date.now() - visibleStartTime) / 1000;
           const roundedFinalTime = Math.round(finalTimeVisible * 100) / 100;
           
-          if (finalTimeVisible > 1) {
+          // Evitar duplicações: Registrar apenas se o tempo for significativo
+          if (finalTimeVisible > 0.5 && hasRegisteredImpression) {
             console.log(`AdTracker [${componentId}]: Reconfigurando enquanto visível. Tempo: ${roundedFinalTime.toFixed(2)}s`);
+            
+            // Adicionar flag para evitar registro duplicado ao reconfigurar
+            const isReconfiguring = true;
             
             registerEvent({
               anuncio_id: anuncioId,
