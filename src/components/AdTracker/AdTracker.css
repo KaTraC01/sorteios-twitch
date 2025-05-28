@@ -31,4 +31,18 @@ td .ad-tracker-container > a {
 /* Garantir que o tracker não afete a visibilidade das imagens */
 .ad-tracker-container img {
   max-width: inherit;
+}
+
+/* Estilo especial para anúncios fixos que ajuda na detecção de visibilidade */
+.ad-tracker-fixed {
+  /* Aumentar a chance de ser detectado corretamente pelo IntersectionObserver */
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  
+  /* Garantir que o z-index não afete a visibilidade */
+  z-index: 1;
+  position: relative;
 } 

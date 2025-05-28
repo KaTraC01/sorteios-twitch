@@ -558,67 +558,6 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     fetchLocation();
   }, []);
   
-  // Remover qualquer chamada incorreta a metricas_anuncios que possa estar causando o erro 404
-  useEffect(() => {
-    // Flag para identificar este componente específico
-    const componentId = componentIdRef.current;
-    
-    // Definir flag no objeto window para evitar chamadas duplicadas
-    if (typeof window !== 'undefined') {
-      // Se for um anúncio de tela-inteira, verificar se temos uma propriedade de rastreamento
-      if (tipoAnuncio === 'tela-inteira') {
-        // Criar ou usar identificador único para este anúncio
-        const anuncioKey = `ad_tracking_${anuncioId}`;
-        
-        // Verificar se este anúncio já foi rastreado nesta sessão
-        if (!window[anuncioKey]) {
-          // Marcar como rastreado
-          window[anuncioKey] = true;
-          console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Primeira visualização nesta sessão`, 'color: #CDDC39; font-weight: bold');
-        } else {
-          console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Já visualizado anteriormente nesta sessão`, 'color: #FF5722');
-        }
-      }
-      
-      // Tratamento especial para anúncios fixos e laterais
-      // Esses anúncios são geralmente fixos na tela e podem não disparar os eventos de visibilidade adequadamente
-      const fixedAdTypes = ['lateral', 'fixo-superior', 'fixo-inferior'];
-      if (fixedAdTypes.includes(tipoAnuncio) && !hasReportedRef.current) {
-        // Para anúncios fixos, vamos garantir que eles sejam registrados logo na inicialização
-        setTimeout(() => {
-          if (!hasReportedRef.current) {
-            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registro imediato para anúncio fixo`, 'background: #3F51B5; color: white; padding: 2px 5px; border-radius: 3px');
-            
-            // Marcar que já reportamos para este anúncio
-            hasReportedRef.current = true;
-            
-            // Obter a página atual para o rastreamento
-            const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-            const pagina = paginaId || currentPath || '/';
-            
-            // Usar um tempo de exposição padrão para anúncios fixos
-            const tempoExposicao = tipoAnuncio.includes('lateral') ? 1.5 : 1.0;
-            
-            // Registrar o evento com tempo fixo
-            registerEvent({
-              anuncio_id: anuncioId,
-              tipo_anuncio: tipoAnuncio,
-              pagina: pagina,
-              tipo_evento: 'impressao',
-              tempo_exposto: tempoExposicao,
-              visivel: true,
-              dispositivo: getDeviceInfo(),
-              pais: locationInfo.pais,
-              regiao: locationInfo.regiao,
-              session_id: sessionId.current,
-              timestamp: new Date().toISOString()
-            });
-          }
-        }, 1000); // Registrar após 1 segundo para dar tempo de renderizar completamente
-      }
-    }
-  }, [anuncioId, tipoAnuncio]);
-  
   // Configurar a detecção de visibilidade com IntersectionObserver
   useEffect(() => {
     const componentId = componentIdRef.current;
@@ -645,6 +584,19 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     
     // Flag para controlar se já enviamos evento neste ciclo de vida do componente
     let hasReportedExposure = false;
+    // Tempo mínimo (em segundos) que um anúncio deve estar visível para ser registrado
+    const MIN_VISIBLE_TIME = 1.0;
+    
+    // Definir limiares com base no tipo de anúncio
+    // Anúncios fixos e laterais precisam de menos visibilidade para serem considerados visíveis
+    let thresholds = [0, 0.1, 0.25, 0.5, 0.75, 1.0];
+    const isFixedAd = ['lateral', 'fixo-superior', 'fixo-inferior'].includes(tipoAnuncio);
+    
+    // Para anúncios fixos, usamos limiares menores para detectar mais facilmente
+    if (isFixedAd) {
+      thresholds = [0, 0.05, 0.1, 0.25, 0.5];
+      console.log(`%c[AdTracker] [${componentId}] Usando limiares especiais para anúncio fixo ${tipoAnuncio}`, 'color: #9C27B0');
+    }
     
     // Criar um novo observer
     observerRef.current = new IntersectionObserver(
@@ -664,7 +616,13 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           // Anúncio acabou de ficar visível
           const currentTime = Date.now();
           setVisibleStartTime(currentTime);
-          console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Visível (${visibilityPercentage}%)`, 'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px');
+          
+          // Log específico para anúncios fixos vs. outros tipos
+          if (isFixedAd) {
+            console.log(`%c[AdTracker] [${componentId}] Anúncio fixo ${tipoAnuncio} (${anuncioId}): Visível (${visibilityPercentage}%)`, 'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px');
+          } else {
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Visível (${visibilityPercentage}%)`, 'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px');
+          }
           
           // Iniciar o cronômetro para rastrear tempo exposto
           if (!exposureTimerRef.current) {
@@ -675,6 +633,33 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                 if (newValue % 10 === 0) {
                   console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo exposto: ${newValue}s`, 'color: #00BCD4');
                 }
+                
+                // Verificar se atingiu o tempo mínimo para registrar
+                // Tem lógica especial para anúncios fixos - usar tempo um pouco menor
+                const timeThreshold = isFixedAd ? 0.5 : MIN_VISIBLE_TIME;
+                
+                if (newValue >= timeThreshold && !hasReportedExposure && !hasReportedRef.current) {
+                  console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s), registrando impressão`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+                  
+                  // Marcar que já reportamos
+                  hasReportedExposure = true;
+                  hasReportedRef.current = true;
+                  
+                  registerEvent({
+                    anuncio_id: anuncioId,
+                    tipo_anuncio: tipoAnuncio,
+                    pagina: pagina,
+                    tipo_evento: 'impressao',
+                    tempo_exposto: Math.round(newValue * 100) / 100, // Arredondar para 2 casas decimais
+                    visivel: true,
+                    dispositivo: getDeviceInfo(),
+                    pais: locationInfo.pais,
+                    regiao: locationInfo.regiao,
+                    session_id: sessionId.current,
+                    timestamp: new Date().toISOString()
+                  });
+                }
+                
                 return newValue;
               });
             }, 1000);
@@ -700,26 +685,29 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           }
           
           // Atualizar o tempo de exposição - APENAS se não enviamos ainda neste ciclo
-          // Reduzido o tempo mínimo para 0.1 segundos para capturar mais impressões
-          if (timeVisible > 0.1 && !hasReportedExposure) {
+          // Verificar tempo mínimo adequado para o tipo de anúncio
+          const minTimeThreshold = isFixedAd ? 0.3 : 0.5;
+          
+          if (timeVisible >= minTimeThreshold && !hasReportedExposure && !hasReportedRef.current) {
             console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando impressão com tempo=${roundedTime}`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
             hasReportedExposure = true; // Marcar que já enviamos
+            hasReportedRef.current = true;
             
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
               tipo_evento: 'impressao',
-              tempo_exposto: roundedTime, // Enviar o valor com precisão decimal
-              visivel: true, // Modificado: TRUE indica que o anúncio foi visualizado
+              tempo_exposto: roundedTime,
+              visivel: true,
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
               regiao: locationInfo.regiao,
               session_id: sessionId.current,
               timestamp: new Date().toISOString()
             });
-          } else if (timeVisible <= 0.1 && !hasReportedExposure) {
-            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo insuficiente (${roundedTime}s < 0.1s) para registrar impressão`, 'background: #FFC107; color: black; padding: 2px 5px; border-radius: 3px');
+          } else if (timeVisible < minTimeThreshold) {
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo insuficiente (${roundedTime}s < ${minTimeThreshold}s) para registrar impressão`, 'background: #FFC107; color: black; padding: 2px 5px; border-radius: 3px');
           }
           
           setVisibleStartTime(null);
@@ -727,8 +715,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         }
       },
       {
-        threshold: 0.1, // Reduzido para 10% - Consideramos visível quando 10% do anúncio está na tela (era 0.5 = 50%)
-        rootMargin: '0px'
+        threshold: thresholds, // Usar os limiares definidos com base no tipo de anúncio
+        rootMargin: isFixedAd ? '10px' : '0px' // Margem extra para anúncios fixos
       }
     );
     
@@ -746,41 +734,31 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       if (observerRef.current && anuncioRef.current) {
         observerRef.current.unobserve(anuncioRef.current);
         observerRef.current = null;
-        
-        // Se o componente for reinicializado enquanto estiver visível, registrar o tempo de exposição
-        // mas APENAS se não registramos já
-        if (visibleStartTime && !hasReportedExposure) {
-          const finalTimeVisible = (Date.now() - visibleStartTime) / 1000;
-          const roundedFinalTime = Math.round(finalTimeVisible * 100) / 100;
-          
-          // Evitar duplicações: Registrar apenas se o tempo for significativo
-          // Reduzido o tempo mínimo para 0.1 segundos
-          if (finalTimeVisible > 0.1 && hasRegisteredImpression) {
-            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Finalizando componente enquanto visível. Tempo: ${roundedFinalTime.toFixed(2)}s`, 'background: #009688; color: white; padding: 2px 5px; border-radius: 3px');
-            
-            // Marcar que já enviamos para evitar envios duplicados
-            hasReportedExposure = true;
-            
-            registerEvent({
-              anuncio_id: anuncioId,
-              tipo_anuncio: tipoAnuncio,
-              pagina: pagina,
-              tipo_evento: 'impressao',
-              tempo_exposto: roundedFinalTime,
-              visivel: true, // Modificado: TRUE indica que o anúncio foi visualizado
-              dispositivo: getDeviceInfo(),
-              pais: locationInfo.pais,
-              regiao: locationInfo.regiao,
-              session_id: sessionId.current,
-              timestamp: new Date().toISOString()
-            });
-          } else if (finalTimeVisible <= 0.1 && hasRegisteredImpression) {
-            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo insuficiente (${roundedFinalTime}s < 0.1s) ao finalizar componente`, 'background: #FFC107; color: black; padding: 2px 5px; border-radius: 3px');
-          }
-        }
       }
     };
   }, [anuncioId, tipoAnuncio, paginaId, hasRegisteredImpression, locationInfo, isVisible]);
+  
+  // Remover o tratamento especial para anúncios fixos e laterais que usava setTimeout
+  // Substituir pelo código abaixo que apenas configura atributos especiais para melhorar a detecção
+  useEffect(() => {
+    const componentId = componentIdRef.current;
+    
+    // Verificar se o anúncio é um tipo fixo ou lateral
+    const isFixedOrLateralAd = ['lateral', 'fixo-superior', 'fixo-inferior'].includes(tipoAnuncio);
+    
+    if (isFixedOrLateralAd && anuncioRef.current) {
+      // Adicionar classe especial para ajudar na detecção de visibilidade
+      anuncioRef.current.classList.add('ad-tracker-fixed');
+      console.log(`%c[AdTracker] [${componentId}] Configurando anúncio fixo ${tipoAnuncio} (${anuncioId}) para melhor detecção`, 'color: #FF9800');
+    }
+    
+    return () => {
+      // Limpar ao desmontar
+      if (isFixedOrLateralAd && anuncioRef.current) {
+        anuncioRef.current.classList.remove('ad-tracker-fixed');
+      }
+    };
+  }, [tipoAnuncio, anuncioId]);
   
   // Registrar clique quando o usuário clicar no anúncio
   const handleClick = () => {
