@@ -313,6 +313,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   const [initialized, setInitialized] = useState(false);
   const observerRef = useRef(null); // Ref para guardar o observer
   const componentIdRef = useRef(`ad_${anuncioId}_${Math.random().toString(36).substring(2, 9)}`); // ID único para identificar instâncias
+  const hasReportedRef = useRef(false); // Ref para controlar se já reportamos (persistente entre re-renders)
   
   // Efeito para recuperar eventos pendentes - executa apenas uma vez
   useEffect(() => {
@@ -326,6 +327,37 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     return () => {
       const id = componentIdRef.current;
       console.log(`AdTracker [${id}]: Desmontando componente`);
+      
+      // Se o componente estiver visível, registrar o tempo antes de desmontar
+      // mas APENAS se ainda não enviamos um evento
+      if (visibleStartTime && !hasReportedRef.current && hasRegisteredImpression) {
+        const finalVisibleTime = (Date.now() - visibleStartTime) / 1000;
+        
+        if (finalVisibleTime > 0.5) {
+          console.log(`AdTracker [${id}]: Registrando impressão final na desmontagem. Tempo: ${finalVisibleTime.toFixed(2)}s`);
+          
+          // Marcar que já reportamos para este anúncio
+          hasReportedRef.current = true;
+          
+          // Registrar o evento final
+          const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+          const pagina = paginaId || currentPath || '/';
+          
+          registerEvent({
+            anuncio_id: anuncioId,
+            tipo_anuncio: tipoAnuncio,
+            pagina: pagina,
+            tipo_evento: 'impressao',
+            tempo_exposto: Math.round(finalVisibleTime * 100) / 100,
+            visivel: false,
+            dispositivo: getDeviceInfo(),
+            pais: locationInfo.pais,
+            regiao: locationInfo.regiao,
+            session_id: sessionId.current,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
       
       // Limpar o observer na desmontagem
       if (observerRef.current && anuncioRef.current) {
@@ -381,6 +413,9 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     
     console.log(`AdTracker [${componentId}]: Configurando observer para anúncio ${anuncioId} (${tipoAnuncio}) em ${pagina}`);
     
+    // Flag para controlar se já enviamos evento neste ciclo de vida do componente
+    let hasReportedExposure = false;
+    
     // Criar um novo observer
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -415,12 +450,9 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             }, 1000);
           }
           
-          // Registrar impressão apenas uma vez e somente se não foi registrada ainda
+          // Apenas marcamos que estamos visualizando
           if (!hasRegisteredImpression) {
-            console.log(`AdTracker [${componentId}]: Registrando impressão inicial`);
-            
-            // Registramos apenas o início da visualização, sem enviar evento de tempo zero
-            // Isso evita um registro redundante
+            console.log(`AdTracker [${componentId}]: Iniciando visualização`);
             setHasRegisteredImpression(true);
           }
         } else if (visibleStartTime) {
@@ -437,8 +469,11 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             exposureTimerRef.current = null;
           }
           
-          // Atualizar o tempo de exposição
-          if (timeVisible > 0.5) { // Registrar apenas se ficou visível por mais de meio segundo
+          // Atualizar o tempo de exposição - APENAS se não enviamos ainda neste ciclo
+          if (timeVisible > 0.5 && !hasReportedExposure) {
+            console.log(`AdTracker [${componentId}]: Registrando impressão com tempo=${roundedTime}`);
+            hasReportedExposure = true; // Marcar que já enviamos
+            
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
@@ -480,16 +515,17 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         observerRef.current = null;
         
         // Se o componente for reinicializado enquanto estiver visível, registrar o tempo de exposição
-        if (visibleStartTime) {
+        // mas APENAS se não registramos já
+        if (visibleStartTime && !hasReportedExposure) {
           const finalTimeVisible = (Date.now() - visibleStartTime) / 1000;
           const roundedFinalTime = Math.round(finalTimeVisible * 100) / 100;
           
           // Evitar duplicações: Registrar apenas se o tempo for significativo
           if (finalTimeVisible > 0.5 && hasRegisteredImpression) {
-            console.log(`AdTracker [${componentId}]: Reconfigurando enquanto visível. Tempo: ${roundedFinalTime.toFixed(2)}s`);
+            console.log(`AdTracker [${componentId}]: Finalizando componente enquanto visível. Tempo: ${roundedFinalTime.toFixed(2)}s`);
             
-            // Adicionar flag para evitar registro duplicado ao reconfigurar
-            const isReconfiguring = true;
+            // Marcar que já enviamos para evitar envios duplicados
+            hasReportedExposure = true;
             
             registerEvent({
               anuncio_id: anuncioId,
