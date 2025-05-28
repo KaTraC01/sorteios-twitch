@@ -349,7 +349,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             pagina: pagina,
             tipo_evento: 'impressao',
             tempo_exposto: Math.round(finalVisibleTime * 100) / 100,
-            visivel: false,
+            visivel: true,
             dispositivo: getDeviceInfo(),
             pais: locationInfo.pais,
             regiao: locationInfo.regiao,
@@ -480,7 +480,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
               pagina: pagina,
               tipo_evento: 'impressao',
               tempo_exposto: roundedTime, // Enviar o valor com precisão decimal
-              visivel: false,
+              visivel: true, // Modificado: TRUE indica que o anúncio foi visualizado
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
               regiao: locationInfo.regiao,
@@ -533,7 +533,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
               pagina: pagina,
               tipo_evento: 'impressao',
               tempo_exposto: roundedFinalTime,
-              visivel: false,
+              visivel: true, // Modificado: TRUE indica que o anúncio foi visualizado
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
               regiao: locationInfo.regiao,
@@ -575,7 +575,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       pagina: pagina,
       tipo_evento: 'clique',
       tempo_exposto: tempoAtual,
-      visivel: isVisible,
+      visivel: true, // Modificado: TRUE para eventos de clique também
       dispositivo: getDeviceInfo(),
       pais: locationInfo.pais,
       regiao: locationInfo.regiao,
