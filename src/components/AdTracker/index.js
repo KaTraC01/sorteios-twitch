@@ -139,16 +139,6 @@ const registerEvent = async (eventData) => {
     }
   }
 
-  // Tratamento especial para anúncios de tela-inteira
-  if (eventData.tipo_anuncio === 'tela-inteira' && eventData.tipo_evento === 'clique') {
-    // Para cliques em anúncios de tela inteira, definir um tempo mínimo de exposição
-    // já que esses anúncios geralmente são mostrados por um tempo específico
-    if (tempoExposto < 0.5) {
-      tempoExposto = 1.0; // Definir um tempo mínimo padrão para melhorar as métricas
-      console.log(`Ajustando tempo para anúncio de tela-inteira: ${tempoExposto}s`);
-    }
-  }
-
   console.log('Registrando evento de anúncio:', eventData.tipo_evento, eventData.anuncio_id, 
     'tempo_exposto:', tempoExposto, typeof tempoExposto);
   
@@ -216,11 +206,6 @@ const flushEventsBuffer = async () => {
       }
     } else {
       processedEvent.tempo_exposto = 0;
-    }
-    
-    // Tratamento especial para anúncios de tela-inteira
-    if (processedEvent.tipo_anuncio === 'tela-inteira' && processedEvent.tipo_evento === 'clique' && processedEvent.tempo_exposto === 0) {
-      processedEvent.tempo_exposto = 1.0; // Garantir que cliques em tela-inteira tenham tempo mínimo
     }
     
     console.log(`Evento processado para envio:`, {
@@ -664,11 +649,6 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     if (visibleStartTime) {
       const tempoVisivel = (Date.now() - visibleStartTime) / 1000;
       tempoAtual = Math.round(tempoVisivel * 100) / 100;
-    }
-    
-    // Tratamento especial para anúncios de tela-inteira
-    if (tipoAnuncio === 'tela-inteira' && tempoAtual < 0.5) {
-      tempoAtual = 1.0; // Definir um tempo mínimo para anúncios de tela inteira
     }
     
     console.log(`AdTracker [${componentId}]: Clique detectado. Tempo exposto: ${tempoAtual.toFixed(2)}s`);
