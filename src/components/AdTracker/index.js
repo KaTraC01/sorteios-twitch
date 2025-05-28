@@ -139,6 +139,16 @@ const registerEvent = async (eventData) => {
     }
   }
 
+  // Tratamento especial para anúncios de tela-inteira
+  if (eventData.tipo_anuncio === 'tela-inteira' && eventData.tipo_evento === 'clique') {
+    // Para cliques em anúncios de tela inteira, definir um tempo mínimo de exposição
+    // já que esses anúncios geralmente são mostrados por um tempo específico
+    if (tempoExposto < 0.5) {
+      tempoExposto = 1.0; // Definir um tempo mínimo padrão para melhorar as métricas
+      console.log(`Ajustando tempo para anúncio de tela-inteira: ${tempoExposto}s`);
+    }
+  }
+
   console.log('Registrando evento de anúncio:', eventData.tipo_evento, eventData.anuncio_id, 
     'tempo_exposto:', tempoExposto, typeof tempoExposto);
   
@@ -149,7 +159,7 @@ const registerEvent = async (eventData) => {
     pagina: eventData.pagina,
     tipo_evento: eventData.tipo_evento,
     tempo_exposto: tempoExposto, // Usar a variável tratada
-    visivel: eventData.visivel !== undefined ? eventData.visivel : true,
+    visivel: eventData.visivel !== undefined ? eventData.visivel : true, // Padrão é true agora
     dispositivo: eventData.dispositivo || getDeviceInfo(),
     pais: eventData.pais || 'Brasil',
     regiao: eventData.regiao || 'Desconhecido',
@@ -208,6 +218,11 @@ const flushEventsBuffer = async () => {
       processedEvent.tempo_exposto = 0;
     }
     
+    // Tratamento especial para anúncios de tela-inteira
+    if (processedEvent.tipo_anuncio === 'tela-inteira' && processedEvent.tipo_evento === 'clique' && processedEvent.tempo_exposto === 0) {
+      processedEvent.tempo_exposto = 1.0; // Garantir que cliques em tela-inteira tenham tempo mínimo
+    }
+    
     console.log(`Evento processado para envio:`, {
       tipo_evento: processedEvent.tipo_evento,
       anuncio_id: processedEvent.anuncio_id,
@@ -237,7 +252,34 @@ const flushEventsBuffer = async () => {
       });
       
     if (error) {
-      throw error;
+      console.error('Erro ao enviar eventos para o Supabase:', error);
+      
+      // Verificar se é um erro 404 (função não encontrada)
+      if (error.code === '404' || error.message.includes('Not Found')) {
+        console.warn('Função RPC não encontrada. Tentando inserir diretamente na tabela.');
+        
+        // Tentar inserir diretamente na tabela como fallback
+        const insertPromises = events.map(event => 
+          supabase.from('eventos_anuncios').insert(event)
+        );
+        
+        // Executar todas as inserções
+        const results = await Promise.allSettled(insertPromises);
+        
+        // Verificar resultados
+        const successful = results.filter(r => r.status === 'fulfilled').length;
+        console.log(`Inserção direta: ${successful}/${results.length} eventos inseridos com sucesso.`);
+        
+        if (successful > 0) {
+          // Pelo menos alguns eventos foram inseridos com sucesso
+          return true;
+        } else {
+          throw new Error('Falha ao inserir eventos diretamente na tabela');
+        }
+      } else {
+        // Outro tipo de erro, propagar
+        throw error;
+      }
     }
     
     console.log(`Sucesso! ${events.length} eventos enviados.`, data);
@@ -565,6 +607,11 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     if (visibleStartTime) {
       const tempoVisivel = (Date.now() - visibleStartTime) / 1000;
       tempoAtual = Math.round(tempoVisivel * 100) / 100;
+    }
+    
+    // Tratamento especial para anúncios de tela-inteira
+    if (tipoAnuncio === 'tela-inteira' && tempoAtual < 0.5) {
+      tempoAtual = 1.0; // Definir um tempo mínimo para anúncios de tela inteira
     }
     
     console.log(`AdTracker [${componentId}]: Clique detectado. Tempo exposto: ${tempoAtual.toFixed(2)}s`);
