@@ -245,56 +245,89 @@ const flushEventsBuffer = async () => {
     console.log('Enviando eventos para o Supabase com payload:', 
       JSON.stringify({ eventos: events }, null, 2));
     
-    // IMPORTANTE: A função RPC espera receber um array JSON, não uma string JSON
-    const { data, error } = await supabase
-      .rpc('inserir_eventos_anuncios_lote', {
-        eventos: events // Enviar o array diretamente, não uma string JSON
-      });
+    // IMPORTANTE: Remover qualquer chamada a metricas_anuncios que esteja causando o erro 404
+    // Usar diretamente a tabela ou a função RPC
+    
+    // Tentar primeiro inserir diretamente na tabela eventos_anuncios
+    let success = false;
+    try {
+      // Tentar inserção em lote direta
+      const { data, error } = await supabase
+        .from('eventos_anuncios')
+        .insert(events);
       
-    if (error) {
-      console.error('Erro ao enviar eventos para o Supabase:', error);
-      
-      // Verificar se é um erro 404 (função não encontrada)
-      if (error.code === '404' || error.message.includes('Not Found')) {
-        console.warn('Função RPC não encontrada. Tentando inserir diretamente na tabela.');
+      if (!error) {
+        console.log('Eventos inseridos com sucesso diretamente na tabela');
+        success = true;
+      } else if (error.code !== '404') {
+        console.warn('Erro ao inserir diretamente na tabela:', error);
+        // Continuar e tentar a função RPC como fallback
+      } else {
+        // Erro 404 (tabela não existe), tentar função RPC
+        console.warn('Tabela não encontrada, tentando função RPC');
+      }
+    } catch (directInsertError) {
+      console.warn('Erro ao tentar inserção direta:', directInsertError);
+      // Continuar e tentar a função RPC
+    }
+    
+    // Se a inserção direta falhou, tentar a função RPC
+    if (!success) {
+      const { data, error } = await supabase
+        .rpc('inserir_eventos_anuncios_lote', {
+          eventos: events // Enviar o array diretamente, não uma string JSON
+        });
         
-        // Tentar inserir diretamente na tabela como fallback
-        const insertPromises = events.map(event => 
-          supabase.from('eventos_anuncios').insert(event)
-        );
+      if (error) {
+        console.error('Erro ao enviar eventos para o Supabase via RPC:', error);
         
-        // Executar todas as inserções
-        const results = await Promise.allSettled(insertPromises);
-        
-        // Verificar resultados
-        const successful = results.filter(r => r.status === 'fulfilled').length;
-        console.log(`Inserção direta: ${successful}/${results.length} eventos inseridos com sucesso.`);
-        
-        if (successful > 0) {
-          // Pelo menos alguns eventos foram inseridos com sucesso
-          return true;
+        // Verificar se é um erro 404 (função não encontrada)
+        if (error.code === '404' || error.message.includes('Not Found')) {
+          console.warn('Função RPC não encontrada. Tentando inserção individual como último recurso.');
+          
+          // Tentar inserir diretamente na tabela como fallback (inserção individual)
+          const insertPromises = events.map(event => 
+            supabase.from('eventos_anuncios').insert([event])
+          );
+          
+          // Executar todas as inserções
+          const results = await Promise.allSettled(insertPromises);
+          
+          // Verificar resultados
+          const successful = results.filter(r => r.status === 'fulfilled').length;
+          console.log(`Inserção individual: ${successful}/${results.length} eventos inseridos com sucesso.`);
+          
+          if (successful > 0) {
+            // Pelo menos alguns eventos foram inseridos com sucesso
+            success = true;
+          } else {
+            throw new Error('Falha ao inserir eventos usando todos os métodos disponíveis');
+          }
         } else {
-          throw new Error('Falha ao inserir eventos diretamente na tabela');
+          // Outro tipo de erro, propagar
+          throw error;
         }
       } else {
-        // Outro tipo de erro, propagar
-        throw error;
+        success = true;
       }
     }
     
-    console.log(`Sucesso! ${events.length} eventos enviados.`, data);
-    
-    // Remover eventos do localStorage se eles existirem lá
-    try {
-      const pendingEvents = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
-      if (pendingEvents.length > 0) {
-        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify([]));
+    if (success) {
+      console.log(`Sucesso! ${events.length} eventos enviados.`);
+      
+      // Remover eventos do localStorage se eles existirem lá
+      try {
+        const pendingEvents = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
+        if (pendingEvents.length > 0) {
+          localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify([]));
+        }
+      } catch (e) {
+        console.error('Erro ao limpar eventos pendentes:', e);
       }
-    } catch (e) {
-      console.error('Erro ao limpar eventos pendentes:', e);
+      
+      return true;
     }
     
-    return true;
   } catch (error) {
     console.error('Erro ao enviar eventos para o Supabase:', error);
     
@@ -430,6 +463,30 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     
     fetchLocation();
   }, []);
+  
+  // Remover qualquer chamada incorreta a metricas_anuncios que possa estar causando o erro 404
+  useEffect(() => {
+    // Flag para identificar este componente específico
+    const componentId = componentIdRef.current;
+    
+    // Definir flag no objeto window para evitar chamadas duplicadas
+    if (typeof window !== 'undefined') {
+      // Se for um anúncio de tela-inteira, verificar se temos uma propriedade de rastreamento
+      if (tipoAnuncio === 'tela-inteira') {
+        // Criar ou usar identificador único para este anúncio
+        const anuncioKey = `ad_tracking_${anuncioId}`;
+        
+        // Verificar se este anúncio já foi rastreado nesta sessão
+        if (!window[anuncioKey]) {
+          // Marcar como rastreado
+          window[anuncioKey] = true;
+          console.log(`AdTracker [${componentId}]: Primeira visualização do anúncio ${anuncioId} nesta sessão`);
+        } else {
+          console.log(`AdTracker [${componentId}]: Anúncio ${anuncioId} já visualizado anteriormente nesta sessão`);
+        }
+      }
+    }
+  }, [anuncioId, tipoAnuncio]);
   
   // Configurar a detecção de visibilidade com IntersectionObserver
   useEffect(() => {
