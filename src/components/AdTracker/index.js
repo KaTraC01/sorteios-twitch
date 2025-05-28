@@ -445,6 +445,39 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           }, 1000);
         }
       }
+      
+      // Configurar um timeout para forçar o registro de impressão após 2 segundos
+      // para tipos específicos de anúncios que podem ter problemas de visibilidade
+      const forceTrackingTypes = ['lateral', 'fixo-superior', 'fixo-inferior', 'banner', 'video', 'quadrado'];
+      if (forceTrackingTypes.includes(tipoAnuncio)) {
+        setTimeout(() => {
+          // Se ainda não registramos uma impressão, forçar um registro mínimo
+          if (!hasReportedRef.current) {
+            console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): Forçando registro de impressão após 2s`, 'background: #9C27B0; color: white; padding: 2px 5px; border-radius: 3px');
+            
+            // Marcar que já reportamos para este anúncio
+            hasReportedRef.current = true;
+            
+            // Registrar o evento com tempo mínimo
+            const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+            const pagina = paginaId || currentPath || '/';
+            
+            registerEvent({
+              anuncio_id: anuncioId,
+              tipo_anuncio: tipoAnuncio,
+              pagina: pagina,
+              tipo_evento: 'impressao',
+              tempo_exposto: 1.0, // Tempo padrão de 1 segundo para garantir registro
+              visivel: true,
+              dispositivo: getDeviceInfo(),
+              pais: locationInfo.pais,
+              regiao: locationInfo.regiao,
+              session_id: sessionId.current,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }, 2000);
+      }
     }
     
     // Limpeza ao desmontar completamente
@@ -452,44 +485,46 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       const id = componentIdRef.current;
       console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Desmontando componente`, 'color: #F44336');
       
-      // Se o componente estiver visível, registrar o tempo antes de desmontar
-      // mas APENAS se ainda não enviamos um evento
-      if ((visibleStartTime || tipoAnuncio === 'tela-inteira') && !hasReportedRef.current && hasRegisteredImpression) {
-        let finalVisibleTime;
+      // Forçar registro para todos os anúncios não registrados na desmontagem
+      // mesmo que não tenham atingido o limiar de visibilidade
+      if (!hasReportedRef.current) {
+        console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Forçando registro na desmontagem`, 'background: #E91E63; color: white; padding: 2px 5px; border-radius: 3px');
         
+        let finalVisibleTime = 1.0; // Valor padrão para garantir o registro
+        
+        // Se temos um tempo real, usá-lo
         if (visibleStartTime) {
           finalVisibleTime = (Date.now() - visibleStartTime) / 1000;
         } else if (tipoAnuncio === 'tela-inteira') {
           // Para anúncios de tela inteira, usar o tempo desde a montagem
           finalVisibleTime = (Date.now() - mountTimeRef.current) / 1000;
-        } else {
+        } else if (exposureTime > 0) {
           finalVisibleTime = exposureTime;
         }
         
-        if (finalVisibleTime > 0.1 || tipoAnuncio === 'tela-inteira') {
-          console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando impressão final na desmontagem. Tempo: ${finalVisibleTime.toFixed(2)}s`, 'background: #E91E63; color: white; padding: 2px 5px; border-radius: 3px');
-          
-          // Marcar que já reportamos para este anúncio
-          hasReportedRef.current = true;
-          
-          // Registrar o evento final
-          const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-          const pagina = paginaId || currentPath || '/';
-          
-          registerEvent({
-            anuncio_id: anuncioId,
-            tipo_anuncio: tipoAnuncio,
-            pagina: pagina,
-            tipo_evento: 'impressao',
-            tempo_exposto: Math.round(finalVisibleTime * 100) / 100,
-            visivel: true,
-            dispositivo: getDeviceInfo(),
-            pais: locationInfo.pais,
-            regiao: locationInfo.regiao,
-            session_id: sessionId.current,
-            timestamp: new Date().toISOString()
-          });
-        }
+        // Garantir valor mínimo e arredondar
+        finalVisibleTime = Math.max(0.5, Math.round(finalVisibleTime * 100) / 100);
+        
+        // Marcar que já reportamos para este anúncio
+        hasReportedRef.current = true;
+        
+        // Registrar o evento final
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const pagina = paginaId || currentPath || '/';
+        
+        registerEvent({
+          anuncio_id: anuncioId,
+          tipo_anuncio: tipoAnuncio,
+          pagina: pagina,
+          tipo_evento: 'impressao',
+          tempo_exposto: finalVisibleTime,
+          visivel: true,
+          dispositivo: getDeviceInfo(),
+          pais: locationInfo.pais,
+          regiao: locationInfo.regiao,
+          session_id: sessionId.current,
+          timestamp: new Date().toISOString()
+        });
       }
       
       // Limpar o observer na desmontagem
@@ -543,6 +578,43 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         } else {
           console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Já visualizado anteriormente nesta sessão`, 'color: #FF5722');
         }
+      }
+      
+      // Tratamento especial para anúncios fixos e laterais
+      // Esses anúncios são geralmente fixos na tela e podem não disparar os eventos de visibilidade adequadamente
+      const fixedAdTypes = ['lateral', 'fixo-superior', 'fixo-inferior'];
+      if (fixedAdTypes.includes(tipoAnuncio) && !hasReportedRef.current) {
+        // Para anúncios fixos, vamos garantir que eles sejam registrados logo na inicialização
+        setTimeout(() => {
+          if (!hasReportedRef.current) {
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registro imediato para anúncio fixo`, 'background: #3F51B5; color: white; padding: 2px 5px; border-radius: 3px');
+            
+            // Marcar que já reportamos para este anúncio
+            hasReportedRef.current = true;
+            
+            // Obter a página atual para o rastreamento
+            const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+            const pagina = paginaId || currentPath || '/';
+            
+            // Usar um tempo de exposição padrão para anúncios fixos
+            const tempoExposicao = tipoAnuncio.includes('lateral') ? 1.5 : 1.0;
+            
+            // Registrar o evento com tempo fixo
+            registerEvent({
+              anuncio_id: anuncioId,
+              tipo_anuncio: tipoAnuncio,
+              pagina: pagina,
+              tipo_evento: 'impressao',
+              tempo_exposto: tempoExposicao,
+              visivel: true,
+              dispositivo: getDeviceInfo(),
+              pais: locationInfo.pais,
+              regiao: locationInfo.regiao,
+              session_id: sessionId.current,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }, 1000); // Registrar após 1 segundo para dar tempo de renderizar completamente
       }
     }
   }, [anuncioId, tipoAnuncio]);
@@ -628,7 +700,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           }
           
           // Atualizar o tempo de exposição - APENAS se não enviamos ainda neste ciclo
-          if (timeVisible > 0.5 && !hasReportedExposure) {
+          // Reduzido o tempo mínimo para 0.1 segundos para capturar mais impressões
+          if (timeVisible > 0.1 && !hasReportedExposure) {
             console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando impressão com tempo=${roundedTime}`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
             hasReportedExposure = true; // Marcar que já enviamos
             
@@ -645,6 +718,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
               session_id: sessionId.current,
               timestamp: new Date().toISOString()
             });
+          } else if (timeVisible <= 0.1 && !hasReportedExposure) {
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo insuficiente (${roundedTime}s < 0.1s) para registrar impressão`, 'background: #FFC107; color: black; padding: 2px 5px; border-radius: 3px');
           }
           
           setVisibleStartTime(null);
@@ -652,7 +727,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         }
       },
       {
-        threshold: 0.5, // Consideramos visível quando 50% do anúncio está na tela
+        threshold: 0.1, // Reduzido para 10% - Consideramos visível quando 10% do anúncio está na tela (era 0.5 = 50%)
         rootMargin: '0px'
       }
     );
@@ -679,7 +754,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           const roundedFinalTime = Math.round(finalTimeVisible * 100) / 100;
           
           // Evitar duplicações: Registrar apenas se o tempo for significativo
-          if (finalTimeVisible > 0.5 && hasRegisteredImpression) {
+          // Reduzido o tempo mínimo para 0.1 segundos
+          if (finalTimeVisible > 0.1 && hasRegisteredImpression) {
             console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Finalizando componente enquanto visível. Tempo: ${roundedFinalTime.toFixed(2)}s`, 'background: #009688; color: white; padding: 2px 5px; border-radius: 3px');
             
             // Marcar que já enviamos para evitar envios duplicados
@@ -698,6 +774,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
               session_id: sessionId.current,
               timestamp: new Date().toISOString()
             });
+          } else if (finalTimeVisible <= 0.1 && hasRegisteredImpression) {
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo insuficiente (${roundedFinalTime}s < 0.1s) ao finalizar componente`, 'background: #FFC107; color: black; padding: 2px 5px; border-radius: 3px');
           }
         }
       }
