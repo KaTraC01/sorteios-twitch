@@ -281,6 +281,7 @@ const Anuncio = ({
           <div 
             className={`anuncio anuncio-${tipo} anuncio-${anuncioPosicao}`}
             style={estiloPersonalizado}
+            id="anuncio-fixo-inferior"
           >
             {mostrarFechar && (
               <button className="anuncio-fechar" onClick={handleFechar}>
@@ -460,7 +461,56 @@ const Anuncio = ({
       if (!anuncioIdEfetivo || !pageId || !tipo) {
         // Se algum dado essencial estiver faltando, renderizar apenas o conteúdo sem o tracker
         console.warn(`AdTracker não renderizado para ${tipo}-${posicao}: dados incompletos`);
-  return renderConteudoAnuncio();
+        return renderConteudoAnuncio();
+      }
+      
+      // Para anúncios fixo-inferior, não usar o AdTracker para garantir exibição correta
+      if (tipo === 'fixo-inferior') {
+        // Registrar evento de impressão manualmente
+        const registrarImpressao = () => {
+          if (window.registerEvent) {
+            // Gerar session_id local se necessário
+            const getLocalSessionId = () => {
+              let sessionId = localStorage.getItem('ad_session_id');
+              if (!sessionId) {
+                sessionId = 'ads_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('ad_session_id', sessionId);
+              }
+              return sessionId;
+            };
+            
+            // Obter informações do dispositivo
+            const getDeviceInfo = () => {
+              if (typeof window === 'undefined') return 'desconhecido';
+              
+              const userAgent = navigator.userAgent;
+              if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)) {
+                return 'mobile';
+              }
+              return 'desktop';
+            };
+            
+            window.registerEvent({
+              anuncio_id: anuncioIdEfetivo,
+              tipo_anuncio: tipo,
+              pagina: pageId,
+              tipo_evento: 'impressao',
+              tempo_exposto: 1.0,
+              visivel: true,
+              dispositivo: getDeviceInfo(),
+              pais: 'Brasil',
+              regiao: 'Desconhecido',
+              session_id: getLocalSessionId(),
+              timestamp: new Date().toISOString()
+            });
+          }
+        };
+        
+        // Registrar impressão após 1 segundo
+        setTimeout(registrarImpressao, 1000);
+        
+        // Renderizar sem o AdTracker
+        return renderConteudoAnuncio();
       }
       
       // Todos os dados necessários estão disponíveis, então renderizar com o AdTracker

@@ -12,6 +12,9 @@ body {
   background-color: #0a0a0a; /* Tom de preto mais escuro da imagem de referência */
   color: #f7f7f8; /* Texto claro para contraste */
   line-height: 1.6;
+  /* Garantir espaço para o anúncio fixo-inferior */
+  padding-bottom: 90px;
+  overflow-x: hidden;
 }
 
 /* Cores do tema */
@@ -28,6 +31,7 @@ body {
   --success: #19b5a5; /* Cor de identidade */
   --error: #f43f5e;
   --warning: #ffaa15;
+  --anuncio-fixo-height: 90px; /* Altura do anúncio fixo-inferior */
 }
 
 /* Estilos de botões */
@@ -90,9 +94,22 @@ input:focus, select:focus, textarea:focus {
   padding: 0 20px;
 }
 
+/* Estilos para garantir que o conteúdo não fique por trás do anúncio fixo-inferior */
+.main-content {
+  padding-bottom: var(--anuncio-fixo-height);
+}
+
 /* Estilos responsivos */
 @media (max-width: 768px) {
   .container {
     padding: 0 10px;
+  }
+  
+  body {
+    padding-bottom: 60px; /* Menor espaço em telas menores */
+  }
+  
+  :root {
+    --anuncio-fixo-height: 60px; /* Altura reduzida em telas menores */
   }
 } 

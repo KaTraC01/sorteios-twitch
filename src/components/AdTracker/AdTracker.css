@@ -3,6 +3,174 @@
   display: contents;
   width: auto;
   height: auto;
+  /* Garantir que o contêiner seja visível para o IntersectionObserver */
+  contain: layout style;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Contêiner do elemento de observação - mantém posicionamento relativo enquanto preserva layout */
+.ad-tracker-observer-container {
+  display: contents;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* Garantir que o contêiner seja detectável */
+  min-height: 1px;
+  min-width: 1px;
+}
+
+/* Elemento invisível que será alvo do IntersectionObserver */
+.ad-tracker-observer-element {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  /* Melhorar detecção de interseção */
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* Garantir que o elemento seja detectável mesmo sendo invisível */
+  min-height: 1px;
+  min-width: 1px;
+  overflow: visible;
+}
+
+/* Estilos específicos para diferentes tipos de anúncios */
+.ad-tracker-container[data-ad-type="fixo-superior"] .ad-tracker-observer-element {
+  position: absolute;
+  width: 100vw;
+  height: calc(100% + 50px);
+  top: -10px;
+  left: 0;
+}
+
+.ad-tracker-container[data-ad-type="fixo-inferior"] .ad-tracker-observer-element {
+  position: absolute;
+  width: 100vw;
+  height: calc(100% + 50px);
+  top: -20px;
+  left: 0;
+}
+
+.ad-tracker-container[data-ad-type="lateral"] .ad-tracker-observer-element {
+  position: absolute;
+  height: 100vh;
+  width: calc(100% + 100px);
+  left: -50px;
+  top: 0;
+}
+
+.ad-tracker-container[data-ad-type="tela-inteira"] .ad-tracker-observer-element {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Tratamento especial para anúncios de vídeo */
+.ad-tracker-container[data-ad-type="video"],
+.ad-tracker-video {
+  display: block !important;
+  position: relative !important;
+  overflow: visible !important;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.ad-tracker-container[data-ad-type="video"] .ad-tracker-observer-container,
+.ad-tracker-video .ad-tracker-observer-container {
+  display: block !important;
+  position: relative !important;
+  width: 100%;
+  height: 100%;
+}
+
+.ad-tracker-container[data-ad-type="video"] .ad-tracker-observer-element,
+.ad-tracker-video .ad-tracker-observer-element {
+  top: -30px;
+  left: -30px;
+  width: calc(100% + 60px);
+  height: calc(100% + 60px);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Tratamento especial para anúncios quadrados */
+.ad-tracker-container[data-ad-type="quadrado"],
+.ad-tracker-quadrado {
+  display: block !important;
+  position: relative !important;
+  width: 100%;
+  height: 100%;
+}
+
+.ad-tracker-container[data-ad-type="quadrado"] .ad-tracker-observer-element,
+.ad-tracker-quadrado .ad-tracker-observer-element {
+  top: -25px;
+  left: -25px;
+  width: calc(100% + 50px);
+  height: calc(100% + 50px);
+}
+
+/* Tratamento especial para anúncios de banner */
+.ad-tracker-container[data-ad-type="banner"],
+.ad-tracker-banner {
+  display: block !important;
+  position: relative !important;
+  width: 100%;
+  height: 100%;
+}
+
+.ad-tracker-container[data-ad-type="banner"] .ad-tracker-observer-element,
+.ad-tracker-banner .ad-tracker-observer-element {
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 60px);
+}
+
+/* Tratamento especial para anúncios de cursos */
+.ad-tracker-container[data-ad-type^="curso"],
+.ad-tracker-container[data-ad-type="curso1"],
+.ad-tracker-container[data-ad-type="curso2"],
+.ad-tracker-container[data-ad-type="curso3"] {
+  display: block !important;
+  position: relative !important;
+  width: 100%;
+  height: 100%;
+}
+
+.ad-tracker-container[data-ad-type^="curso"] .ad-tracker-observer-element,
+.ad-tracker-container[data-ad-type="curso1"] .ad-tracker-observer-element,
+.ad-tracker-container[data-ad-type="curso2"] .ad-tracker-observer-element,
+.ad-tracker-container[data-ad-type="curso3"] .ad-tracker-observer-element {
+  top: -40px;
+  left: -40px;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+}
+
+/* Tratamento específico para display: contents em contextos especiais */
+:where(tr, td, li, .lista-item) .ad-tracker-container {
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+:where(tr, td, li, .lista-item) .ad-tracker-observer-container {
+  display: block !important;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 /* Estilo para anúncios que estão dentro de tabelas */
@@ -14,7 +182,8 @@ td .ad-tracker-container {
 }
 
 /* Estilos específicos para anúncios diferentes dentro do tracker */
-.ad-tracker-container > a {
+.ad-tracker-container > a,
+.ad-tracker-observer-container > a {
   /* Preservar cliques */
   display: inherit;
   width: inherit;
@@ -24,7 +193,9 @@ td .ad-tracker-container {
 
 /* Para anúncios em tabelas */
 tr .ad-tracker-container > a,
-td .ad-tracker-container > a {
+td .ad-tracker-container > a,
+tr .ad-tracker-observer-container > a,
+td .ad-tracker-observer-container > a {
   display: block;
 }
 
@@ -34,7 +205,10 @@ td .ad-tracker-container > a {
 }
 
 /* Estilo especial para anúncios fixos que ajuda na detecção de visibilidade */
-.ad-tracker-fixed {
+.ad-tracker-fixed,
+.ad-tracker-container[data-ad-type="fixo-superior"],
+.ad-tracker-container[data-ad-type="fixo-inferior"],
+.ad-tracker-container[data-ad-type="lateral"] {
   /* Aumentar a chance de ser detectado corretamente pelo IntersectionObserver */
   will-change: transform;
   transform: translateZ(0);
@@ -45,4 +219,90 @@ td .ad-tracker-container > a {
   /* Garantir que o z-index não afete a visibilidade */
   z-index: 1;
   position: relative;
+}
+
+/* Ajustes para anúncios em contêineres flex */
+.flex-container .ad-tracker-container {
+  display: block !important;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+/* Correção para anúncios dentro de listas que usam grid */
+.grid-container .ad-tracker-container {
+  display: block !important;
+  position: relative;
+}
+
+/* Garantir que anúncios de final de lista sejam visíveis */
+:last-child > .ad-tracker-container,
+:last-child > * > .ad-tracker-container {
+  display: block !important;
+  position: relative !important;
+  min-height: 20px;
+}
+
+/* Correções específicas para anúncios de tipos especiais */
+.ad-tracker-container[data-ad-type*="logo"] .ad-tracker-observer-element {
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+}
+
+.ad-tracker-container[data-ad-type="carousel"] .ad-tracker-observer-element {
+  top: -30px;
+  left: -30px;
+  width: calc(100% + 60px);
+  height: calc(100% + 60px);
+}
+
+/* Garantir compatibilidade com diferentes browsers */
+@supports (display: contents) {
+  .ad-tracker-container {
+    display: contents;
+  }
+  
+  .ad-tracker-observer-container {
+    display: contents;
+  }
+  
+  /* Mas não em contextos especiais */
+  :where(tr, td, li, .lista-item, .flex-container, .grid-container) .ad-tracker-container,
+  :where(tr, td, li, .lista-item, .flex-container, .grid-container) .ad-tracker-observer-container {
+    display: block !important;
+    position: relative;
+  }
+  
+  /* E nunca para tipos específicos como vídeo, banner e quadrado */
+  .ad-tracker-video,
+  .ad-tracker-banner,
+  .ad-tracker-quadrado,
+  .ad-tracker-container[data-ad-type="video"],
+  .ad-tracker-container[data-ad-type="banner"],
+  .ad-tracker-container[data-ad-type="quadrado"],
+  .ad-tracker-container[data-ad-type^="curso"],
+  .ad-tracker-container[data-ad-type="curso1"],
+  .ad-tracker-container[data-ad-type="curso2"],
+  .ad-tracker-container[data-ad-type="curso3"],
+  .ad-tracker-container[data-ad-type*="logo"],
+  .ad-tracker-container[data-ad-type="carousel"] {
+    display: block !important;
+    position: relative !important;
+  }
+}
+
+/* Estilos para o componente AdTracker */
+
+.ad-tracker-fixo-inferior {
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+
+/* Destacar anúncios em modo de desenvolvimento */
+.development-highlight .ad-tracker-observer-element {
+  border: 2px dashed rgba(255, 0, 0, 0.3);
+  background-color: rgba(255, 0, 0, 0.1);
+  opacity: 0.5;
 } 

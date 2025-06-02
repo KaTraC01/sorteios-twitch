@@ -41,6 +41,34 @@ function App() {
         }, 30000); // 30 segundos
     };
 
+    // Efeito para lidar com o anúncio fixo-inferior
+    useEffect(() => {
+        // Só mostrar o anúncio se estiver visível
+        if (!adsVisible.fixoInferior) return;
+        
+        // Ajustar o padding do body para acomodar o anúncio fixo-inferior
+        document.body.style.paddingBottom = window.innerWidth <= 970 ? '70px' : '90px';
+        
+        return () => {
+            document.body.style.paddingBottom = '0';
+        };
+    }, [adsVisible.fixoInferior]);
+
+    // Efeito para atualizar o padding quando a janela for redimensionada
+    useEffect(() => {
+        if (!adsVisible.fixoInferior) return;
+        
+        const atualizarPadding = () => {
+            document.body.style.paddingBottom = window.innerWidth <= 970 ? '70px' : '90px';
+        };
+        
+        window.addEventListener('resize', atualizarPadding);
+        
+        return () => {
+            window.removeEventListener('resize', atualizarPadding);
+        };
+    }, [adsVisible.fixoInferior]);
+
     return (
         <Router>
             <div className="conteudo-com-laterais">

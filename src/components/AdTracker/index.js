@@ -2,6 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../utils/supabaseClient';
 import './AdTracker.css';
 
+// Detecção de ambiente de desenvolvimento
+const isDevelopment = process.env.NODE_ENV === 'development';
+const MIN_COMPONENT_LIFETIME = 500; // Tempo mínimo de vida do componente em ms
+// Flag global para rastrear se estamos em uma navegação/atualização de página
+let isNavigatingAway = false;
+
 // Buffer para armazenar eventos antes de enviar para o servidor
 let eventsBuffer = [];
 let bufferTimer = null;
@@ -11,7 +17,10 @@ const BUFFER_STORAGE_KEY = 'pending_ad_events'; // Chave para localStorage
 
 // Adicionar listener para quando a página for fechada
 if (typeof window !== 'undefined') {
+  // Detectar quando o usuário está saindo da página ou recarregando
   window.addEventListener('beforeunload', () => {
+    isNavigatingAway = true;
+    
     if (eventsBuffer.length > 0) {
       try {
         // Processar valores numéricos antes de salvar
@@ -74,6 +83,39 @@ if (typeof window !== 'undefined') {
       }
     }
   });
+  
+  // Detectar quando o usuário está navegando para outra página (usando history API)
+  window.addEventListener('popstate', () => {
+    isNavigatingAway = true;
+    console.log('%c[AdTracker] Navegação detectada, desativando registros automáticos', 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 3px');
+  });
+  
+  // Para frameworks como React Router, Next.js, etc.
+  // Tentar interceptar navegações dentro da SPA
+  try {
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    
+    history.pushState = function() {
+      isNavigatingAway = true;
+      console.log('%c[AdTracker] Navegação SPA detectada (pushState), desativando registros automáticos', 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 3px');
+      setTimeout(() => {
+        isNavigatingAway = false;
+      }, 100); // Restaurar após navegação
+      return originalPushState.apply(this, arguments);
+    };
+    
+    history.replaceState = function() {
+      isNavigatingAway = true;
+      console.log('%c[AdTracker] Navegação SPA detectada (replaceState), desativando registros automáticos', 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 3px');
+      setTimeout(() => {
+        isNavigatingAway = false;
+      }, 100); // Restaurar após navegação
+      return originalReplaceState.apply(this, arguments);
+    };
+  } catch (e) {
+    console.error('%c[AdTracker] Erro ao configurar detecção de navegação SPA:', 'color: red', e);
+  }
 }
 
 // Função para gerar ou recuperar o session_id do usuário
@@ -163,21 +205,89 @@ const registerEvent = async (eventData) => {
   eventsBuffer.push(mappedEvent);
   console.log(`%c[AdTracker] Evento adicionado ao buffer. Total de eventos pendentes: ${eventsBuffer.length}`, 'color: #8BC34A');
   
+  // Limpar o timer existente se houver
+  if (bufferTimer) {
+    clearTimeout(bufferTimer);
+    bufferTimer = null;
+  }
+  
   // Se atingimos o limite de tamanho do buffer, enviar imediatamente
   if (eventsBuffer.length >= BUFFER_SIZE_LIMIT) {
     console.log(`%c[AdTracker] Buffer atingiu limite de ${BUFFER_SIZE_LIMIT} eventos. Enviando...`, 'background: #FF9800; color: black; padding: 2px 5px; border-radius: 3px');
     await flushEventsBuffer();
-  }
-  
-  // Se não houver um timer em execução, iniciar um novo
-  if (!bufferTimer) {
-    bufferTimer = setTimeout(flushEventsBuffer, BUFFER_TIMEOUT);
+  } else {
+    // Configurar um novo timer para garantir que os eventos sejam enviados mesmo se não atingir o limite
+    bufferTimer = setTimeout(() => {
+      console.log(`%c[AdTracker] Timer de ${BUFFER_TIMEOUT/1000}s expirou. Enviando eventos pendentes...`, 'background: #9C27B0; color: white; padding: 2px 5px; border-radius: 3px');
+      flushEventsBuffer();
+    }, BUFFER_TIMEOUT);
+    
     console.log(`%c[AdTracker] Timer de envio configurado para ${BUFFER_TIMEOUT/1000}s`, 'color: #9C27B0');
   }
 };
 
+// Exportar a função registerEvent globalmente para uso por outros componentes
+if (typeof window !== 'undefined') {
+  // Criar uma versão segura da função que verifica se há todas as dependências necessárias
+  window.registerEvent = (eventData) => {
+    // Verificar se todos os dados essenciais estão presentes
+    if (!eventData.anuncio_id || !eventData.tipo_anuncio || !eventData.pagina) {
+      console.warn('%c[AdTracker] ERRO: Tentativa de registrar evento sem dados essenciais:', 'color: red; font-weight: bold', 
+        !eventData.anuncio_id ? 'anuncio_id ausente' : 
+        !eventData.tipo_anuncio ? 'tipo_anuncio ausente' : 
+        'pagina ausente');
+      return; // Não registrar o evento se algum dado essencial estiver faltando
+    }
+
+    // Garantir que sessionId existe
+    if (!eventData.session_id) {
+      // Gerar session_id se não foi fornecido
+      let sessionId = localStorage.getItem('ad_session_id');
+      if (!sessionId) {
+        sessionId = 'ads_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('ad_session_id', sessionId);
+      }
+      eventData.session_id = sessionId;
+    }
+    
+    // Garantir que tempo_exposto seja um número válido
+    if (eventData.tempo_exposto !== undefined && eventData.tempo_exposto !== null) {
+      // Converter para número e garantir que seja um valor válido
+      let tempoExposto = Number(eventData.tempo_exposto);
+      if (isNaN(tempoExposto)) {
+        console.warn('%c[AdTracker] AVISO: Valor inválido para tempo_exposto, definindo como 0', 'color: orange');
+        tempoExposto = 0;
+      }
+      eventData.tempo_exposto = tempoExposto;
+    } else {
+      eventData.tempo_exposto = 0;
+    }
+    
+    // Garantir outros campos obrigatórios
+    if (!eventData.dispositivo) eventData.dispositivo = getDeviceInfo();
+    if (!eventData.pais) eventData.pais = 'Brasil';
+    if (!eventData.regiao) eventData.regiao = 'Desconhecido';
+    if (!eventData.timestamp) eventData.timestamp = new Date().toISOString();
+    
+    // Garantir que tipo_evento seja válido
+    if (eventData.tipo_evento !== 'impressao' && eventData.tipo_evento !== 'clique') {
+      console.warn(`%c[AdTracker] AVISO: Valor inválido para tipo_evento (${eventData.tipo_evento}), alterando para 'impressao'`, 'color: orange');
+      eventData.tipo_evento = 'impressao';
+    }
+
+    // Agora que garantimos que todos os dados estão presentes, chamar a função original
+    registerEvent(eventData);
+  };
+}
+
 // Função para enviar eventos em lote para o servidor
 const flushEventsBuffer = async () => {
+  // Limpar o timer se existir
+  if (bufferTimer) {
+    clearTimeout(bufferTimer);
+    bufferTimer = null;
+  }
+  
   if (eventsBuffer.length === 0) {
     console.log('%c[AdTracker] Buffer vazio, nada para enviar.', 'color: #9E9E9E');
     return false;
@@ -185,8 +295,12 @@ const flushEventsBuffer = async () => {
   
   console.log(`%c[AdTracker] Preparando para enviar ${eventsBuffer.length} eventos do buffer...`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
   
+  // Criar uma cópia dos eventos e limpar o buffer original
+  const events = [...eventsBuffer];
+  eventsBuffer = [];
+  
   // Verificar e corrigir valores numéricos antes de enviar
-  const events = eventsBuffer.map(event => {
+  const processedEvents = events.map(event => {
     // Criar uma cópia do evento para não modificar o original
     const processedEvent = { ...event };
     
@@ -210,6 +324,12 @@ const flushEventsBuffer = async () => {
       processedEvent.tempo_exposto = 0;
     }
     
+    // Garantir que tipo_evento seja válido (apenas 'impressao' ou 'clique')
+    if (processedEvent.tipo_evento !== 'impressao' && processedEvent.tipo_evento !== 'clique') {
+      console.warn(`%c[AdTracker] AVISO: Valor inválido para tipo_evento (${processedEvent.tipo_evento}), alterando para 'impressao'`, 'color: orange');
+      processedEvent.tipo_evento = 'impressao';
+    }
+    
     console.log(`%c[AdTracker] Evento processado: ${processedEvent.tipo_anuncio} (${processedEvent.anuncio_id}) - ${processedEvent.tipo_evento}`, 'color: #4CAF50', {
       tempo_exposto: processedEvent.tempo_exposto,
       tipo_tempo_exposto: typeof processedEvent.tempo_exposto,
@@ -218,114 +338,160 @@ const flushEventsBuffer = async () => {
     
     return processedEvent;
   });
-  
-  eventsBuffer = [];
-  
-  // Limpar o timer
-  if (bufferTimer) {
-    clearTimeout(bufferTimer);
-    bufferTimer = null;
-  }
 
   try {
     console.log('%c[AdTracker] Enviando eventos para o Supabase...', 'background: #0288D1; color: white; padding: 3px 5px; border-radius: 3px');
-    console.log('%c[AdTracker] Payload:', 'color: #0288D1', JSON.stringify({ eventos: events }, null, 2));
     
-    // IMPORTANTE: Remover qualquer chamada a metricas_anuncios que esteja causando o erro 404
-    // Usar diretamente a tabela ou a função RPC
-    
-    // Tentar primeiro inserir diretamente na tabela eventos_anuncios
-    let success = false;
-    try {
-      // Tentar inserção em lote direta
-      console.log('%c[AdTracker] Tentando inserção direta na tabela eventos_anuncios...', 'color: #00BCD4');
-      const { data, error } = await supabase
-        .from('eventos_anuncios')
-        .insert(events);
-      
-      if (!error) {
-        console.log('%c[AdTracker] SUCESSO! Eventos inseridos diretamente na tabela', 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
-        success = true;
-      } else if (error.code !== '404') {
-        console.warn('%c[AdTracker] AVISO: Erro ao inserir diretamente na tabela:', 'color: orange', error);
-        // Continuar e tentar a função RPC como fallback
-      } else {
-        // Erro 404 (tabela não existe), tentar função RPC
-        console.warn('%c[AdTracker] AVISO: Tabela não encontrada, tentando função RPC...', 'color: orange');
-      }
-    } catch (directInsertError) {
-      console.warn('%c[AdTracker] AVISO: Erro ao tentar inserção direta:', 'color: orange', directInsertError);
-      // Continuar e tentar a função RPC
+    // Dividir em lotes menores para evitar timeout
+    const BATCH_SIZE = 50; // Enviar no máximo 50 eventos por vez
+    const batches = [];
+    for (let i = 0; i < processedEvents.length; i += BATCH_SIZE) {
+      batches.push(processedEvents.slice(i, i + BATCH_SIZE));
     }
     
-    // Se a inserção direta falhou, tentar a função RPC
-    if (!success) {
-      console.log('%c[AdTracker] Tentando inserção via RPC (inserir_eventos_anuncios_lote)...', 'color: #00BCD4');
-      const { data, error } = await supabase
-        .rpc('inserir_eventos_anuncios_lote', {
-          eventos: events // Enviar o array diretamente, não uma string JSON
-        });
-        
-      if (error) {
-        console.error('%c[AdTracker] ERRO ao enviar eventos via RPC:', 'color: red', error);
-        
-        // Verificar se é um erro 404 (função não encontrada)
-        if (error.code === '404' || error.message.includes('Not Found')) {
-          console.warn('%c[AdTracker] AVISO: Função RPC não encontrada. Tentando inserção individual como último recurso...', 'color: orange');
-          
-          // Tentar inserir diretamente na tabela como fallback (inserção individual)
-          const insertPromises = events.map(event => 
-            supabase.from('eventos_anuncios').insert([event])
-          );
-          
-          // Executar todas as inserções
-          const results = await Promise.allSettled(insertPromises);
-          
-          // Verificar resultados
-          const successful = results.filter(r => r.status === 'fulfilled').length;
-          console.log(`%c[AdTracker] Inserção individual: ${successful}/${results.length} eventos inseridos com sucesso.`, 
-            successful > 0 ? 'background: #4CAF50; color: white;' : 'background: #F44336; color: white;', 
-            'padding: 3px 5px; border-radius: 3px');
-          
-          if (successful > 0) {
-            // Pelo menos alguns eventos foram inseridos com sucesso
-            success = true;
-          } else {
-            throw new Error('Falha ao inserir eventos usando todos os métodos disponíveis');
-          }
-        } else {
-          // Outro tipo de erro, propagar
-          throw error;
-        }
-      } else {
-        console.log('%c[AdTracker] SUCESSO! Eventos inseridos via RPC', 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
-        success = true;
-      }
-    }
+    console.log(`%c[AdTracker] Dividindo ${processedEvents.length} eventos em ${batches.length} lotes de até ${BATCH_SIZE} eventos`, 'color: #FF9800');
     
-    if (success) {
-      console.log(`%c[AdTracker] ✅ CONCLUÍDO: ${events.length} eventos enviados com sucesso!`, 
-        'background: #388E3C; color: white; font-weight: bold; padding: 5px; border-radius: 3px; font-size: 14px');
+    let successCount = 0;
+    let failedCount = 0;
+    
+    // Processar cada lote sequencialmente
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`%c[AdTracker] Processando lote ${batchIndex + 1}/${batches.length} (${batch.length} eventos)`, 'color: #2196F3');
       
-      // Remover eventos do localStorage se eles existirem lá
+      // Tentar inserir diretamente na tabela
+      let batchSuccess = false;
       try {
-        const pendingEvents = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
-        if (pendingEvents.length > 0) {
-          localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify([]));
-          console.log('%c[AdTracker] Eventos pendentes removidos do localStorage', 'color: #8BC34A');
+        console.log('%c[AdTracker] Tentando inserção direta na tabela eventos_anuncios...', 'color: #00BCD4');
+        const { data, error } = await supabase
+          .from('eventos_anuncios')
+          .insert(batch);
+        
+        if (!error) {
+          console.log(`%c[AdTracker] SUCESSO! Lote ${batchIndex + 1} inserido diretamente na tabela`, 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+          batchSuccess = true;
+          successCount += batch.length;
+        } else if (error.code !== '404') {
+          console.warn('%c[AdTracker] AVISO: Erro ao inserir diretamente na tabela:', 'color: orange', error);
+          // Continuar e tentar a função RPC como fallback
+        } else {
+          console.warn('%c[AdTracker] AVISO: Tabela não encontrada, tentando função RPC...', 'color: orange');
         }
-      } catch (e) {
-        console.error('%c[AdTracker] ERRO ao limpar eventos pendentes:', 'color: red', e);
+      } catch (directInsertError) {
+        console.warn('%c[AdTracker] AVISO: Erro ao tentar inserção direta:', 'color: orange', directInsertError);
       }
       
-      return true;
+      // Se a inserção direta falhou, tentar a função RPC
+      if (!batchSuccess) {
+        try {
+          console.log('%c[AdTracker] Tentando inserção via RPC (inserir_eventos_anuncios_lote)...', 'color: #00BCD4');
+          const { data, error } = await supabase
+            .rpc('inserir_eventos_anuncios_lote', {
+              eventos: batch
+            });
+            
+          if (error) {
+            console.error('%c[AdTracker] ERRO ao enviar eventos via RPC:', 'color: red', error);
+            
+            // Verificar se é um erro 404 (função não encontrada)
+            if (error.code === '404' || error.message.includes('Not Found')) {
+              console.warn('%c[AdTracker] AVISO: Função RPC não encontrada. Tentando inserção individual como último recurso...', 'color: orange');
+              
+              // Tentar inserir cada evento individualmente
+              let individualSuccessCount = 0;
+              for (const event of batch) {
+                try {
+                  const { error: individualError } = await supabase
+                    .from('eventos_anuncios')
+                    .insert([event]);
+                  
+                  if (!individualError) {
+                    individualSuccessCount++;
+                  }
+                } catch (e) {
+                  console.error('Erro ao inserir evento individual:', e);
+                }
+              }
+              
+              console.log(`%c[AdTracker] Inserção individual: ${individualSuccessCount}/${batch.length} eventos inseridos com sucesso.`, 
+                individualSuccessCount > 0 ? 'background: #4CAF50; color: white;' : 'background: #F44336; color: white;', 
+                'padding: 3px 5px; border-radius: 3px');
+              
+              if (individualSuccessCount > 0) {
+                successCount += individualSuccessCount;
+                failedCount += (batch.length - individualSuccessCount);
+                batchSuccess = individualSuccessCount === batch.length;
+              } else {
+                failedCount += batch.length;
+              }
+            } else {
+              // Outro tipo de erro, propagar
+              failedCount += batch.length;
+            }
+          } else {
+            console.log(`%c[AdTracker] SUCESSO! Lote ${batchIndex + 1} inserido via RPC`, 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+            batchSuccess = true;
+            successCount += batch.length;
+          }
+        } catch (rpcError) {
+          console.error('%c[AdTracker] Erro ao processar lote via RPC:', 'color: red', rpcError);
+          failedCount += batch.length;
+        }
+      }
+      
+      // Pausa entre lotes para não sobrecarregar o servidor
+      if (batchIndex < batches.length - 1) {
+        console.log('%c[AdTracker] Aguardando 500ms antes do próximo lote...', 'color: #9E9E9E');
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
+    
+    console.log(`%c[AdTracker] ✅ Resumo do processamento: ${successCount} eventos enviados com sucesso, ${failedCount} falhas.`, 
+      'background: #388E3C; color: white; font-weight: bold; padding: 5px; border-radius: 3px; font-size: 14px');
+    
+    // Se tivermos falhas, adicionar de volta ao buffer
+    if (failedCount > 0) {
+      // Armazenar eventos que falharam para tentar novamente depois
+      const failedEvents = processedEvents.slice(successCount);
+      if (failedEvents.length > 0) {
+        eventsBuffer = [...eventsBuffer, ...failedEvents];
+        console.log(`%c[AdTracker] ${failedEvents.length} eventos que falharam foram adicionados de volta ao buffer para tentar novamente.`, 'background: #FF9800; color: white; padding: 3px 5px; border-radius: 3px');
+        
+        // Salvar no localStorage como backup
+        try {
+          localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
+        } catch (storageError) {
+          console.error('%c[AdTracker] ERRO ao salvar eventos no localStorage:', 'color: red', storageError);
+        }
+        
+        // Tentar novamente em 30 segundos
+        if (!bufferTimer) {
+          console.log('%c[AdTracker] Agendando nova tentativa em 30 segundos...', 'color: #9C27B0');
+          bufferTimer = setTimeout(flushEventsBuffer, 30000);
+        }
+      }
+      
+      return successCount > 0; // Retorna true se pelo menos alguns eventos foram enviados com sucesso
+    }
+    
+    // Remover eventos do localStorage se foram todos enviados
+    try {
+      const pendingEvents = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
+      if (pendingEvents.length > 0) {
+        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify([]));
+        console.log('%c[AdTracker] Eventos pendentes removidos do localStorage', 'color: #8BC34A');
+      }
+    } catch (e) {
+      console.error('%c[AdTracker] ERRO ao limpar eventos pendentes:', 'color: red', e);
+    }
+    
+    return true;
     
   } catch (error) {
     console.error('%c[AdTracker] ERRO CRÍTICO ao enviar eventos para o Supabase:', 'background: #F44336; color: white; padding: 3px 5px; border-radius: 3px', error);
     
     // Adicionar de volta ao buffer em caso de falha
-    eventsBuffer = [...eventsBuffer, ...events];
+    eventsBuffer = [...eventsBuffer, ...processedEvents];
     
     // Salvar no localStorage como backup
     try {
@@ -356,13 +522,28 @@ const recoverPendingEvents = () => {
       return;
     }
     
-    const pendingEvents = JSON.parse(pendingEventsString);
+    let pendingEvents = JSON.parse(pendingEventsString);
     if (Array.isArray(pendingEvents) && pendingEvents.length > 0) {
       console.log(`%c[AdTracker] ♻️ Recuperados ${pendingEvents.length} eventos pendentes do localStorage`, 'background: #009688; color: white; padding: 3px 5px; border-radius: 3px');
       
+      // Filtrar eventos com tipo_evento inválido (permitidos: 'impressao' e 'clique')
+      const validEvents = pendingEvents.filter(evento => {
+        const tipoValido = evento.tipo_evento === 'impressao' || evento.tipo_evento === 'clique';
+        if (!tipoValido) {
+          console.log(`%c[AdTracker] Removendo evento com tipo_evento inválido: ${evento.tipo_evento}`, 'color: #FF9800');
+          // Corrigir eventos com tipo_evento inválido
+          evento.tipo_evento = 'impressao';
+        }
+        return true;
+      });
+      
+      if (validEvents.length < pendingEvents.length) {
+        console.log(`%c[AdTracker] Removidos ${pendingEvents.length - validEvents.length} eventos com tipo_evento inválido`, 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 3px');
+      }
+      
       // Mostrar resumo dos tipos de anúncios recuperados
       const tiposAnuncios = {};
-      pendingEvents.forEach(evento => {
+      validEvents.forEach(evento => {
         const tipo = evento.tipo_anuncio || 'desconhecido';
         tiposAnuncios[tipo] = (tiposAnuncios[tipo] || 0) + 1;
       });
@@ -370,7 +551,10 @@ const recoverPendingEvents = () => {
       console.log('%c[AdTracker] Resumo dos tipos de anúncios recuperados:', 'color: #009688');
       console.table(tiposAnuncios);
       
-      eventsBuffer = [...eventsBuffer, ...pendingEvents];
+      eventsBuffer = [...eventsBuffer, ...validEvents];
+      
+      // Salvar a versão filtrada de volta ao localStorage
+      localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(validEvents));
       
       // Tentar enviar imediatamente
       console.log('%c[AdTracker] Tentando enviar eventos recuperados imediatamente...', 'color: #00BCD4');
@@ -386,9 +570,87 @@ const recoverPendingEvents = () => {
   }
 };
 
+// Adicionar função para limpar eventos pendentes (para debugging)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  // Função para corrigir eventos no localStorage
+  window.corrigirEventosAdTracker = () => {
+    try {
+      const eventos = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
+      if (eventos.length === 0) {
+        console.log('%c[AdTracker] Nenhum evento pendente para corrigir', 'color: #9E9E9E');
+        return 'Nenhum evento pendente encontrado.';
+      }
+      
+      console.log(`%c[AdTracker] Corrigindo ${eventos.length} eventos pendentes...`, 'background: #FF9800; color: white; padding: 3px 5px; border-radius: 3px');
+      
+      // Corrigir eventos
+      let corrigidos = 0;
+      const eventosCorrected = eventos.map(evento => {
+        let modificado = false;
+        
+        // Corrigir tipo_evento
+        if (evento.tipo_evento !== 'impressao' && evento.tipo_evento !== 'clique') {
+          evento.tipo_evento = 'impressao';
+          modificado = true;
+        }
+        
+        // Corrigir tempo_exposto
+        if (typeof evento.tempo_exposto !== 'number' || isNaN(evento.tempo_exposto)) {
+          evento.tempo_exposto = 1.0;
+          modificado = true;
+        }
+        
+        // Garantir que valores obrigatórios existam
+        if (!evento.anuncio_id || !evento.tipo_anuncio || !evento.pagina) {
+          console.warn('Evento inválido encontrado e será removido:', evento);
+          return null; // Remover eventos inválidos
+        }
+        
+        if (modificado) corrigidos++;
+        return evento;
+      }).filter(e => e !== null); // Remover eventos nulos
+      
+      // Salvar eventos corrigidos
+      localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventosCorrected));
+      
+      const removidos = eventos.length - eventosCorrected.length;
+      console.log(`%c[AdTracker] Correção concluída: ${corrigidos} eventos corrigidos, ${removidos} eventos inválidos removidos`, 
+        'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+      
+      return `Correção concluída: ${corrigidos} eventos corrigidos, ${removidos} eventos inválidos removidos. Total atual: ${eventosCorrected.length} eventos.`;
+    } catch (e) {
+      console.error('Erro ao corrigir eventos:', e);
+      return 'Erro ao corrigir eventos.';
+    }
+  };
+  
+  window.limparEventosAdTracker = () => {
+    localStorage.removeItem(BUFFER_STORAGE_KEY);
+    eventsBuffer = [];
+    console.log('%c[AdTracker] TODOS OS EVENTOS PENDENTES FORAM LIMPOS!', 'background: #F44336; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
+    return 'Eventos pendentes do AdTracker foram limpos com sucesso!';
+  };
+  
+  // Adicionar método para ver eventos pendentes
+  window.verEventosAdTracker = () => {
+    try {
+      const eventos = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
+      console.log('%c[AdTracker] Eventos pendentes:', 'background: #2196F3; color: white; padding: 3px 5px; border-radius: 3px');
+      console.table(eventos);
+      return `Total de ${eventos.length} eventos pendentes.`;
+    } catch (e) {
+      console.error('Erro ao ler eventos:', e);
+      return 'Erro ao ler eventos.';
+    }
+  };
+  
+  console.log('%c[AdTracker] Funções de debug disponíveis no console: window.limparEventosAdTracker(), window.verEventosAdTracker() e window.corrigirEventosAdTracker()', 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+}
+
 // Componente principal AdTracker
 const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout = true }) => {
   const anuncioRef = useRef(null);
+  const observerElementRef = useRef(null); // Referência para o elemento invisível que será observado
   const [isVisible, setIsVisible] = useState(false);
   const [visibleStartTime, setVisibleStartTime] = useState(null);
   const [locationInfo, setLocationInfo] = useState({ pais: 'desconhecido', regiao: 'desconhecido' });
@@ -401,9 +663,15 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   const componentIdRef = useRef(`ad_${anuncioId}_${Math.random().toString(36).substring(2, 9)}`); // ID único para identificar instâncias
   const hasReportedRef = useRef(false); // Ref para controlar se já reportamos (persistente entre re-renders)
   const mountTimeRef = useRef(Date.now()); // Ref para armazenar o momento em que o componente foi montado
+  const isFirstRenderRef = useRef(true); // Ref para controlar se é a primeira renderização
+  const actualMountTimeRef = useRef(Date.now()); // Ref para armazenar o momento real da montagem
+  const visibilityCheckTimerRef = useRef(null); // Timer para verificação periódica de visibilidade
   
   // Log inicial com informações completas sobre o anúncio
   useEffect(() => {
+    // Registrar tempo real de montagem
+    actualMountTimeRef.current = Date.now();
+    
     console.log(`%c[AdTracker] Inicializando [${componentIdRef.current}]`, 'background: #222; color: #bada55');
     console.log(`%c[AdTracker] Detalhes do anúncio:`, 'color: #2196F3');
     console.table({
@@ -412,9 +680,78 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       pagina: paginaId,
       preservar_layout: preservarLayout,
       component_id: componentIdRef.current,
-      session_id: sessionId.current
+      session_id: sessionId.current,
+      ambiente: isDevelopment ? 'desenvolvimento' : 'produção'
     });
   }, [anuncioId, tipoAnuncio, paginaId, preservarLayout]);
+  
+  // Efeito para tratar primeira renderização em ambiente de desenvolvimento
+  useEffect(() => {
+    if (isDevelopment && isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      
+      return () => {
+        // Ignorar a primeira desmontagem em ambiente de desenvolvimento (provavelmente StrictMode)
+        console.log(`%c[AdTracker] [${componentIdRef.current}] Ignorando primeira desmontagem (provavelmente StrictMode)`, 'color: gray');
+      };
+    }
+  }, []);
+  
+  // Efeito para tratar as mudanças de rota e recarregamentos
+  useEffect(() => {
+    // Detectar mudanças de rota dentro do React
+    const handleRouteChange = () => {
+      isNavigatingAway = true;
+      console.log(`%c[AdTracker] [${componentIdRef.current}] Mudança de rota detectada para ${anuncioId}`, 'color: #FF9800');
+    };
+
+    // Reset do estado ao montar
+    isNavigatingAway = false;
+    
+    // Tentar detectar mudanças de rota em frameworks comuns
+    if (typeof window !== 'undefined') {
+      // Para React Router e frameworks similares
+      window.addEventListener('popstate', handleRouteChange);
+      
+      // Para Next.js
+      if (typeof window.__NEXT_DATA__ !== 'undefined') {
+        const routeChangeStart = () => {
+          isNavigatingAway = true;
+          console.log(`%c[AdTracker] [${componentIdRef.current}] Mudança de rota Next.js detectada`, 'color: #FF9800');
+        };
+        
+        // Verificar se existe o evento do Next.js
+        if (window.next && window.next.router && typeof window.next.router.events?.on === 'function') {
+          window.next.router.events.on('routeChangeStart', routeChangeStart);
+        }
+      }
+    }
+    
+    return () => {
+      // Limpar listeners na desmontagem
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('popstate', handleRouteChange);
+        
+        // Limpar evento do Next.js se existir
+        if (window.next && window.next.router && typeof window.next.router.events?.off === 'function') {
+          window.next.router.events.off('routeChangeStart', handleRouteChange);
+        }
+      }
+    };
+  }, [anuncioId, componentIdRef]);
+  
+  // Remover o bloqueio global de isNavigatingAway após um curto período
+  // Isso permite que navegações subsequentes sejam rastreadas corretamente
+  useEffect(() => {
+    const resetNavigationTimer = setTimeout(() => {
+      if (isNavigatingAway) {
+        console.log('%c[AdTracker] Resetando flag de navegação', 'color: #888');
+        isNavigatingAway = false;
+      }
+    }, 1000);
+    
+    return () => clearTimeout(resetNavigationTimer);
+  }, []);
   
   // Efeito para recuperar eventos pendentes - executa apenas uma vez
   useEffect(() => {
@@ -446,90 +783,143 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         }
       }
       
-      // Configurar um timeout para forçar o registro de impressão após 2 segundos
-      // para tipos específicos de anúncios que podem ter problemas de visibilidade
-      const forceTrackingTypes = ['lateral', 'fixo-superior', 'fixo-inferior', 'banner', 'video', 'quadrado'];
-      if (forceTrackingTypes.includes(tipoAnuncio)) {
-        setTimeout(() => {
-          // Se ainda não registramos uma impressão, forçar um registro mínimo
-          if (!hasReportedRef.current) {
-            console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): Forçando registro de impressão após 2s`, 'background: #9C27B0; color: white; padding: 2px 5px; border-radius: 3px');
+      // Remover registro automático no início da montagem
+      // Os forceTrackingTypes serão registrados apenas após o IntersectionObserver detectar visibilidade real
+      
+      // Configurar um backup para anúncios que podem não ser detectados pelo IntersectionObserver
+      setTimeout(() => {
+        // Se ainda não registramos uma impressão após 5s, verificar manualmente a visibilidade
+        if (!hasReportedRef.current && !isNavigatingAway) {
+          console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): Backup - Verificando após 5s`, 'color: #888');
+          
+          // Realizar uma verificação manual de visibilidade
+          const rect = observerElementRef.current?.getBoundingClientRect();
+          if (rect) {
+            const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+            const windowWidth = window.innerWidth || document.documentElement.clientWidth;
             
-            // Marcar que já reportamos para este anúncio
-            hasReportedRef.current = true;
+            // Usar critérios mais estritos para determinar visibilidade
+            const isElementVisible = (
+              rect.top < windowHeight && 
+              rect.bottom > 0 && 
+              rect.left < windowWidth && 
+              rect.right > 0
+            );
             
-            // Registrar o evento com tempo mínimo
-            const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-            const pagina = paginaId || currentPath || '/';
-            
-            registerEvent({
-              anuncio_id: anuncioId,
-              tipo_anuncio: tipoAnuncio,
-              pagina: pagina,
-              tipo_evento: 'impressao',
-              tempo_exposto: 1.0, // Tempo padrão de 1 segundo para garantir registro
-              visivel: true,
-              dispositivo: getDeviceInfo(),
-              pais: locationInfo.pais,
-              regiao: locationInfo.regiao,
-              session_id: sessionId.current,
-              timestamp: new Date().toISOString()
-            });
+            if (isElementVisible) {
+              console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): Elemento realmente visível em tela`, 'background: #795548; color: white; padding: 2px 5px; border-radius: 3px');
+              
+              // Não registramos imediatamente, mas iniciamos o cronômetro
+              if (!visibleStartTime) {
+                setVisibleStartTime(Date.now());
+                setIsVisible(true);
+                
+                // Iniciar o cronômetro para contabilizar corretamente o tempo
+                if (!exposureTimerRef.current) {
+                  exposureTimerRef.current = setInterval(() => {
+                    setExposureTime(prev => {
+                      const newValue = prev + 1;
+                      if (newValue >= 1 && !hasReportedRef.current) {
+                        // Registrar apenas após pelo menos 1 segundo de visibilidade real
+                        console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s), registrando impressão`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+                        
+                        hasReportedRef.current = true;
+                        
+                        // Registrar o evento com tempo correto
+                        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+                        const pagina = paginaId || currentPath || '/';
+                        
+                        registerEvent({
+                          anuncio_id: anuncioId,
+                          tipo_anuncio: tipoAnuncio,
+                          pagina: pagina,
+                          tipo_evento: 'impressao',
+                          tempo_exposto: newValue,
+                          visivel: true,
+                          dispositivo: getDeviceInfo(),
+                          pais: locationInfo.pais,
+                          regiao: locationInfo.regiao,
+                          session_id: sessionId.current,
+                          timestamp: new Date().toISOString()
+                        });
+                      }
+                      return newValue;
+                    });
+                  }, 1000);
+                }
+              }
+            }
           }
-        }, 2000);
-      }
+        }
+      }, 5000);
     }
     
     // Limpeza ao desmontar completamente
     return () => {
       const id = componentIdRef.current;
-      console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Desmontando componente`, 'color: #F44336');
+      const componentLifetime = Date.now() - actualMountTimeRef.current;
       
-      // Forçar registro para todos os anúncios não registrados na desmontagem
-      // mesmo que não tenham atingido o limiar de visibilidade
-      if (!hasReportedRef.current) {
-        console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Forçando registro na desmontagem`, 'background: #E91E63; color: white; padding: 2px 5px; border-radius: 3px');
-        
-        let finalVisibleTime = 1.0; // Valor padrão para garantir o registro
-        
-        // Se temos um tempo real, usá-lo
-        if (visibleStartTime) {
-          finalVisibleTime = (Date.now() - visibleStartTime) / 1000;
-        } else if (tipoAnuncio === 'tela-inteira') {
-          // Para anúncios de tela inteira, usar o tempo desde a montagem
-          finalVisibleTime = (Date.now() - mountTimeRef.current) / 1000;
-        } else if (exposureTime > 0) {
-          finalVisibleTime = exposureTime;
+      console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Desmontando componente após ${componentLifetime}ms`, 'color: #F44336');
+      
+      // Verificar se estamos em uma navegação ou recarregamento de página
+      if (isNavigatingAway) {
+        console.log(`%c[AdTracker] [${id}] Navegação ou recarregamento detectado, ignorando registro automático`, 'color: orange');
+      }
+      // Verificar se estamos em ambiente de desenvolvimento e se é uma desmontagem rápida
+      // Ignorar registro de impressão em desmontagens muito rápidas (provavelmente causadas por StrictMode)
+      else if (isDevelopment && componentLifetime < MIN_COMPONENT_LIFETIME) {
+        console.log(`%c[AdTracker] [${id}] Desmontagem rápida detectada (${componentLifetime}ms), ignorando registro automático`, 'color: orange');
+      }
+      // Verificar se o componente já registrou uma impressão ou se foi muito curto
+      else if (!hasReportedRef.current && componentLifetime >= MIN_COMPONENT_LIFETIME) {
+        // Verificar se o anúncio realmente teve alguma visibilidade verificada
+        // Se nunca foi visível pelo IntersectionObserver ou verificação manual, não registrar
+        if (!isVisible && !visibleStartTime && exposureTime === 0) {
+          console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Ignorando registro na desmontagem - anúncio nunca foi visível`, 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 3px');
+        } else {
+          console.log(`%c[AdTracker] [${id}] Anúncio ${tipoAnuncio} (${anuncioId}): Forçando registro na desmontagem`, 'background: #E91E63; color: white; padding: 2px 5px; border-radius: 3px');
+          
+          let finalVisibleTime = 1.0; // Valor padrão para garantir o registro
+          
+          // Se temos um tempo real, usá-lo
+          if (visibleStartTime) {
+            finalVisibleTime = (Date.now() - visibleStartTime) / 1000;
+          } else if (tipoAnuncio === 'tela-inteira') {
+            // Para anúncios de tela inteira, usar o tempo desde a montagem
+            finalVisibleTime = (Date.now() - mountTimeRef.current) / 1000;
+          } else if (exposureTime > 0) {
+            finalVisibleTime = exposureTime;
+          }
+          
+          // Garantir valor mínimo e arredondar
+          finalVisibleTime = Math.max(0.5, Math.round(finalVisibleTime * 100) / 100);
+          
+          // Marcar que já reportamos para este anúncio
+          hasReportedRef.current = true;
+          
+          // Registrar o evento final
+          const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+          const pagina = paginaId || currentPath || '/';
+          
+          registerEvent({
+            anuncio_id: anuncioId,
+            tipo_anuncio: tipoAnuncio,
+            pagina: pagina,
+            tipo_evento: 'impressao',
+            tempo_exposto: finalVisibleTime,
+            visivel: true,
+            dispositivo: getDeviceInfo(),
+            pais: locationInfo.pais,
+            regiao: locationInfo.regiao,
+            session_id: sessionId.current,
+            timestamp: new Date().toISOString()
+          });
         }
-        
-        // Garantir valor mínimo e arredondar
-        finalVisibleTime = Math.max(0.5, Math.round(finalVisibleTime * 100) / 100);
-        
-        // Marcar que já reportamos para este anúncio
-        hasReportedRef.current = true;
-        
-        // Registrar o evento final
-        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-        const pagina = paginaId || currentPath || '/';
-        
-        registerEvent({
-          anuncio_id: anuncioId,
-          tipo_anuncio: tipoAnuncio,
-          pagina: pagina,
-          tipo_evento: 'impressao',
-          tempo_exposto: finalVisibleTime,
-          visivel: true,
-          dispositivo: getDeviceInfo(),
-          pais: locationInfo.pais,
-          regiao: locationInfo.regiao,
-          session_id: sessionId.current,
-          timestamp: new Date().toISOString()
-        });
       }
       
       // Limpar o observer na desmontagem
-      if (observerRef.current && anuncioRef.current) {
-        observerRef.current.unobserve(anuncioRef.current);
+      if (observerRef.current && observerElementRef.current) {
+        observerRef.current.unobserve(observerElementRef.current);
         observerRef.current = null;
       }
       
@@ -563,16 +953,16 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     const componentId = componentIdRef.current;
     
     // Verificar se temos todos os dados necessários
-    if (!anuncioId || !tipoAnuncio || !anuncioRef.current) {
+    if (!anuncioId || !tipoAnuncio || !anuncioRef.current || !observerElementRef.current) {
       console.warn(`%c[AdTracker] [${componentId}] ERRO: Dados incompletos para configurar detecção de visibilidade`, 'color: red', {
-        anuncioId, tipoAnuncio, refExiste: !!anuncioRef.current
+        anuncioId, tipoAnuncio, refExiste: !!anuncioRef.current, observerElementExiste: !!observerElementRef.current
       });
       return; // Não configurar o observer se faltar qualquer dado essencial
     }
     
     // Limpar observer anterior se existir
-    if (observerRef.current && anuncioRef.current) {
-      observerRef.current.unobserve(anuncioRef.current);
+    if (observerRef.current && observerElementRef.current) {
+      observerRef.current.unobserve(observerElementRef.current);
       observerRef.current = null;
     }
     
@@ -589,24 +979,189 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     
     // Definir limiares com base no tipo de anúncio
     // Anúncios fixos e laterais precisam de menos visibilidade para serem considerados visíveis
-    let thresholds = [0, 0.1, 0.25, 0.5, 0.75, 1.0];
+    let thresholds = [0, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0];
     const isFixedAd = ['lateral', 'fixo-superior', 'fixo-inferior'].includes(tipoAnuncio);
     
     // Para anúncios fixos, usamos limiares menores para detectar mais facilmente
     if (isFixedAd) {
-      thresholds = [0, 0.05, 0.1, 0.25, 0.5];
+      thresholds = [0, 0.01, 0.03, 0.05, 0.1, 0.25, 0.5];
       console.log(`%c[AdTracker] [${componentId}] Usando limiares especiais para anúncio fixo ${tipoAnuncio}`, 'color: #9C27B0');
+      
+      // Para anúncios fixo-inferior, considerar visível por padrão
+      if (tipoAnuncio === 'fixo-inferior') {
+        console.log(`%c[AdTracker] [${componentId}] Anúncio fixo-inferior - considerando visível por padrão`, 'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px');
+        // Iniciar a visibilidade imediatamente
+        if (!isVisible) {
+          setIsVisible(true);
+          setVisibleStartTime(Date.now());
+          
+          // Iniciar o cronômetro para rastrear tempo exposto
+          if (!exposureTimerRef.current) {
+            exposureTimerRef.current = setInterval(() => {
+              setExposureTime(prev => {
+                const newValue = prev + 1;
+                if (newValue % 10 === 0) {
+                  console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio}: Tempo exposto: ${newValue}s`, 'color: #00BCD4');
+                }
+                return newValue;
+              });
+            }, 1000);
+          }
+        }
+      }
     }
     
-    // Criar um novo observer
+    // Configurar verificação manual de visibilidade para garantir que anúncios no final da página sejam detectados
+    // Esta é uma abordagem de backup para anúncios que não são detectados pelo IntersectionObserver
+    const checkVisibilityManually = () => {
+      if (hasReportedRef.current && exposureTime > 0) return; // Não verificar se já reportamos com tempo exposto
+      
+      // Verificar se o elemento existe e se está no DOM
+      if (!observerElementRef.current || !document.body.contains(observerElementRef.current)) {
+        return;
+      }
+      
+      const rect = observerElementRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+      const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+      
+      // Verificar se o elemento está pelo menos parcialmente visível na janela
+      const isElementVisible = (
+        rect.top < windowHeight && 
+        rect.bottom > 0 && 
+        rect.left < windowWidth && 
+        rect.right > 0
+      );
+      
+      // Se já está visível, não fazer nada
+      if (isElementVisible === isVisible) {
+        return;
+      }
+      
+      console.log(`%c[AdTracker] [${componentId}] Verificação manual: Anúncio ${tipoAnuncio} (${anuncioId}) está ${isElementVisible ? 'visível' : 'invisível'}`, 
+        isElementVisible ? 'background: #4CAF50; color: white;' : 'background: #F44336; color: white;', 
+        'padding: 2px 5px; border-radius: 3px');
+      
+      // Simular o comportamento do IntersectionObserver
+      if (isElementVisible && !isVisible) {
+        setIsVisible(true);
+        setVisibleStartTime(Date.now());
+        
+        // Iniciar o cronômetro para rastrear tempo exposto
+        if (!exposureTimerRef.current) {
+          exposureTimerRef.current = setInterval(() => {
+            setExposureTime(prev => {
+              const newValue = prev + 1;
+              // Reduzir frequência de logs (apenas a cada 10 segundos)
+              if (newValue % 10 === 0) {
+                console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo exposto: ${newValue}s`, 'color: #00BCD4');
+              }
+              
+              // Verificar se atingiu o tempo mínimo para registrar
+              const timeThreshold = isFixedAd ? 0.5 : MIN_VISIBLE_TIME;
+              
+              if (newValue >= timeThreshold && !hasReportedExposure && !hasReportedRef.current) {
+                console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s), registrando impressão`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+                
+                // Marcar que já reportamos
+                hasReportedExposure = true;
+                hasReportedRef.current = true;
+                
+                registerEvent({
+                  anuncio_id: anuncioId,
+                  tipo_anuncio: tipoAnuncio,
+                  pagina: pagina,
+                  tipo_evento: 'impressao',
+                  tempo_exposto: Math.round(newValue * 100) / 100,
+                  visivel: true,
+                  dispositivo: getDeviceInfo(),
+                  pais: locationInfo.pais,
+                  regiao: locationInfo.regiao,
+                  session_id: sessionId.current,
+                  timestamp: new Date().toISOString()
+                });
+              }
+              
+              return newValue;
+            });
+          }, 1000);
+        }
+      } else if (!isElementVisible && isVisible) {
+        setIsVisible(false);
+        
+        // Parar o cronômetro
+        if (exposureTimerRef.current) {
+          clearInterval(exposureTimerRef.current);
+          exposureTimerRef.current = null;
+        }
+        
+        // Registrar o tempo visível se for suficiente
+        if (visibleStartTime) {
+          const timeVisible = (Date.now() - visibleStartTime) / 1000;
+          const roundedTime = Math.round(timeVisible * 100) / 100;
+          const minTimeThreshold = isFixedAd ? 0.3 : 0.5;
+          
+          if (timeVisible >= minTimeThreshold && !hasReportedExposure && !hasReportedRef.current) {
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando impressão manual com tempo=${roundedTime}`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+            hasReportedExposure = true;
+            hasReportedRef.current = true;
+            
+            registerEvent({
+              anuncio_id: anuncioId,
+              tipo_anuncio: tipoAnuncio,
+              pagina: pagina,
+              tipo_evento: 'impressao',
+              tempo_exposto: roundedTime,
+              visivel: true,
+              dispositivo: getDeviceInfo(),
+              pais: locationInfo.pais,
+              regiao: locationInfo.regiao,
+              session_id: sessionId.current,
+              timestamp: new Date().toISOString()
+            });
+          }
+          
+          setVisibleStartTime(null);
+          setExposureTime(0);
+        }
+      }
+    };
+    
+    // Configurar timer para verificação periódica de visibilidade a cada 500ms (mais frequente)
+    // Especialmente útil para elementos que podem não ser detectados corretamente pelo IntersectionObserver
+    visibilityCheckTimerRef.current = setInterval(checkVisibilityManually, 500);
+    
+    // Adicionar eventos de scroll e resize para verificação adicional de visibilidade
+    const handleViewportChange = () => {
+      // Executar verificação manual após um pequeno delay para permitir que o DOM se estabilize
+      setTimeout(checkVisibilityManually, 100);
+    };
+    
+    window.addEventListener('scroll', handleViewportChange, { passive: true });
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+    
+    // Verificação inicial mais agressiva - repetir algumas vezes nos primeiros segundos
+    setTimeout(checkVisibilityManually, 100); // Verificação quase imediata
+    setTimeout(checkVisibilityManually, 500); // Verificação após meio segundo
+    setTimeout(checkVisibilityManually, 1000); // Verificação após 1 segundo
+    setTimeout(checkVisibilityManually, 2000); // Verificação após 2 segundos
+    
+    // Criar um novo observer com configurações mais sensíveis
     observerRef.current = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         const isNowVisible = entry.isIntersecting;
         const visibilityPercentage = Math.round(entry.intersectionRatio * 100);
         
-        // Evitar atualizações redundantes
-        if (isNowVisible === isVisible) {
+        // Verificar tempo de vida do componente
+        const componentLifetime = Date.now() - actualMountTimeRef.current;
+        
+        // Log mais detalhado
+        console.log(`%c[AdTracker] [${componentId}] Observer: ${tipoAnuncio} (${anuncioId}) - isIntersecting: ${isNowVisible}, ratio: ${entry.intersectionRatio.toFixed(3)}`, 
+          'color: #888');
+        
+        // Evitar atualizações redundantes ou se for uma renderização muito rápida em desenvolvimento
+        if (isNowVisible === isVisible || (isDevelopment && componentLifetime < MIN_COMPONENT_LIFETIME)) {
           return;
         }
         
@@ -635,7 +1190,6 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                 }
                 
                 // Verificar se atingiu o tempo mínimo para registrar
-                // Tem lógica especial para anúncios fixos - usar tempo um pouco menor
                 const timeThreshold = isFixedAd ? 0.5 : MIN_VISIBLE_TIME;
                 
                 if (newValue >= timeThreshold && !hasReportedExposure && !hasReportedRef.current) {
@@ -650,7 +1204,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                     tipo_anuncio: tipoAnuncio,
                     pagina: pagina,
                     tipo_evento: 'impressao',
-                    tempo_exposto: Math.round(newValue * 100) / 100, // Arredondar para 2 casas decimais
+                    tempo_exposto: Math.round(newValue * 100) / 100,
                     visivel: true,
                     dispositivo: getDeviceInfo(),
                     pais: locationInfo.pais,
@@ -684,22 +1238,28 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             exposureTimerRef.current = null;
           }
           
-          // Atualizar o tempo de exposição - APENAS se não enviamos ainda neste ciclo
-          // Verificar tempo mínimo adequado para o tipo de anúncio
+          // Atualizar o tempo de exposição - SEMPRE ENVIAR o evento quando o anúncio sai de tela
+          // independente se já enviamos um evento antes, para capturar o tempo total
           const minTimeThreshold = isFixedAd ? 0.3 : 0.5;
           
-          if (timeVisible >= minTimeThreshold && !hasReportedExposure && !hasReportedRef.current) {
-            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando impressão com tempo=${roundedTime}`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
-            hasReportedExposure = true; // Marcar que já enviamos
+          if (timeVisible >= minTimeThreshold) {
+            // Mesmo que já tenhamos reportado antes, usar 'impressao' como tipo de evento
+            // Isso é necessário porque o banco de dados tem uma constraint que restringe os tipos de evento válidos
+            const tipoEvento = 'impressao';
+            
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando ${tipoEvento} com tempo=${roundedTime}`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+            
+            // Marcar que já enviamos pelo menos um evento
+            hasReportedExposure = true;
             hasReportedRef.current = true;
             
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
-              tipo_evento: 'impressao',
+              tipo_evento: tipoEvento,
               tempo_exposto: roundedTime,
-              visivel: true,
+              visivel: false, // Agora está invisível
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
               regiao: locationInfo.regiao,
@@ -716,12 +1276,12 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       },
       {
         threshold: thresholds, // Usar os limiares definidos com base no tipo de anúncio
-        rootMargin: isFixedAd ? '10px' : '0px' // Margem extra para anúncios fixos
+        rootMargin: isFixedAd ? '50px' : '20px' // Margem extra aumentada para melhor detecção
       }
     );
     
-    // Observar o elemento
-    observerRef.current.observe(anuncioRef.current);
+    // Observar o elemento invisível ao invés do container
+    observerRef.current.observe(observerElementRef.current);
     
     // Função de limpeza
     return () => {
@@ -731,34 +1291,22 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         exposureTimerRef.current = null;
       }
       
-      if (observerRef.current && anuncioRef.current) {
-        observerRef.current.unobserve(anuncioRef.current);
+      if (observerRef.current && observerElementRef.current) {
+        observerRef.current.unobserve(observerElementRef.current);
         observerRef.current = null;
       }
+      
+      // Limpar o timer de verificação de visibilidade
+      if (visibilityCheckTimerRef.current) {
+        clearInterval(visibilityCheckTimerRef.current);
+        visibilityCheckTimerRef.current = null;
+      }
+      
+      // Remover event listeners
+      window.removeEventListener('scroll', handleViewportChange);
+      window.removeEventListener('resize', handleViewportChange);
     };
   }, [anuncioId, tipoAnuncio, paginaId, hasRegisteredImpression, locationInfo, isVisible]);
-  
-  // Remover o tratamento especial para anúncios fixos e laterais que usava setTimeout
-  // Substituir pelo código abaixo que apenas configura atributos especiais para melhorar a detecção
-  useEffect(() => {
-    const componentId = componentIdRef.current;
-    
-    // Verificar se o anúncio é um tipo fixo ou lateral
-    const isFixedOrLateralAd = ['lateral', 'fixo-superior', 'fixo-inferior'].includes(tipoAnuncio);
-    
-    if (isFixedOrLateralAd && anuncioRef.current) {
-      // Adicionar classe especial para ajudar na detecção de visibilidade
-      anuncioRef.current.classList.add('ad-tracker-fixed');
-      console.log(`%c[AdTracker] [${componentId}] Configurando anúncio fixo ${tipoAnuncio} (${anuncioId}) para melhor detecção`, 'color: #FF9800');
-    }
-    
-    return () => {
-      // Limpar ao desmontar
-      if (isFixedOrLateralAd && anuncioRef.current) {
-        anuncioRef.current.classList.remove('ad-tracker-fixed');
-      }
-    };
-  }, [tipoAnuncio, anuncioId]);
   
   // Registrar clique quando o usuário clicar no anúncio
   const handleClick = () => {
@@ -809,6 +1357,131 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     });
   };
   
+  // Obtém estilo para o elemento de observação invisível com base no tipo de anúncio
+  const getObserverElementStyle = () => {
+    // Estilo base comum para todos os tipos
+    const baseStyle = {
+      position: 'absolute',
+      top: '-20px',  // Aumentar a área de detecção para cima
+      left: '-20px', // Aumentar a área de detecção para a esquerda
+      width: 'calc(100% + 40px)',  // Aumentar a largura total
+      height: 'calc(100% + 40px)', // Aumentar a altura total
+      pointerEvents: 'none',
+      zIndex: -1,
+      opacity: 0,
+      // Adicionar overflow: visible para melhor detecção
+      overflow: 'visible'
+    };
+
+    // Ajustes específicos por tipo de anúncio
+    switch (tipoAnuncio) {
+      case 'fixo-superior':
+        return {
+          ...baseStyle,
+          position: 'absolute',
+          width: '100vw',  // Usar toda a largura da viewport
+          height: 'calc(100% + 50px)', // Aumentar significativamente a altura
+          top: '-10px',
+          left: '0'
+        };
+      case 'fixo-inferior':
+        return {
+          ...baseStyle,
+          position: 'absolute',
+          width: '100vw',  // Usar toda a largura da viewport
+          height: 'calc(100% + 100px)', // Aumentar ainda mais a altura para garantir detecção
+          top: '-20px',
+          left: '0',
+          zIndex: -1  // Garantir que está abaixo do conteúdo visível
+        };
+      case 'lateral':
+        return {
+          ...baseStyle,
+          position: 'absolute',
+          width: 'calc(100% + 100px)', // Aumentar significativamente a largura
+          height: '100vh', // Usar toda a altura da viewport
+          top: '0',
+          left: '-50px'
+        };
+      case 'tela-inteira':
+        return {
+          ...baseStyle,
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          width: '100vw',
+          height: '100vh'
+        };
+      case 'video':
+        return {
+          ...baseStyle,
+          // Aumentar a área de detecção para anúncios de vídeo
+          top: '-30px',
+          left: '-30px',
+          width: 'calc(100% + 60px)',
+          height: 'calc(100% + 60px)',
+        };
+      case 'quadrado':
+        return {
+          ...baseStyle,
+          // Aumentar a área de detecção para anúncios quadrados
+          top: '-25px',
+          left: '-25px',
+          width: 'calc(100% + 50px)',
+          height: 'calc(100% + 50px)',
+        };
+      case 'banner':
+        return {
+          ...baseStyle,
+          // Aumentar a área de detecção para banners
+          top: '-20px',
+          left: '-20px',
+          width: 'calc(100% + 40px)',
+          height: 'calc(100% + 60px)',
+        };
+      // Tratar anúncios de cursos e qualquer tipo que contenha "curso" no nome
+      case 'curso1':
+      case 'curso2':
+      case 'curso3':
+      case 'curso':
+        return {
+          ...baseStyle,
+          // Área de detecção ainda maior para cursos
+          top: '-40px',
+          left: '-40px',
+          width: 'calc(100% + 80px)',
+          height: 'calc(100% + 80px)',
+        };
+      // Para outros tipos: cursos, logos
+      default:
+        // Se o tipo contiver "curso", tratar como curso
+        if (tipoAnuncio.includes('curso')) {
+          return {
+            ...baseStyle,
+            // Área de detecção ainda maior para cursos
+            top: '-40px',
+            left: '-40px',
+            width: 'calc(100% + 80px)',
+            height: 'calc(100% + 80px)',
+          };
+        }
+        
+        // Se o tipo contiver "logo", tratar como logo
+        if (tipoAnuncio.includes('logo')) {
+          return {
+            ...baseStyle,
+            // Área de detecção para logos
+            top: '-20px',
+            left: '-20px',
+            width: 'calc(100% + 40px)',
+            height: 'calc(100% + 40px)',
+          };
+        }
+        
+        return baseStyle;
+    }
+  };
+  
   // Estilo para não afetar o layout quando preservarLayout=true
   const trackerStyle = preservarLayout ? {
     display: 'contents',
@@ -816,10 +1489,30 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     height: 'auto'
   } : {};
   
+  // Estilo para o container do elemento observável
+  const observerContainerStyle = {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    display: 'contents'
+  };
+  
+  // Determinar a classe correta com base no tipo de anúncio
+  const getTrackerClassName = () => {
+    let className = 'ad-tracker-container';
+    
+    // Adicionar classes específicas para tipos especiais
+    if (['video', 'quadrado', 'banner'].includes(tipoAnuncio)) {
+      className += ` ad-tracker-${tipoAnuncio}`;
+    }
+    
+    return className;
+  };
+  
   // Renderizar o componente com o envoltório para rastreamento
   return (
     <div 
-      className="ad-tracker-container" 
+      className={getTrackerClassName()}
       ref={anuncioRef} 
       onClick={handleClick}
       style={trackerStyle}
@@ -827,7 +1520,16 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       data-ad-type={tipoAnuncio}
       data-page-id={paginaId}
     >
-      {children}
+      <div className="ad-tracker-observer-container" style={observerContainerStyle}>
+        {/* Elemento invisível que será alvo do IntersectionObserver */}
+        <div 
+          ref={observerElementRef}
+          className="ad-tracker-observer-element"
+          style={getObserverElementStyle()}
+          data-ad-tracking-element={`${tipoAnuncio}-${anuncioId}`}
+        />
+        {children}
+      </div>
     </div>
   );
 };
