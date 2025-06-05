@@ -48,20 +48,20 @@ async function handler(req, res) {
         throw new Error(`Erro ao congelar lista: ${erroConfig.message}`);
       }
       
-      // Selecionar um participante aleatório
+      // OTIMIZAÇÃO: Selecionar um participante aleatório diretamente no banco de dados
+      // Isso garante que todos os participantes tenham chances iguais, sem limite de 1000
       const { data: sorteado, error: erroSorteio } = await supabase
         .from('participantes_ativos')
-        .select('*')
-        .limit(1000) // Limitamos para evitar problemas com grandes listas
-        .order('id', { ascending: false });
+        .select('id, nome_twitch, streamer_escolhido, plataforma_premio')
+        .order('random()') // Ordenação aleatória pelo PostgreSQL
+        .limit(1);         // Pegar apenas um registro - o vencedor
         
       if (erroSorteio || !sorteado || sorteado.length === 0) {
         throw new Error(`Erro ao sortear participante: ${erroSorteio?.message || 'Nenhum participante encontrado'}`);
       }
       
-      // Escolher um vencedor aleatório
-      const indiceAleatorio = Math.floor(Math.random() * sorteado.length);
-      const vencedor = sorteado[indiceAleatorio];
+      // Não precisamos mais selecionar um índice aleatório, já temos o vencedor
+      const vencedor = sorteado[0];
       
       // Gerar número aleatório para o sorteio (1-100)
       const numeroSorteado = Math.floor(Math.random() * 100) + 1;
@@ -73,7 +73,8 @@ async function handler(req, res) {
           nome: vencedor.nome_twitch,
           streamer: vencedor.streamer_escolhido,
           numero: numeroSorteado,
-          data: new Date().toISOString()
+          data: new Date().toISOString(),
+          plataforma_premio: vencedor.plataforma_premio || 'twitch'
         }])
         .select();
         
@@ -98,7 +99,8 @@ async function handler(req, res) {
           streamer: vencedor.streamer_escolhido,
           numero: numeroSorteado,
           id: novoSorteio[0].id,
-          data: novoSorteio[0].data
+          data: novoSorteio[0].data,
+          plataforma_premio: vencedor.plataforma_premio || 'twitch'
         }
       };
     }
@@ -142,6 +144,46 @@ async function handler(req, res) {
       }
     }
     
+    // Função para limpar dados antigos (eventos de anúncios e logs)
+    async function limparDadosAntigos() {
+      try {
+        // Chamar a função RPC que executa todas as limpezas
+        const { data, error } = await supabase.rpc('executar_limpeza_dados_antigos');
+        
+        if (error) {
+          logger.error("Erro ao limpar dados antigos:", error);
+          throw error;
+        }
+        
+        // Registrar log do sucesso da limpeza
+        await supabase
+          .from('logs')
+          .insert([{
+            descricao: `Limpeza de dados antigos executada pelo cron job.`
+          }]);
+        
+        return {
+          sucesso: true,
+          mensagem: "Limpeza de dados antigos executada com sucesso",
+          resultado: data
+        };
+      } catch (error) {
+        logger.error("Erro na limpeza de dados antigos:", error);
+        
+        // Registrar erro em logs
+        await supabase
+          .from('logs')
+          .insert([{
+            descricao: `ERRO ao limpar dados antigos: ${error.message}`
+          }]);
+        
+        return {
+          sucesso: false,
+          mensagem: `Erro na limpeza de dados antigos: ${error.message}`
+        };
+      }
+    }
+    
     // Executar o sorteio
     const resultado = await verificarERealizarSorteio();
     
@@ -156,10 +198,14 @@ async function handler(req, res) {
       
     // Atualizar métricas de anúncios após o sorteio
     const resultadoMetricas = await atualizarMetricasResumo();
+    
+    // Limpar dados antigos (eventos de anúncios e logs)
+    const resultadoLimpeza = await limparDadosAntigos();
       
     return successResponse(res, 'Cron job executado com sucesso', {
       resultado: resultado,
-      metricas: resultadoMetricas
+      metricas: resultadoMetricas,
+      limpeza: resultadoLimpeza
     });
   } catch (error) {
     logger.critical("Erro no cron job de sorteio:", error);
