@@ -9,6 +9,35 @@
 const fs = require('fs');
 const path = require('path');
 
+// Primeiro, carregar as variáveis de ambiente dos arquivos
+try {
+  // Carregar o script de carregamento de variáveis
+  const { carregarEnv } = require('./load-env');
+  
+  // Tentar carregar variáveis de diversos arquivos
+  const arquivosEnv = [
+    path.join(__dirname, '../.env.local'),
+    path.join(__dirname, '../.env.txt'),
+    path.join(__dirname, '../.env')
+  ];
+  
+  let carregouAlgum = false;
+  
+  for (const arquivo of arquivosEnv) {
+    if (carregarEnv(arquivo)) {
+      carregouAlgum = true;
+      console.log(`Variáveis carregadas de ${arquivo}`);
+      break; // Usar apenas o primeiro arquivo encontrado
+    }
+  }
+  
+  if (!carregouAlgum) {
+    console.warn('⚠️ AVISO: Nenhum arquivo de variáveis de ambiente foi carregado!');
+  }
+} catch (erro) {
+  console.warn('⚠️ AVISO: Erro ao carregar script de variáveis:', erro.message);
+}
+
 // Caminho para o env-config.js
 const ENV_CONFIG_PATH = path.join(__dirname, '../public/env-config.js');
 
@@ -33,9 +62,23 @@ function main() {
       console.warn('⚠️ AVISO: NEXT_PUBLIC_SUPABASE_ANON_KEY não está definida no ambiente.');
     }
     
-    // Substituição dos placeholders
-    envConfig = envConfig.replace(/%%SUPABASE_URL_PLACEHOLDER%%/g, supabaseUrl);
-    envConfig = envConfig.replace(/%%SUPABASE_ANON_KEY_PLACEHOLDER%%/g, supabaseAnonKey);
+    // Substituir a inicialização do window.__ENV__ de forma segura
+    const pattern = /window\.__ENV__\s*=\s*window\.__ENV__\s*\|\|\s*\{\};/;
+    
+    // Verificar se o padrão já existe
+    if (pattern.test(envConfig)) {
+      // Atualizar os valores sem modificar a estrutura
+      envConfig = envConfig.replace(
+        pattern,
+        `window.__ENV__ = window.__ENV__ || {};\nwindow.__ENV__.SUPABASE_URL = "${supabaseUrl}";\nwindow.__ENV__.SUPABASE_ANON_KEY = "${supabaseAnonKey}";`
+      );
+    } else {
+      // Caso contrário, buscar qualquer definição de window.__ENV__ e substituir
+      envConfig = envConfig.replace(
+        /window\.__ENV__\s*=\s*(\{[^}]*\}|window\.__ENV__\s*\|\|\s*\{\});/,
+        `window.__ENV__ = window.__ENV__ || {};\nwindow.__ENV__.SUPABASE_URL = "${supabaseUrl}";\nwindow.__ENV__.SUPABASE_ANON_KEY = "${supabaseAnonKey}";`
+      );
+    }
     
     // Salvando o arquivo atualizado
     fs.writeFileSync(ENV_CONFIG_PATH, envConfig);

@@ -4,43 +4,57 @@
 // AVISO: Este arquivo não deve conter credenciais reais em produção!
 // As variáveis de ambiente devem ser injetadas pelo processo de build da Vercel
 
-// Os valores abaixo serão substituídos automaticamente durante o build
-// Esta é uma abordagem segura que funciona com o sistema da Vercel
-window.__ENV__ = {
-  SUPABASE_URL: "%%SUPABASE_URL_PLACEHOLDER%%",
-  SUPABASE_ANON_KEY: "%%SUPABASE_ANON_KEY_PLACEHOLDER%%"
-};
+// Definir window.__ENV__ apenas se não existir (evita expor a estrutura)
+window.__ENV__ = window.__ENV__ || {};
 
+// Função para verificar e configurar as variáveis de ambiente
+function configurarVariaveisSupabase() {
+  // Função auxiliar para obter valor de variável de diversas fontes
+  function obterValor(metaName, envKey, placeholder) {
+    // 1. Verificar meta tag
+    const meta = document.querySelector(`meta[name="${metaName}"]`);
+    if (meta) {
+      const valor = meta.getAttribute('content');
+      // Garantir que o valor não é um placeholder (mantendo a verificação exata como antes)
+      if (valor && valor !== placeholder) {
+        return valor;
+      }
+    }
+    
+    // 2. Verificar window.__ENV__
+    return window.__ENV__ && window.__ENV__[envKey] ? window.__ENV__[envKey] : null;
+  }
+  
+  // Obter valores das variáveis de ambiente
+  const supabaseUrl = window.NEXT_PUBLIC_SUPABASE_URL || 
+                      obterValor('supabase-url', 'SUPABASE_URL', '%NEXT_PUBLIC_SUPABASE_URL%');
+  
+  const supabaseAnonKey = window.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+                          obterValor('supabase-anon-key', 'SUPABASE_ANON_KEY', '%NEXT_PUBLIC_SUPABASE_ANON_KEY%');
+  
+  // Atribuir valores encontrados às variáveis globais
+  if (supabaseUrl) {
+    window.NEXT_PUBLIC_SUPABASE_URL = supabaseUrl;
+  }
+  
+  if (supabaseAnonKey) {
+    window.NEXT_PUBLIC_SUPABASE_ANON_KEY = supabaseAnonKey;
+  }
+  
+  // Verificar configuração (sem expor as chaves)
+  const urlConfigurada = !!window.NEXT_PUBLIC_SUPABASE_URL;
+  const keyConfigurada = !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (urlConfigurada && keyConfigurada) {
+    console.log('✅ Variáveis do Supabase configuradas com sucesso no frontend!');
+  } else {
+    console.error('❌ ERRO: Falha ao configurar variáveis do Supabase no frontend!');
+    console.error(`URL configurada: ${urlConfigurada ? 'Sim' : 'Não'}`);
+    console.error(`Chave configurada: ${keyConfigurada ? 'Sim' : 'Não'}`);
+  }
+}
+
+// Executar a configuração apenas no navegador
 if (typeof window !== 'undefined') {
-  // Variáveis de ambiente da Vercel (adicionadas durante o build)
-  // Verificação e recuperação de valores
-  
-  // Para variável de URL do Supabase
-  if (!window.NEXT_PUBLIC_SUPABASE_URL) {
-    // Tentar obter do atributo data no HTML
-    const urlMeta = document.querySelector('meta[name="supabase-url"]');
-    if (urlMeta) {
-      window.NEXT_PUBLIC_SUPABASE_URL = urlMeta.getAttribute('content');
-    } else if (window.__ENV__ && window.__ENV__.SUPABASE_URL && 
-               window.__ENV__.SUPABASE_URL !== "%%SUPABASE_URL_PLACEHOLDER%%") {
-      // Usar valor substituído durante o build
-      window.NEXT_PUBLIC_SUPABASE_URL = window.__ENV__.SUPABASE_URL;
-    }
-  }
-  
-  // Para variável de chave anônima do Supabase
-  if (!window.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    // Tentar obter do atributo data no HTML
-    const keyMeta = document.querySelector('meta[name="supabase-anon-key"]');
-    if (keyMeta) {
-      window.NEXT_PUBLIC_SUPABASE_ANON_KEY = keyMeta.getAttribute('content');
-    } else if (window.__ENV__ && window.__ENV__.SUPABASE_ANON_KEY && 
-               window.__ENV__.SUPABASE_ANON_KEY !== "%%SUPABASE_ANON_KEY_PLACEHOLDER%%") {
-      // Usar valor substituído durante o build
-      window.NEXT_PUBLIC_SUPABASE_ANON_KEY = window.__ENV__.SUPABASE_ANON_KEY;
-    }
-  }
-  
-  // Verificar silenciosamente se as variáveis foram configuradas corretamente
-  // Não exibir informações sobre as variáveis no console para aumentar a segurança
+  configurarVariaveisSupabase();
 } 
