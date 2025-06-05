@@ -1,15 +1,19 @@
 import { supabase } from "../../lib/supabaseClient";
+import { withErrorHandling, successResponse, errorResponse } from "../../src/utils/apiResponse";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   try {
     // Este endpoint é apenas para testes em ambiente de desenvolvimento
     // Por segurança, verificar se estamos em desenvolvimento
     const isDev = process.env.NODE_ENV === 'development' || req.headers['x-vercel-env'] === 'development';
     if (!isDev && !req.query.force) {
-      return res.status(403).json({ 
-        error: 'Este endpoint só está disponível em ambiente de desenvolvimento',
-        tip: 'Adicione ?force=true se realmente quiser forçar a execução em produção'
-      });
+      return errorResponse(
+        res, 
+        403, 
+        'Este endpoint só está disponível em ambiente de desenvolvimento',
+        'Acesso não autorizado em produção',
+        { tip: 'Adicione ?force=true se realmente quiser forçar a execução em produção' }
+      );
     }
 
     // Obter informações sobre o sistema
@@ -137,8 +141,7 @@ export default async function handler(req, res) {
     }
 
     // Retornar diagnóstico
-    return res.status(200).json({
-      success: true,
+    return successResponse(res, 'Diagnóstico concluído com sucesso', {
       diagnostico,
       ajuda: {
         acoes_disponiveis: [
@@ -150,10 +153,9 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Erro no endpoint de debug:', error);
-    return res.status(500).json({ 
-      error: 'Erro interno do servidor', 
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+    return errorResponse(res, 500, 'Erro no diagnóstico', error);
   }
-} 
+}
+
+// Exportar o handler com o middleware de tratamento de erros
+export default withErrorHandling(handler); 

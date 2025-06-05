@@ -7,6 +7,32 @@
 // Definir window.__ENV__ apenas se não existir (evita expor a estrutura)
 window.__ENV__ = window.__ENV__ || {};
 
+// Função para verificar se estamos em ambiente de produção
+function isProduction() {
+  // Verificar se a URL atual contém 'localhost' ou é um ambiente de desenvolvimento
+  return !(
+    window.location.hostname.includes('localhost') || 
+    window.location.hostname.includes('127.0.0.1') ||
+    window.location.hostname.includes('.vercel.app') // ambientes de preview
+  );
+}
+
+// Função para log seguro (só mostra em desenvolvimento)
+function logSeguro(mensagem, ...args) {
+  if (!isProduction()) {
+    console.log(mensagem, ...args);
+  }
+}
+
+// Função para log de erro (mostrar versão simplificada em produção)
+function logErro(mensagem, ...args) {
+  if (isProduction()) {
+    console.error("Erro de configuração. Verifique as variáveis de ambiente.");
+  } else {
+    console.error(mensagem, ...args);
+  }
+}
+
 // Função para verificar e configurar as variáveis de ambiente
 function configurarVariaveisSupabase() {
   // Função auxiliar para obter valor de variável de diversas fontes
@@ -46,11 +72,11 @@ function configurarVariaveisSupabase() {
   const keyConfigurada = !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
   if (urlConfigurada && keyConfigurada) {
-    console.log('✅ Variáveis do Supabase configuradas com sucesso no frontend!');
+    logSeguro('✅ Variáveis do Supabase configuradas com sucesso no frontend!');
   } else {
-    console.error('❌ ERRO: Falha ao configurar variáveis do Supabase no frontend!');
-    console.error(`URL configurada: ${urlConfigurada ? 'Sim' : 'Não'}`);
-    console.error(`Chave configurada: ${keyConfigurada ? 'Sim' : 'Não'}`);
+    logErro('❌ ERRO: Falha ao configurar variáveis do Supabase no frontend!');
+    logErro(`URL configurada: ${urlConfigurada ? 'Sim' : 'Não'}`);
+    logErro(`Chave configurada: ${keyConfigurada ? 'Sim' : 'Não'}`);
   }
 }
 

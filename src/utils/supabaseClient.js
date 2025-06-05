@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import logger from './logger';
 
 // Usar variáveis de ambiente 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
@@ -11,8 +12,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
 
 // Verificar se as variáveis de ambiente estão configuradas
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('ERRO: Variáveis de ambiente do Supabase não configuradas corretamente.');
-  console.error('Por favor, configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no ambiente.');
+  logger.error('Variáveis de ambiente do Supabase não configuradas corretamente.');
+  logger.error('Por favor, configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no ambiente.');
 }
 
 // Criar e exportar o cliente Supabase
@@ -24,20 +25,20 @@ export async function testSupabaseConnection() {
     const { data, error } = await supabase.from('configuracoes').select('*').limit(1);
     
     if (error) {
-      console.error('SUPABASE TESTE CONEXÃO: Erro ao conectar', error);
+      logger.error('SUPABASE TESTE CONEXÃO: Erro ao conectar', error);
       return {
         success: false,
         error: error.message
       };
     }
     
-    console.log('SUPABASE TESTE CONEXÃO: Conexão bem sucedida');
+    logger.info('SUPABASE TESTE CONEXÃO: Conexão bem sucedida');
     return {
       success: true,
       data
     };
   } catch (err) {
-    console.error('SUPABASE TESTE CONEXÃO: Erro crítico', err);
+    logger.critical('SUPABASE TESTE CONEXÃO: Erro crítico', err);
     return {
       success: false,
       error: err.message

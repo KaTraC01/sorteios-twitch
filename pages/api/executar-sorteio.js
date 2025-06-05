@@ -1,10 +1,11 @@
 import { supabase } from "../../lib/supabaseClient";
 import { sanitizarEntrada } from '../../lib/supabaseClient';
+import { withErrorHandling, successResponse, errorResponse } from "../../src/utils/apiResponse";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Verificar se é uma chamada GET ou POST (aceita ambos)
   if (req.method !== 'GET' && req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+    return errorResponse(res, 405, 'Método não permitido', 'O método deve ser GET ou POST');
   }
 
   try {
@@ -23,25 +24,28 @@ export default async function handler(req, res) {
         
         if (oldError) {
           console.error('SORTEIO DEBUG: Erro com função alternativa:', oldError);
-          return res.status(500).json({ 
-            sucesso: false,
-            erro: `Erro em ambas as funções de sorteio. Último erro: ${oldError.message}`,
-            detalhes: oldError
-          });
+          return errorResponse(
+            res, 
+            500, 
+            'Não foi possível realizar o sorteio', 
+            `Erro em ambas as funções de sorteio. Último erro: ${oldError.message}`,
+            { detalhes: 'Todas as funções de sorteio falharam' }
+          );
         }
         
         console.log('SORTEIO DEBUG: Função alternativa executada com sucesso');
-        return res.status(200).json({
-          sucesso: true,
+        return successResponse(res, 'Sorteio realizado com sucesso (método alternativo)', {
           resultado: oldData,
           metodo: "alternativo"
         });
       } catch (fallbackError) {
         console.error('SORTEIO DEBUG: Erro completo no fallback:', fallbackError);
-        return res.status(500).json({ 
-          sucesso: false,
-          erro: `Todos os métodos de sorteio falharam. Último erro: ${fallbackError.message}`
-        });
+        return errorResponse(
+          res, 
+          500, 
+          'Falha no sorteio', 
+          `Todos os métodos de sorteio falharam. Último erro: ${fallbackError.message}`
+        );
       }
     }
     
@@ -81,16 +85,15 @@ export default async function handler(req, res) {
     }
     
     // Retornar o resultado do sorteio
-    return res.status(200).json({
-      sucesso: true,
+    return successResponse(res, 'Sorteio realizado com sucesso', {
       resultado: data,
       metodo: "seguro_v2"
     });
   } catch (error) {
     console.error('SORTEIO DEBUG: Erro inesperado no sorteio:', error);
-    return res.status(500).json({ 
-      sucesso: false,
-      erro: error.message
-    });
+    return errorResponse(res, 500, 'Erro ao realizar o sorteio', error);
   }
-} 
+}
+
+// Exportar o handler com o middleware de tratamento de erros
+export default withErrorHandling(handler); 

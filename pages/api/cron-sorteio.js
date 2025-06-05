@@ -1,11 +1,23 @@
 import { supabase } from "../../lib/supabaseClient";
+import { withErrorHandling, successResponse, errorResponse } from "../../src/utils/apiResponse";
+import logger from "../../src/utils/logger";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Verificar se a requisição é do cron job do Vercel
   const isVercelCron = req.headers?.authorization === `Bearer ${process.env.CRON_SECRET}`;
   
+  // Se não for uma requisição autorizada do cron
+  if (!isVercelCron) {
+    return errorResponse(
+      res, 
+      401, 
+      'Acesso não autorizado', 
+      'Este endpoint só pode ser acessado pelo cron job da Vercel'
+    );
+  }
+  
   try {
-    console.log("Cron job de sorteio iniciado");
+    logger.info("Cron job de sorteio iniciado");
     
     // Função para verificar e realizar o sorteio
     async function verificarERealizarSorteio() {
@@ -98,7 +110,7 @@ export default async function handler(req, res) {
         const { data, error } = await supabase.rpc('atualizar_metricas_resumo');
         
         if (error) {
-          console.error("Erro ao atualizar métricas resumidas:", error);
+          logger.error("Erro ao atualizar métricas resumidas:", error);
           throw error;
         }
         
@@ -114,7 +126,7 @@ export default async function handler(req, res) {
           mensagem: "Métricas de anúncios atualizadas com sucesso"
         };
       } catch (error) {
-        console.error("Erro na atualização de métricas:", error);
+        logger.error("Erro na atualização de métricas:", error);
         
         // Registrar erro em logs
         await supabase
@@ -145,13 +157,12 @@ export default async function handler(req, res) {
     // Atualizar métricas de anúncios após o sorteio
     const resultadoMetricas = await atualizarMetricasResumo();
       
-    return res.status(200).json({
-      success: true,
+    return successResponse(res, 'Cron job executado com sucesso', {
       resultado: resultado,
       metricas: resultadoMetricas
     });
   } catch (error) {
-    console.error("Erro no cron job de sorteio:", error);
+    logger.critical("Erro no cron job de sorteio:", error);
     
     // Registrar erro em logs
     await supabase
@@ -160,9 +171,9 @@ export default async function handler(req, res) {
         descricao: `ERRO no cron job: ${error.message}`
       }]);
       
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    return errorResponse(res, 500, 'Erro na execução do cron job', error);
   }
-} 
+}
+
+// Exportar o handler com o middleware de tratamento de erros
+export default withErrorHandling(handler); 
