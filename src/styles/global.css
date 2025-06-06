@@ -15,6 +15,8 @@ body {
   /* Garantir espaço para o anúncio fixo-inferior */
   padding-bottom: 90px;
   overflow-x: hidden;
+  position: relative; /* Adiciona posição relativa para servir como referência para elementos fixos */
+  min-height: 100vh; /* Garante que o body ocupe toda a altura da viewport */
 }
 
 /* Cores do tema */

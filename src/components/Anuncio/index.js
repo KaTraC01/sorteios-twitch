@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import './Anuncio.css';
 import AdTracker from '../AdTracker';
 
@@ -185,7 +186,7 @@ const Anuncio = ({
         );
       
       case 'tela-inteira':
-        return (
+        const anuncioTelaInteira = (
           <div className="anuncio-tela-inteira">
             <div className="anuncio-tela-inteira-container">
               {mostrarFechar && (
@@ -208,6 +209,12 @@ const Anuncio = ({
               </a>
             </div>
           </div>
+        );
+        
+        // Usar portal para montar diretamente no body, fora da hierarquia do DOM atual
+        return ReactDOM.createPortal(
+          anuncioTelaInteira,
+          document.body
         );
       
       case 'fixo-superior':
