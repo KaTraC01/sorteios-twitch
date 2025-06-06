@@ -4,7 +4,7 @@ import './AdTracker.css';
 
 // Detecção de ambiente de desenvolvimento
 const isDevelopment = process.env.NODE_ENV === 'development';
-const MIN_COMPONENT_LIFETIME = 500; // Tempo mínimo de vida do componente em ms
+const MIN_COMPONENT_LIFETIME = 200; // Mínimo de tempo (ms) para considerar componente montado (evitar StrictMode)
 // Flag global para rastrear se estamos em uma navegação/atualização de página
 let isNavigatingAway = false;
 
@@ -13,73 +13,92 @@ let eventsBuffer = [];
 let bufferTimer = null;
 const BUFFER_TIMEOUT = 10000; // 10 segundos
 const BUFFER_SIZE_LIMIT = 5; // Enviar após 5 eventos
-const BUFFER_STORAGE_KEY = 'pending_ad_events'; // Chave para localStorage
+const BUFFER_STORAGE_KEY = 'adtracker_events_buffer'; // Chave para localStorage
+const componentIds = {}; // Armazenar IDs dos componentes rastreados
 
 // Adicionar listener para quando a página for fechada
 if (typeof window !== 'undefined') {
+  // Função para enviar eventos usando o navigator.sendBeacon (funciona durante o fechamento da página)
+  const sendEventsByBeacon = (events) => {
+    if (!events || events.length === 0) {
+      return false;
+    }
+    
+    try {
+      // Obter a URL correta para a API do Supabase
+      const url = `${supabase.supabaseUrl}/rest/v1/rpc/inserir_eventos_anuncios_lote`;
+      
+      // Criar um objeto URLSearchParams para os parâmetros de consulta
+      const params = new URLSearchParams();
+      
+      // Adicionar a chave de API anônima como parâmetro de consulta
+      params.append('apikey', supabase.supabaseKey);
+      
+      // URL completa com parâmetros de consulta
+      const fullUrl = `${url}?${params.toString()}`;
+      
+      // Processar valores numéricos antes de enviar
+      const processedEvents = events.map(event => {
+        // Criar uma cópia para não alterar o original
+        const processedEvent = { ...event };
+        
+        // Garantir que tempo_exposto seja um número válido
+        if (processedEvent.tempo_exposto !== undefined) {
+          try {
+            // Forçar conversão para número
+            const tempNumber = Number(processedEvent.tempo_exposto);
+            if (isNaN(tempNumber)) {
+              processedEvent.tempo_exposto = 0;
+            } else {
+              // Arredondar para duas casas decimais
+              processedEvent.tempo_exposto = Math.round(tempNumber * 100) / 100;
+            }
+          } catch (e) {
+            processedEvent.tempo_exposto = 0;
+          }
+        } else {
+          processedEvent.tempo_exposto = 0;
+        }
+        
+        return processedEvent;
+      });
+      
+      // Criar um blob com os dados para enviar
+      const blob = new Blob([JSON.stringify({ eventos: processedEvents })], { 
+        type: 'application/json' 
+      });
+      
+      // Usar sendBeacon que foi projetado especificamente para este cenário
+      const result = navigator.sendBeacon(fullUrl, blob);
+      
+      console.log(`%c[AdTracker] ${result ? 'SUCESSO' : 'FALHA'} ao enviar ${events.length} eventos via sendBeacon`, 
+        result ? 'color: #4CAF50' : 'color: #F44336');
+      
+      return result;
+    } catch (error) {
+      console.error('%c[AdTracker] Erro ao enviar eventos via sendBeacon:', 'color: red', error);
+      return false;
+    }
+  };
+
   // Detectar quando o usuário está saindo da página ou recarregando
   window.addEventListener('beforeunload', () => {
     isNavigatingAway = true;
     
     if (eventsBuffer.length > 0) {
       try {
-        // Processar valores numéricos antes de salvar
-        const processedEvents = eventsBuffer.map(event => {
-          // Criar uma cópia para não alterar o original
-          const processedEvent = { ...event };
-          
-          // Garantir que tempo_exposto seja um número válido
-          if (processedEvent.tempo_exposto !== undefined) {
-            try {
-              // Forçar conversão para número
-              const tempNumber = Number(processedEvent.tempo_exposto);
-              if (isNaN(tempNumber)) {
-                processedEvent.tempo_exposto = 0;
-              } else {
-                // Arredondar para duas casas decimais
-                processedEvent.tempo_exposto = Math.round(tempNumber * 100) / 100;
-              }
-            } catch (e) {
-              processedEvent.tempo_exposto = 0;
-            }
-          } else {
-            processedEvent.tempo_exposto = 0;
-          }
-          
-          return processedEvent;
-        });
+        console.log(`%c[AdTracker] Fechamento de página detectado, enviando ${eventsBuffer.length} eventos pendentes`, 
+          'background: #FF5722; color: white; padding: 2px 5px; border-radius: 3px');
         
-        // Salvar eventos pendentes no localStorage
-        console.log(`Salvando ${processedEvents.length} eventos pendentes antes de fechar a página`);
-        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(processedEvents));
+        // Salvar eventos pendentes no localStorage como backup
+        localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
         
-        // Tentar enviar com sendBeacon se disponível (mais confiável)
+        // Tentar enviar imediatamente usando sendBeacon
         if (navigator.sendBeacon) {
-          // Formato correto: enviar o objeto como ele é esperado pela função RPC
-          const blob = new Blob([JSON.stringify({
-            eventos: processedEvents // Enviar array processado
-          })], {
-            type: 'application/json'
-          });
-          
-          // Obter a URL correta para a API do Supabase
-          const url = `${supabase.supabaseUrl}/rest/v1/rpc/inserir_eventos_anuncios_lote`;
-          
-          // Criar um objeto URLSearchParams para os parâmetros de consulta
-          const params = new URLSearchParams();
-          
-          // Adicionar a chave de API anônima como parâmetro de consulta
-          params.append('apikey', supabase.supabaseKey);
-          
-          // URL completa com parâmetros de consulta
-          const fullUrl = `${url}?${params.toString()}`;
-          
-          // Enviar a requisição via sendBeacon
-          const enviado = navigator.sendBeacon(fullUrl, blob);
-          console.log('Eventos enviados via sendBeacon:', enviado);
+          sendEventsByBeacon(eventsBuffer);
         }
       } catch (e) {
-        console.error('Erro ao salvar eventos pendentes:', e);
+        console.error('Erro ao processar eventos no fechamento da página:', e);
       }
     }
   });
@@ -725,20 +744,59 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           window.next.router.events.on('routeChangeStart', routeChangeStart);
         }
       }
+      
+      // Adicionar tratamento para o fechamento da página
+      const handleBeforeUnload = () => {
+        console.log(`%c[AdTracker] Fechamento de página detectado, enviando dados pendentes`, 'background: #FF5722; color: white; padding: 2px 5px; border-radius: 3px');
+        
+        // Se o anúncio estiver visível, calcular o tempo atual de exposição
+        if (isVisible && visibleStartTime) {
+          const timeVisible = (Date.now() - visibleStartTime) / 1000;
+          const roundedTime = Math.round(timeVisible * 100) / 100;
+          
+          // Apenas registrar se o tempo for suficiente
+          if (roundedTime >= 0.5) {
+            const eventData = {
+              anuncio_id: anuncioId,
+              tipo_anuncio: tipoAnuncio,
+              pagina: paginaId || window.location.pathname || '/',
+              tipo_evento: 'impressao',
+              tempo_exposto: roundedTime,
+              visivel: true,
+              dispositivo: getDeviceInfo(),
+              pais: locationInfo.pais || 'Desconhecido',
+              regiao: locationInfo.regiao || 'Desconhecido',
+              session_id: sessionId.current,
+              timestamp: new Date().toISOString()
+            };
+            
+            // Adicionar ao buffer
+            eventsBuffer.push(eventData);
+          }
+        }
+        
+        // Enviar todos os eventos pendentes usando a função centralizada
+        if (eventsBuffer.length > 0 && navigator.sendBeacon) {
+          sendEventsByBeacon(eventsBuffer);
+        }
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
     }
     
     return () => {
       // Limpar listeners na desmontagem
       if (typeof window !== 'undefined') {
         window.removeEventListener('popstate', handleRouteChange);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
         
         // Limpar evento do Next.js se existir
         if (window.next && window.next.router && typeof window.next.router.events?.off === 'function') {
-          window.next.router.events.off('routeChangeStart', handleRouteChange);
+          window.next.router.events.off('routeChangeStart', routeChangeStart);
         }
       }
     };
-  }, [anuncioId, componentIdRef]);
+  }, [anuncioId, tipoAnuncio, paginaId, componentIdRef, isVisible, visibleStartTime, locationInfo, eventsBuffer]);
   
   // Remover o bloqueio global de isNavigatingAway após um curto período
   // Isso permite que navegações subsequentes sejam rastreadas corretamente
