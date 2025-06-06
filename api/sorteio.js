@@ -4,6 +4,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { sanitizarEntrada } from '../lib/supabaseClient';
 import logger from '../lib/logger';
+import { errorResponse, successResponse, withErrorHandling } from '../lib/apiResponse';
 
 // Configuração do Supabase
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -25,7 +26,7 @@ if (SUPABASE_SERVICE_KEY) {
 // Criando o cliente Supabase com a chave de serviço para acesso total
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   try {
     logger.api('sorteio', `Iniciando função às ${new Date().toISOString()}`);
     logger.debug(`Método ${req.method}, Body: ${JSON.stringify(req.body || {})}`);
@@ -35,13 +36,13 @@ export default async function handler(req, res) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logger.warn('Erro de autorização - header inválido ou ausente');
-      return res.status(401).json({ error: 'Não autorizado' });
+      return errorResponse(res, 401, 'Não autorizado', 'Header de autorização inválido ou ausente');
     }
     
     const token = authHeader.split(' ')[1];
     if (token !== process.env.API_SECRET_KEY) {
       logger.warn('Erro de autorização - token inválido');
-      return res.status(401).json({ error: 'Token inválido' });
+      return errorResponse(res, 401, 'Token inválido', 'O token fornecido não corresponde ao esperado');
     }
     logger.debug('Autorização validada com sucesso');
 
@@ -55,18 +56,18 @@ export default async function handler(req, res) {
         logger.info('Iniciando execução do sorteio');
         const resultado = await realizarSorteio();
         logger.info(`Sorteio finalizado com sucesso, vencedor: ${resultado.vencedor?.nome || 'N/A'}`);
-        return res.status(200).json({ success: true, message: 'Sorteio realizado com sucesso', resultado });
+        return successResponse(res, 'Sorteio realizado com sucesso', { resultado });
       } 
       else if (action === 'resetar') {
         logger.info('Iniciando reset da lista');
         await resetarLista();
         logger.info('Lista resetada com sucesso');
-        return res.status(200).json({ success: true, message: 'Lista resetada com sucesso' });
+        return successResponse(res, 'Lista resetada com sucesso');
       }
       else if (action === 'congelar') {
         // A funcionalidade de congelar foi removida do projeto
         logger.debug('Ação "congelar" foi solicitada, mas esta funcionalidade foi desativada');
-        return res.status(200).json({ success: true, message: 'Função de congelamento foi desativada' });
+        return successResponse(res, 'Função de congelamento foi desativada');
       }
       else if (action === 'diagnostico') {
         // Nova ação para diagnóstico do cron job
@@ -103,24 +104,20 @@ export default async function handler(req, res) {
         };
         
         logger.debug('Diagnóstico concluído:', diagnosticoInfo);
-        return res.status(200).json({ 
-          success: true, 
-          message: 'Diagnóstico realizado com sucesso', 
-          diagnostico: diagnosticoInfo 
-        });
+        return successResponse(res, 'Diagnóstico realizado com sucesso', { diagnostico: diagnosticoInfo });
       }
       else {
         logger.warn(`Ação inválida recebida: "${action}"`);
-        return res.status(400).json({ error: 'Ação inválida' });
+        return errorResponse(res, 400, 'Ação inválida', `A ação '${action}' não é reconhecida`);
       }
     } else {
       // Se não for POST, retornar erro
       logger.warn(`Método inválido: ${req.method}`);
-      return res.status(405).json({ error: 'Método não permitido' });
+      return errorResponse(res, 405, 'Método não permitido', `O método ${req.method} não é suportado por esta API`);
     }
   } catch (error) {
     logger.critical('ERRO CRÍTICO:', error);
-    return res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
+    return errorResponse(res, 500, 'Ocorreu um erro interno no servidor', error);
   } finally {
     logger.api('sorteio', `Função finalizada às ${new Date().toISOString()}`);
   }
@@ -151,8 +148,8 @@ async function realizarSorteio() {
   const vencedor = participantes[vencedorIndex];
   
   // Sanitizar dados do vencedor antes de salvar
-  const nomeSanitizado = sanitizarEntrada(vencedor.nome_twitch);
-  const streamerSanitizado = sanitizarEntrada(vencedor.streamer_escolhido);
+  const nomeSanitizado = sanitizarEntrada(vencedor.nome_twitch || "");
+  const streamerSanitizado = sanitizarEntrada(vencedor.streamer_escolhido || "");
   
   logger.info(`Vencedor sorteado: ${nomeSanitizado} (índice ${vencedorIndex})`);
   
@@ -190,8 +187,8 @@ async function realizarSorteio() {
     // Prepara os dados dos participantes para inserção no histórico
     const participantesHistorico = participantes.map((participante, index) => ({
       sorteio_id: sorteioId,
-      nome_twitch: sanitizarEntrada(participante.nome_twitch),
-      streamer_escolhido: sanitizarEntrada(participante.streamer_escolhido),
+      nome_twitch: sanitizarEntrada(participante.nome_twitch || ""),
+      streamer_escolhido: sanitizarEntrada(participante.streamer_escolhido || ""),
       posicao_original: index + 1 // Adicionando a posição original (começando em 1)
     }));
     
@@ -249,5 +246,5 @@ async function resetarLista() {
   return true;
 }
 
-// A função congelarLista() foi removida pois não é mais necessária
-// async function congelarLista() { ... } - REMOVIDA 
+// Exportar o handler com o middleware de tratamento de erros
+export default withErrorHandling(handler); 

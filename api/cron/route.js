@@ -1,7 +1,8 @@
 import fetch from 'node-fetch';
 import logger from '../../lib/logger';
+import { errorResponse, successResponse, withErrorHandling } from '../../lib/apiResponse';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   try {
     // Log detalhado de horários para debug (apenas em desenvolvimento)
     const agora = new Date();
@@ -13,12 +14,12 @@ export default async function handler(req, res) {
     // Verificar se API_SECRET_KEY está configurada
     if (!process.env.API_SECRET_KEY) {
       logger.critical('A variável de ambiente API_SECRET_KEY não está configurada.');
-      return res.status(500).json({ error: 'Configuração do servidor incompleta: API_SECRET_KEY não configurada' });
+      return errorResponse(res, 500, 'Configuração do servidor incompleta', 'API_SECRET_KEY não configurada');
     }
     
     if (!process.env.BASE_URL) {
       logger.critical('A variável de ambiente BASE_URL não está configurada.');
-      return res.status(500).json({ error: 'Configuração do servidor incompleta: BASE_URL não configurada' });
+      return errorResponse(res, 500, 'Configuração do servidor incompleta', 'BASE_URL não configurada');
     }
     
     const baseUrl = process.env.BASE_URL;
@@ -80,11 +81,7 @@ export default async function handler(req, res) {
     // - Limpeza da tabela de 'participantes_ativos'
     
     logger.info('Processo de sorteio concluído com sucesso');
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Sorteio realizado com sucesso', 
-      data: resultadoSorteio
-    });
+    return successResponse(res, 'Sorteio realizado com sucesso', resultadoSorteio);
 
   } catch (error) {
     logger.critical('ERRO CRÍTICO no cron job de sorteio:', error);
@@ -104,12 +101,11 @@ export default async function handler(req, res) {
       logger.error('Erro ao registrar logs:', logError);
     }
     
-    return res.status(500).json({ 
-      error: 'Erro interno do servidor', 
-      details: error.message, 
-      timestamp: new Date().toISOString() 
-    });
+    return errorResponse(res, 500, 'Erro interno do servidor', error);
   } finally {
     logger.api('cron-sorteio', `Função finalizada`);
   }
-} 
+}
+
+// Exportar o handler com o middleware de tratamento de erros
+export default withErrorHandling(handler); 
