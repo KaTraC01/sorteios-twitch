@@ -25,6 +25,11 @@ if (typeof window !== 'undefined') {
     }
     
     try {
+      if (typeof navigator.sendBeacon !== 'function') {
+        console.error('%c[AdTracker] API sendBeacon não disponível neste navegador', 'color: red');
+        return false;
+      }
+
       // Obter a URL correta para a API do Supabase
       const url = `${supabase.supabaseUrl}/rest/v1/rpc/inserir_eventos_anuncios_lote`;
       
@@ -82,7 +87,7 @@ if (typeof window !== 'undefined') {
   };
 
   // Detectar quando o usuário está saindo da página ou recarregando
-  window.addEventListener('beforeunload', () => {
+  const globalBeforeUnloadHandler = () => {
     isNavigatingAway = true;
     
     if (eventsBuffer.length > 0) {
@@ -94,14 +99,18 @@ if (typeof window !== 'undefined') {
         localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
         
         // Tentar enviar imediatamente usando sendBeacon
-        if (navigator.sendBeacon) {
-          sendEventsByBeacon(eventsBuffer);
+        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+          // Usar o escopo global
+          window.sendEventsByBeacon ? window.sendEventsByBeacon(eventsBuffer) : 
+            console.error('%c[AdTracker] Função sendEventsByBeacon não disponível no escopo global', 'color: red');
         }
       } catch (e) {
         console.error('Erro ao processar eventos no fechamento da página:', e);
       }
     }
-  });
+  };
+  
+  window.addEventListener('beforeunload', globalBeforeUnloadHandler);
   
   // Detectar quando o usuário está navegando para outra página (usando history API)
   window.addEventListener('popstate', () => {
@@ -134,6 +143,77 @@ if (typeof window !== 'undefined') {
     };
   } catch (e) {
     console.error('%c[AdTracker] Erro ao configurar detecção de navegação SPA:', 'color: red', e);
+  }
+
+  // Expor a função no escopo global para que possa ser acessada por todos os componentes
+  if (typeof window !== 'undefined') {
+    // Definir a função no escopo global, garantindo que estará disponível para todos
+    window.sendEventsByBeacon = function(events) {
+      if (!events || events.length === 0) {
+        return false;
+      }
+      
+      try {
+        if (typeof navigator.sendBeacon !== 'function') {
+          console.error('%c[AdTracker] API sendBeacon não disponível neste navegador', 'color: red');
+          return false;
+        }
+
+        // Obter a URL correta para a API do Supabase
+        const url = `${supabase.supabaseUrl}/rest/v1/rpc/inserir_eventos_anuncios_lote`;
+        
+        // Criar um objeto URLSearchParams para os parâmetros de consulta
+        const params = new URLSearchParams();
+        
+        // Adicionar a chave de API anônima como parâmetro de consulta
+        params.append('apikey', supabase.supabaseKey);
+        
+        // URL completa com parâmetros de consulta
+        const fullUrl = `${url}?${params.toString()}`;
+        
+        // Processar valores numéricos antes de enviar
+        const processedEvents = events.map(event => {
+          // Criar uma cópia para não alterar o original
+          const processedEvent = { ...event };
+          
+          // Garantir que tempo_exposto seja um número válido
+          if (processedEvent.tempo_exposto !== undefined) {
+            try {
+              // Forçar conversão para número
+              const tempNumber = Number(processedEvent.tempo_exposto);
+              if (isNaN(tempNumber)) {
+                processedEvent.tempo_exposto = 0;
+              } else {
+                // Arredondar para duas casas decimais
+                processedEvent.tempo_exposto = Math.round(tempNumber * 100) / 100;
+              }
+            } catch (e) {
+              processedEvent.tempo_exposto = 0;
+            }
+          } else {
+            processedEvent.tempo_exposto = 0;
+          }
+          
+          return processedEvent;
+        });
+        
+        // Criar um blob com os dados para enviar
+        const blob = new Blob([JSON.stringify({ eventos: processedEvents })], { 
+          type: 'application/json' 
+        });
+        
+        // Usar sendBeacon que foi projetado especificamente para este cenário
+        const result = navigator.sendBeacon(fullUrl, blob);
+        
+        console.log(`%c[AdTracker] ${result ? 'SUCESSO' : 'FALHA'} ao enviar ${events.length} eventos via sendBeacon`, 
+          result ? 'color: #4CAF50' : 'color: #F44336');
+        
+        return result;
+      } catch (error) {
+        console.error('%c[AdTracker] Erro ao enviar eventos via sendBeacon:', 'color: red', error);
+        return false;
+      }
+    };
   }
 }
 
@@ -776,26 +856,32 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         }
         
         // Enviar todos os eventos pendentes usando a função centralizada
-        if (eventsBuffer.length > 0 && navigator.sendBeacon) {
-          sendEventsByBeacon(eventsBuffer);
+        if (eventsBuffer.length > 0 && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+          // Usar o escopo global
+          window.sendEventsByBeacon ? window.sendEventsByBeacon(eventsBuffer) : 
+            console.error('%c[AdTracker] Função sendEventsByBeacon não disponível no escopo global', 'color: red');
         }
       };
       
       window.addEventListener('beforeunload', handleBeforeUnload);
+    
+      // Limpeza ao desmontar completamente
+      return () => {
+        // Limpar listeners na desmontagem
+        if (typeof window !== 'undefined') {
+          window.removeEventListener('popstate', handleRouteChange);
+          window.removeEventListener('beforeunload', handleBeforeUnload);
+          
+          // Limpar evento do Next.js se existir
+          if (window.next && window.next.router && typeof window.next.router.events?.off === 'function') {
+            window.next.router.events.off('routeChangeStart', routeChangeStart);
+          }
+        }
+      };
     }
     
-    return () => {
-      // Limpar listeners na desmontagem
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('popstate', handleRouteChange);
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        
-        // Limpar evento do Next.js se existir
-        if (window.next && window.next.router && typeof window.next.router.events?.off === 'function') {
-          window.next.router.events.off('routeChangeStart', routeChangeStart);
-        }
-      }
-    };
+    // Se window não estiver definido, retornar uma função de limpeza vazia
+    return () => {};
   }, [anuncioId, tipoAnuncio, paginaId, componentIdRef, isVisible, visibleStartTime, locationInfo, eventsBuffer]);
   
   // Remover o bloqueio global de isNavigatingAway após um curto período
@@ -1535,4 +1621,4 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   );
 };
 
-export default AdTracker; 
+export default AdTracker;
