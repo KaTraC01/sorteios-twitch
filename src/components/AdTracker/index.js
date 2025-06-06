@@ -1067,12 +1067,16 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                 hasReportedExposure = true;
                 hasReportedRef.current = true;
                 
+                // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
+                // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
+                const tempoAjustado = Math.max(5.0, newValue);
+                
                 registerEvent({
                   anuncio_id: anuncioId,
                   tipo_anuncio: tipoAnuncio,
                   pagina: pagina,
                   tipo_evento: 'impressao',
-                  tempo_exposto: Math.round(newValue * 100) / 100,
+                  tempo_exposto: Math.round(tempoAjustado * 100) / 100,
                   visivel: true,
                   dispositivo: getDeviceInfo(),
                   pais: locationInfo.pais,
@@ -1106,12 +1110,16 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             hasReportedExposure = true;
             hasReportedRef.current = true;
             
+            // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
+            // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
+            const tempoAjustado = Math.max(5.0, roundedTime);
+            
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
               tipo_evento: 'impressao',
-              tempo_exposto: roundedTime,
+              tempo_exposto: tempoAjustado,
               visivel: true,
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
@@ -1199,12 +1207,16 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                   hasReportedExposure = true;
                   hasReportedRef.current = true;
                   
+                  // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
+                  // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
+                  const tempoAjustado = Math.max(5.0, newValue);
+                  
                   registerEvent({
                     anuncio_id: anuncioId,
                     tipo_anuncio: tipoAnuncio,
                     pagina: pagina,
                     tipo_evento: 'impressao',
-                    tempo_exposto: Math.round(newValue * 100) / 100,
+                    tempo_exposto: Math.round(tempoAjustado * 100) / 100,
                     visivel: true,
                     dispositivo: getDeviceInfo(),
                     pais: locationInfo.pais,
@@ -1247,7 +1259,11 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             // Isso é necessário porque o banco de dados tem uma constraint que restringe os tipos de evento válidos
             const tipoEvento = 'impressao';
             
-            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando ${tipoEvento} com tempo=${roundedTime}`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+            // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
+            // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
+            const tempoAjustado = Math.max(5.0, roundedTime);
+            
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando ${tipoEvento} com tempo ajustado=${tempoAjustado.toFixed(2)}s (original=${roundedTime.toFixed(2)}s)`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
             
             // Marcar que já enviamos pelo menos um evento
             hasReportedExposure = true;
@@ -1258,7 +1274,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
               tipo_evento: tipoEvento,
-              tempo_exposto: roundedTime,
+              tempo_exposto: tempoAjustado,
               visivel: false, // Agora está invisível
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
@@ -1322,32 +1338,21 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const pagina = paginaId || currentPath || '/';
     
-    // Calcular o tempo atual de exposição
-    let tempoAtual;
+    // Calcular o tempo decorrido desde a montagem até o clique (normalmente menor)
+    // Para cliques, queremos registrar o tempo de reação, não o tempo total de exposição
+    const tempoReacao = (Date.now() - mountTimeRef.current) / 1000;
     
-    if (tipoAnuncio === 'tela-inteira') {
-      // Para anúncios de tela inteira, calcular desde a montagem
-      tempoAtual = (Date.now() - mountTimeRef.current) / 1000;
-      console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo de exposição para tela inteira calculado desde a montagem: ${tempoAtual.toFixed(2)}s`, 'color: #FF9800');
-    } else if (visibleStartTime) {
-      // Para outros anúncios, calcular desde que ficou visível
-      tempoAtual = (Date.now() - visibleStartTime) / 1000;
-    } else {
-      // Fallback para o valor do estado
-      tempoAtual = exposureTime;
-    }
+    // Garantir que o tempo seja um número válido e arredondado (mas não acumular tempo total)
+    const tempoArredondado = Math.max(0.1, Math.round(tempoReacao * 100) / 100);
     
-    // Garantir que o tempo seja um número válido e arredondado
-    tempoAtual = Math.max(0.1, Math.round(tempoAtual * 100) / 100);
-    
-    console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): CLIQUE detectado! Tempo exposto: ${tempoAtual.toFixed(2)}s`, 'background: #E91E63; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
+    console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): CLIQUE detectado! Tempo de reação: ${tempoArredondado.toFixed(2)}s`, 'background: #E91E63; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
     
     registerEvent({
       anuncio_id: anuncioId,
       tipo_anuncio: tipoAnuncio,
       pagina: pagina,
       tipo_evento: 'clique',
-      tempo_exposto: tempoAtual,
+      tempo_exposto: tempoArredondado, // Usar o tempo de reação para cliques
       visivel: true,
       dispositivo: getDeviceInfo(),
       pais: locationInfo.pais,
