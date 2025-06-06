@@ -819,30 +819,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                   exposureTimerRef.current = setInterval(() => {
                     setExposureTime(prev => {
                       const newValue = prev + 1;
-                      if (newValue >= 1 && !hasReportedRef.current) {
-                        // Registrar apenas após pelo menos 1 segundo de visibilidade real
-                        console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s), registrando impressão`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
-                        
-                        hasReportedRef.current = true;
-                        
-                        // Registrar o evento com tempo correto
-                        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-                        const pagina = paginaId || currentPath || '/';
-                        
-                        registerEvent({
-                          anuncio_id: anuncioId,
-                          tipo_anuncio: tipoAnuncio,
-                          pagina: pagina,
-                          tipo_evento: 'impressao',
-                          tempo_exposto: newValue,
-                          visivel: true,
-                          dispositivo: getDeviceInfo(),
-                          pais: locationInfo.pais,
-                          regiao: locationInfo.regiao,
-                          session_id: sessionId.current,
-                          timestamp: new Date().toISOString()
-                        });
-                      }
+                      // Removido o registro automático após 1 segundo
+                      // Agora apenas incrementa o contador, sem registrar evento
                       return newValue;
                     });
                   }, 1000);
@@ -935,7 +913,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
         flushEventsBuffer();
       }
     };
-  }, []);
+  }, [anuncioId, tipoAnuncio, paginaId]);
   
   // Efeito para obter localização - executa apenas uma vez
   useEffect(() => {
