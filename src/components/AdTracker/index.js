@@ -869,8 +869,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             finalVisibleTime = exposureTime;
           }
           
-          // Garantir valor mínimo e arredondar
-          finalVisibleTime = Math.max(0.5, Math.round(finalVisibleTime * 100) / 100);
+          // Usar apenas o tempo real sem valor mínimo forçado
+          finalVisibleTime = Math.round(finalVisibleTime * 100) / 100;
           
           // Marcar que já reportamos para este anúncio
           hasReportedRef.current = true;
@@ -1039,28 +1039,12 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
               const timeThreshold = isFixedAd ? 0.5 : MIN_VISIBLE_TIME;
               
               if (newValue >= timeThreshold && !hasReportedExposure && !hasReportedRef.current) {
-                console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s), registrando impressão`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+                console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s)`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
                 
-                // Marcar que já reportamos
+                // Apenas marcar que o tempo mínimo foi atingido, mas NÃO registrar o evento agora
+                // O registro será feito apenas quando o anúncio sair da área visível ou o componente for desmontado
                 hasReportedExposure = true;
                 hasReportedRef.current = true;
-                
-                // Usar o tempo real medido, sem valores mínimos fixos
-                const tempoReal = Math.round(newValue * 100) / 100;
-                
-                registerEvent({
-                  anuncio_id: anuncioId,
-                  tipo_anuncio: tipoAnuncio,
-                  pagina: pagina,
-                  tipo_evento: 'impressao',
-                  tempo_exposto: tempoReal,
-                  visivel: true,
-                  dispositivo: getDeviceInfo(),
-                  pais: locationInfo.pais,
-                  regiao: locationInfo.regiao,
-                  session_id: sessionId.current,
-                  timestamp: new Date().toISOString()
-                });
               }
               
               return newValue;
@@ -1175,28 +1159,12 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                 const timeThreshold = isFixedAd ? 0.5 : MIN_VISIBLE_TIME;
                 
                 if (newValue >= timeThreshold && !hasReportedExposure && !hasReportedRef.current) {
-                  console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s), registrando impressão`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+                  console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Tempo mínimo atingido (${newValue}s)`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
                   
-                  // Marcar que já reportamos
+                  // Apenas marcar que o tempo mínimo foi atingido, mas NÃO registrar o evento agora
+                  // O registro será feito apenas quando o anúncio sair da área visível ou o componente for desmontado
                   hasReportedExposure = true;
                   hasReportedRef.current = true;
-                  
-                  // Usar o tempo real medido, sem valores mínimos fixos
-                  const tempoReal = Math.round(newValue * 100) / 100;
-                  
-                  registerEvent({
-                    anuncio_id: anuncioId,
-                    tipo_anuncio: tipoAnuncio,
-                    pagina: pagina,
-                    tipo_evento: 'impressao',
-                    tempo_exposto: tempoReal,
-                    visivel: true,
-                    dispositivo: getDeviceInfo(),
-                    pais: locationInfo.pais,
-                    regiao: locationInfo.regiao,
-                    session_id: sessionId.current,
-                    timestamp: new Date().toISOString()
-                  });
                 }
                 
                 return newValue;
