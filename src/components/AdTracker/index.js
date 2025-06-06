@@ -596,7 +596,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
         
         // Corrigir tempo_exposto
         if (typeof evento.tempo_exposto !== 'number' || isNaN(evento.tempo_exposto)) {
-          evento.tempo_exposto = 1.0;
+          evento.tempo_exposto = 0.1; // Usar um valor inicial pequeno em vez de fixo
           modificado = true;
         }
         
@@ -1067,16 +1067,15 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                 hasReportedExposure = true;
                 hasReportedRef.current = true;
                 
-                // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
-                // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
-                const tempoAjustado = Math.max(5.0, newValue);
+                // Usar o tempo real medido, sem valores mínimos fixos
+                const tempoReal = Math.round(newValue * 100) / 100;
                 
                 registerEvent({
                   anuncio_id: anuncioId,
                   tipo_anuncio: tipoAnuncio,
                   pagina: pagina,
                   tipo_evento: 'impressao',
-                  tempo_exposto: Math.round(tempoAjustado * 100) / 100,
+                  tempo_exposto: tempoReal,
                   visivel: true,
                   dispositivo: getDeviceInfo(),
                   pais: locationInfo.pais,
@@ -1110,16 +1109,13 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             hasReportedExposure = true;
             hasReportedRef.current = true;
             
-            // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
-            // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
-            const tempoAjustado = Math.max(5.0, roundedTime);
-            
+            // Usar o tempo real medido sem valores mínimos fixos
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
               tipo_evento: 'impressao',
-              tempo_exposto: tempoAjustado,
+              tempo_exposto: roundedTime,
               visivel: true,
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,
@@ -1207,16 +1203,15 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
                   hasReportedExposure = true;
                   hasReportedRef.current = true;
                   
-                  // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
-                  // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
-                  const tempoAjustado = Math.max(5.0, newValue);
+                  // Usar o tempo real medido, sem valores mínimos fixos
+                  const tempoReal = Math.round(newValue * 100) / 100;
                   
                   registerEvent({
                     anuncio_id: anuncioId,
                     tipo_anuncio: tipoAnuncio,
                     pagina: pagina,
                     tipo_evento: 'impressao',
-                    tempo_exposto: Math.round(tempoAjustado * 100) / 100,
+                    tempo_exposto: tempoReal,
                     visivel: true,
                     dispositivo: getDeviceInfo(),
                     pais: locationInfo.pais,
@@ -1259,11 +1254,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             // Isso é necessário porque o banco de dados tem uma constraint que restringe os tipos de evento válidos
             const tipoEvento = 'impressao';
             
-            // Garantir que o tempo registrado seja maior que o mínimo esperado para impressões (5 segundos)
-            // Isso ajuda a corrigir o problema de tempos invertidos entre cliques e impressões
-            const tempoAjustado = Math.max(5.0, roundedTime);
-            
-            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando ${tipoEvento} com tempo ajustado=${tempoAjustado.toFixed(2)}s (original=${roundedTime.toFixed(2)}s)`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
+            // Usar o tempo real medido, sem valores mínimos fixos
+            console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando ${tipoEvento} com tempo real=${roundedTime.toFixed(2)}s`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
             
             // Marcar que já enviamos pelo menos um evento
             hasReportedExposure = true;
@@ -1274,7 +1266,7 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
               tipo_evento: tipoEvento,
-              tempo_exposto: tempoAjustado,
+              tempo_exposto: roundedTime,
               visivel: false, // Agora está invisível
               dispositivo: getDeviceInfo(),
               pais: locationInfo.pais,

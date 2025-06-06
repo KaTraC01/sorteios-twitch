@@ -502,7 +502,7 @@ const Anuncio = ({
               tipo_anuncio: tipo,
               pagina: pageId,
               tipo_evento: 'impressao',
-              tempo_exposto: 1.0,
+              tempo_exposto: 0.1, // Tempo inicial mínimo, será atualizado quando o usuário interagir ou o anúncio desaparecer
               visivel: true,
               dispositivo: getDeviceInfo(),
               pais: 'Brasil',
