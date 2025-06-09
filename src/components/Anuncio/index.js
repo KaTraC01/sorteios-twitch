@@ -471,14 +471,14 @@ const Anuncio = ({
         return renderConteudoAnuncio();
       }
       
-      // Para anúncios fixo-inferior, não usar o AdTracker para garantir exibição correta
-      if (tipo === 'fixo-inferior') {
-        // Removemos o registro automático de impressão
-        // O registro só ocorrerá quando houver interação real do usuário
-        
-        // Renderizar sem o AdTracker
-        return renderConteudoAnuncio();
-      }
+      // Comentado para permitir que o anúncio fixo-inferior também use o AdTracker
+      // if (tipo === 'fixo-inferior') {
+      //   // Removemos o registro automático de impressão
+      //   // O registro só ocorrerá quando houver interação real do usuário
+      //   
+      //   // Renderizar sem o AdTracker
+      //   return renderConteudoAnuncio();
+      // }
       
       // Todos os dados necessários estão disponíveis, então renderizar com o AdTracker
       return (
