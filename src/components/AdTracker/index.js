@@ -285,7 +285,21 @@ const registerEvent = async (eventData) => {
     }
   }
 
-  console.log(`%c[AdTracker] Registrando evento: ${eventData.tipo_evento} para ${eventData.tipo_anuncio} (${eventData.anuncio_id})`, 
+  // CORREÇÃO: Inverter tipo_evento para anúncios tela-inteira
+  let tipoEvento = eventData.tipo_evento;
+  if (eventData.tipo_anuncio === 'tela-inteira') {
+    if (tipoEvento === 'clique') {
+      tipoEvento = 'impressao';
+      console.log(`%c[AdTracker] Invertendo tipo_evento para tela-inteira: clique -> impressao`, 
+        'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+    } else if (tipoEvento === 'impressao') {
+      tipoEvento = 'clique';
+      console.log(`%c[AdTracker] Invertendo tipo_evento para tela-inteira: impressao -> clique`, 
+        'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+    }
+  }
+
+  console.log(`%c[AdTracker] Registrando evento: ${tipoEvento} para ${eventData.tipo_anuncio} (${eventData.anuncio_id})`, 
     'background: #2196F3; color: white; padding: 3px 5px; border-radius: 3px');
   console.log(`%c[AdTracker] tempo_exposto: ${tempoExposto}s, tipo: ${typeof tempoExposto}`, 'color: #03A9F4');
   
@@ -294,7 +308,7 @@ const registerEvent = async (eventData) => {
     anuncio_id: eventData.anuncio_id,
     tipo_anuncio: eventData.tipo_anuncio,
     pagina: eventData.pagina,
-    tipo_evento: eventData.tipo_evento,
+    tipo_evento: tipoEvento, // Usar o valor possivelmente invertido
     tempo_exposto: tempoExposto, // Usar a variável tratada
     visivel: eventData.visivel !== undefined ? eventData.visivel : true, // Padrão é true agora
     dispositivo: eventData.dispositivo || getDeviceInfo(),
@@ -432,6 +446,19 @@ const flushEventsBuffer = async () => {
     if (processedEvent.tipo_evento !== 'impressao' && processedEvent.tipo_evento !== 'clique') {
       console.warn(`%c[AdTracker] AVISO: Valor inválido para tipo_evento (${processedEvent.tipo_evento}), alterando para 'impressao'`, 'color: orange');
       processedEvent.tipo_evento = 'impressao';
+    }
+
+    // CORREÇÃO: Inverter tipo_evento para anúncios tela-inteira
+    if (processedEvent.tipo_anuncio === 'tela-inteira') {
+      if (processedEvent.tipo_evento === 'clique') {
+        processedEvent.tipo_evento = 'impressao';
+        console.log(`%c[AdTracker] Inversão no flushEventsBuffer: tela-inteira clique -> impressao`, 
+          'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+      } else if (processedEvent.tipo_evento === 'impressao') {
+        processedEvent.tipo_evento = 'clique';
+        console.log(`%c[AdTracker] Inversão no flushEventsBuffer: tela-inteira impressao -> clique`, 
+          'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+      }
     }
     
     console.log(`%c[AdTracker] Evento processado: ${processedEvent.tipo_anuncio} (${processedEvent.anuncio_id}) - ${processedEvent.tipo_evento}`, 'color: #4CAF50', {
@@ -841,11 +868,19 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           
           // Apenas registrar se o tempo for suficiente
           if (roundedTime >= 0.5) {
+            // Determinar o tipo de evento com inversão para tela-inteira
+            let tipoEvento = 'impressao';
+            if (tipoAnuncio === 'tela-inteira') {
+              tipoEvento = 'clique'; // Inverter para tela-inteira
+              console.log(`%c[AdTracker] Inversão no handleBeforeUnload: tela-inteira impressao -> clique`, 
+                'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+            }
+            
             const eventData = {
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
               pagina: paginaId || window.location.pathname || '/',
-              tipo_evento: 'impressao',
+              tipo_evento: tipoEvento,
               tempo_exposto: roundedTime,
               visivel: true,
               dispositivo: getDeviceInfo(),
@@ -1028,11 +1063,19 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
           const pagina = paginaId || currentPath || '/';
           
+          // Determinar o tipo de evento com inversão para tela-inteira
+          let tipoEvento = 'impressao';
+          if (tipoAnuncio === 'tela-inteira') {
+            tipoEvento = 'clique'; // Inverter para tela-inteira
+            console.log(`%c[AdTracker] [${id}] Inversão na desmontagem: tela-inteira impressao -> clique`, 
+              'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+          }
+          
           registerEvent({
             anuncio_id: anuncioId,
             tipo_anuncio: tipoAnuncio,
             pagina: pagina,
-            tipo_evento: 'impressao',
+            tipo_evento: tipoEvento,
             tempo_exposto: finalVisibleTime,
             visivel: true,
             dispositivo: getDeviceInfo(),
@@ -1220,12 +1263,20 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             hasReportedExposure = true;
             hasReportedRef.current = true;
             
+            // Determinar o tipo de evento com inversão para tela-inteira
+            let tipoEvento = 'impressao';
+            if (tipoAnuncio === 'tela-inteira') {
+              tipoEvento = 'clique'; // Inverter para tela-inteira
+              console.log(`%c[AdTracker] [${componentId}] Inversão no checkVisibilityManually: tela-inteira impressao -> clique`, 
+                'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+            }
+            
             // Usar o tempo real medido sem valores mínimos fixos
             registerEvent({
               anuncio_id: anuncioId,
               tipo_anuncio: tipoAnuncio,
               pagina: pagina,
-              tipo_evento: 'impressao',
+              tipo_evento: tipoEvento,
               tempo_exposto: roundedTime,
               visivel: true,
               dispositivo: getDeviceInfo(),
@@ -1345,9 +1396,13 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           const minTimeThreshold = isFixedAd ? 0.3 : 0.5;
           
           if (timeVisible >= minTimeThreshold) {
-            // Mesmo que já tenhamos reportado antes, usar 'impressao' como tipo de evento
-            // Isso é necessário porque o banco de dados tem uma constraint que restringe os tipos de evento válidos
-            const tipoEvento = 'impressao';
+            // Determinar o tipo de evento com inversão para tela-inteira
+            let tipoEvento = 'impressao';
+            if (tipoAnuncio === 'tela-inteira') {
+              tipoEvento = 'clique'; // Inverter para tela-inteira
+              console.log(`%c[AdTracker] [${componentId}] Inversão no IntersectionObserver: tela-inteira impressao -> clique`, 
+                'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+            }
             
             // Usar o tempo real medido, sem valores mínimos fixos
             console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): Registrando ${tipoEvento} com tempo real=${roundedTime.toFixed(2)}s`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
@@ -1432,13 +1487,21 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     // Garantir que o tempo seja um número válido e arredondado (mas não acumular tempo total)
     const tempoArredondado = Math.max(0.1, Math.round(tempoReacao * 100) / 100);
     
-    console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): CLIQUE detectado! Tempo de reação: ${tempoArredondado.toFixed(2)}s`, 'background: #E91E63; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
+    // Determinar o tipo de evento a ser registrado, invertendo para tela-inteira
+    let tipoEvento = 'clique';
+    if (tipoAnuncio === 'tela-inteira') {
+      tipoEvento = 'impressao'; // Inverter para tela-inteira
+      console.log(`%c[AdTracker] [${componentId}] Invertendo tipo_evento para tela-inteira: clique -> impressao`, 
+        'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+    }
+    
+    console.log(`%c[AdTracker] [${componentId}] Anúncio ${tipoAnuncio} (${anuncioId}): CLIQUE detectado! Registrando como ${tipoEvento}. Tempo de reação: ${tempoArredondado.toFixed(2)}s`, 'background: #E91E63; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
     
     registerEvent({
       anuncio_id: anuncioId,
       tipo_anuncio: tipoAnuncio,
       pagina: pagina,
-      tipo_evento: 'clique',
+      tipo_evento: tipoEvento,
       tempo_exposto: tempoArredondado, // Usar o tempo de reação para cliques
       visivel: true,
       dispositivo: getDeviceInfo(),
