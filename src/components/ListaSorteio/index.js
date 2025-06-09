@@ -701,6 +701,27 @@ function ListaSorteio({ onReiniciarLista }) {
                 </div>
             )}
 
+            {/* Anúncio de cursos acima do botão Como Participar */}
+            <div className="anuncio-sobre-participar">
+                <Anuncio 
+                  tipo="cursos" 
+                  posicao="centro" 
+                  mostrarFechar={true}
+                  preservarLayout={true}
+                  paginaId="lista-sorteio_antes_participar" 
+                />
+            </div>
+            
+            {/* Script para verificar se o AdTracker está registrando este anúncio */}
+            {useEffect(() => {
+                console.log("Anúncio 'cursos' acima do botão 'Como Participar' montado com pageId: lista-sorteio_antes_participar");
+                
+                // Verificar no console se o AdTracker está inicializando este anúncio
+                return () => {
+                    console.log("Anúncio 'cursos' acima do botão 'Como Participar' desmontado");
+                };
+            }, [])}
+
             <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
                 {mostrarInstrucoes ? t('listaSorteio.fecharInstrucoes') : t('listaSorteio.instrucoes.title')}
             </button>

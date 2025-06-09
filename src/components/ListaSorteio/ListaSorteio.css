@@ -110,6 +110,15 @@
     }
 }
 
+/* Estilo para o anúncio acima do botão Como Participar */
+.anuncio-sobre-participar {
+    margin: 20px auto;
+    max-width: 300px; /* Tamanho similar ao banner 300x250 */
+    border-radius: 0; /* Removido border-radius */
+    overflow: hidden;
+    /* Removido box-shadow */
+}
+
 /* Estilização do botão "Como Participar" */
 .como-participar-btn {
     background: linear-gradient(135deg, #12423e, #27b8a8); /* Usando as cores do botão Mostrar Menos */
@@ -120,7 +129,7 @@
     border-radius: 5px;
     cursor: pointer;
     display: block;
-    margin: 10px auto;
+    margin: 20px auto 10px; /* Aumentado margin-top para dar espaço após o anúncio */
     transition: all 0.3s ease;
 }
 
