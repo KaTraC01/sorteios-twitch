@@ -406,6 +406,14 @@
     border-top: 1px solid #444 !important;
 }
 
+/* Quando dentro de um AdTracker, o posicionamento é diferente */
+.ad-tracker-container .anuncio-fixo-inferior {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+}
+
 .anuncio-fixo-inferior .anuncio-imagem {
     max-width: 970px !important;
     width: 100% !important;

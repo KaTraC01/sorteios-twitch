@@ -295,7 +295,12 @@ const Anuncio = ({
                 X
               </button>
             )}
-            <a href={anuncioUrlDestino} className="anuncio-link" target="_blank" rel="noopener noreferrer">
+            <a 
+              href={anuncioUrlDestino} 
+              className="anuncio-link" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
               {anuncioImagemSrc && <img src={anuncioImagemSrc} alt={anuncioTitulo || 'Anúncio'} className="anuncio-imagem" />}
               {!anuncioImagemSrc && (
                 <>
@@ -471,14 +476,8 @@ const Anuncio = ({
         return renderConteudoAnuncio();
       }
       
-      // Comentado para permitir que o anúncio fixo-inferior também use o AdTracker
-      // if (tipo === 'fixo-inferior') {
-      //   // Removemos o registro automático de impressão
-      //   // O registro só ocorrerá quando houver interação real do usuário
-      //   
-      //   // Renderizar sem o AdTracker
-      //   return renderConteudoAnuncio();
-      // }
+      // Usaremos o AdTracker para todos os tipos de anúncios, incluindo fixo-inferior
+      // Não há condição especial para fixo-inferior
       
       // Todos os dados necessários estão disponíveis, então renderizar com o AdTracker
       return (

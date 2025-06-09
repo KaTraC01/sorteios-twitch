@@ -240,6 +240,11 @@ const getDeviceInfo = () => {
   return 'desktop';
 };
 
+// Disponibilizar a função getDeviceInfo globalmente
+if (typeof window !== 'undefined') {
+  window.getDeviceInfo = getDeviceInfo;
+}
+
 // Função para obter a localização do usuário
 const getLocation = async () => {
   try {
@@ -1477,9 +1482,11 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
           position: 'absolute',
           width: '100vw',  // Usar toda a largura da viewport
           height: 'calc(100% + 100px)', // Aumentar ainda mais a altura para garantir detecção
-          top: '-20px',
+          top: '-50px',
           left: '0',
-          zIndex: -1  // Garantir que está abaixo do conteúdo visível
+          zIndex: -1,  // Garantir que está abaixo do conteúdo visível
+          opacity: 0.001, // Muito pequeno, mas detectável
+          pointerEvents: 'none' // Não interferir em cliques
         };
       case 'lateral':
         return {
@@ -1570,27 +1577,54 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   };
   
   // Estilo para não afetar o layout quando preservarLayout=true
-  const trackerStyle = preservarLayout ? {
+  let trackerStyle = preservarLayout ? {
     display: 'contents',
     width: 'auto',
     height: 'auto'
   } : {};
   
+  // Estilos especiais para anúncios fixo-inferior
+  if (tipoAnuncio === 'fixo-inferior') {
+    trackerStyle = {
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      width: '100%',
+      zIndex: 9999,
+      display: 'block'
+    };
+  }
+  
   // Estilo para o container do elemento observável
-  const observerContainerStyle = {
+  let observerContainerStyle = {
     position: 'relative',
     width: '100%',
     height: '100%',
     display: 'contents'
   };
   
+  // Ajustes específicos para fixo-inferior
+  if (tipoAnuncio === 'fixo-inferior') {
+    observerContainerStyle = {
+      ...observerContainerStyle,
+      display: 'block',
+      position: 'relative'
+    };
+  }
+  
   // Determinar a classe correta com base no tipo de anúncio
   const getTrackerClassName = () => {
     let className = 'ad-tracker-container';
     
     // Adicionar classes específicas para tipos especiais
-    if (['video', 'quadrado', 'banner'].includes(tipoAnuncio)) {
+    if (['video', 'quadrado', 'banner', 'fixo-inferior', 'fixo-superior', 'lateral'].includes(tipoAnuncio)) {
       className += ` ad-tracker-${tipoAnuncio}`;
+    }
+    
+    // Adicionar classe especial para fixo-inferior para garantir posicionamento correto
+    if (tipoAnuncio === 'fixo-inferior') {
+      className += ' fixed-bottom-ad';
     }
     
     return className;
