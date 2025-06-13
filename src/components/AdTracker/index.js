@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../utils/supabaseClient';
+import { supabase } from '../../config/supabaseClient';
 import './AdTracker.css';
+import adTrackerLogs, { LOG_TYPES } from './adTrackerLogs';
 
 // Detecção de ambiente de desenvolvimento
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -24,9 +25,24 @@ if (typeof window !== 'undefined') {
       return false;
     }
     
+    // Registrar tentativa de envio no sistema de logs centralizado
+    adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_ATTEMPT, {
+      quantidade: events.length,
+      navegador: navigator.userAgent,
+      timestamp_envio: new Date().toISOString()
+    });
+    
     try {
       if (typeof navigator.sendBeacon !== 'function') {
         console.error('%c[AdTracker] API sendBeacon não disponível neste navegador', 'color: red');
+        
+        // Registrar falha no sistema de logs centralizado
+        adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
+          quantidade: events.length,
+          motivo: 'api_indisponivel',
+          erro: 'API sendBeacon não disponível neste navegador'
+        });
+        
         return false;
       }
 
@@ -65,6 +81,11 @@ if (typeof window !== 'undefined') {
           processedEvent.tempo_exposto = 0;
         }
         
+        // Adicionar timestamp se não existir
+        if (!processedEvent.timestamp) {
+          processedEvent.timestamp = new Date().toISOString();
+        }
+        
         return processedEvent;
       });
       
@@ -73,15 +94,43 @@ if (typeof window !== 'undefined') {
         type: 'application/json' 
       });
       
+      // Calcular tamanho do payload em bytes
+      const payloadSize = blob.size;
+      
       // Usar sendBeacon que foi projetado especificamente para este cenário
       const result = navigator.sendBeacon(fullUrl, blob);
       
       console.log(`%c[AdTracker] ${result ? 'SUCESSO' : 'FALHA'} ao enviar ${events.length} eventos via sendBeacon`, 
         result ? 'color: #4CAF50' : 'color: #F44336');
       
+      // Registrar resultado no sistema de logs centralizado
+      if (result) {
+        adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_SUCCESS, {
+          quantidade: events.length,
+          tamanho_payload: payloadSize,
+          timestamp_envio: new Date().toISOString()
+        });
+      } else {
+        adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
+          quantidade: events.length,
+          tamanho_payload: payloadSize,
+          motivo: 'beacon_retornou_falso',
+          timestamp_envio: new Date().toISOString()
+        });
+      }
+      
       return result;
     } catch (error) {
       console.error('%c[AdTracker] Erro ao enviar eventos via sendBeacon:', 'color: red', error);
+      
+      // Registrar erro no sistema de logs centralizado
+      adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
+        quantidade: events.length,
+        motivo: 'excecao',
+        erro: error.message,
+        stack: error.stack
+      });
+      
       return false;
     }
   };
@@ -89,6 +138,12 @@ if (typeof window !== 'undefined') {
   // Detectar quando o usuário está saindo da página ou recarregando
   const globalBeforeUnloadHandler = () => {
     isNavigatingAway = true;
+    
+    // Registrar evento de fechamento da página
+    adTrackerLogs.adicionarLog(LOG_TYPES.PAGE_UNLOAD, {
+      eventos_pendentes: eventsBuffer.length,
+      timestamp: new Date().toISOString()
+    });
     
     if (eventsBuffer.length > 0) {
       try {
@@ -98,6 +153,11 @@ if (typeof window !== 'undefined') {
         // Salvar eventos pendentes no localStorage como backup
         localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
         
+        // Forçar salvamento dos logs antes do fechamento
+        if (typeof adTrackerLogs.saveLogs === 'function') {
+          adTrackerLogs.saveLogs();
+        }
+        
         // Tentar enviar imediatamente usando sendBeacon
         if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
           // Usar o escopo global
@@ -106,6 +166,27 @@ if (typeof window !== 'undefined') {
         }
       } catch (e) {
         console.error('Erro ao processar eventos no fechamento da página:', e);
+        
+        // Registrar erro no sistema de logs centralizado
+        adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
+          quantidade: eventsBuffer.length,
+          motivo: 'erro_beforeunload',
+          erro: e.message
+        });
+        
+        // Tentar salvar logs mesmo com erro
+        if (typeof adTrackerLogs.saveLogs === 'function') {
+          try {
+            adTrackerLogs.saveLogs();
+          } catch (logError) {
+            // Último recurso, não podemos fazer mais nada
+          }
+        }
+      }
+    } else {
+      // Mesmo sem eventos, forçar salvamento dos logs
+      if (typeof adTrackerLogs.saveLogs === 'function') {
+        adTrackerLogs.saveLogs();
       }
     }
   };
@@ -153,9 +234,24 @@ if (typeof window !== 'undefined') {
         return false;
       }
       
+      // Registrar tentativa de envio no sistema de logs centralizado
+      adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_ATTEMPT, {
+        quantidade: events.length,
+        navegador: navigator.userAgent,
+        timestamp_envio: new Date().toISOString()
+      });
+      
       try {
         if (typeof navigator.sendBeacon !== 'function') {
           console.error('%c[AdTracker] API sendBeacon não disponível neste navegador', 'color: red');
+          
+          // Registrar falha no sistema de logs centralizado
+          adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
+            quantidade: events.length,
+            motivo: 'api_indisponivel',
+            erro: 'API sendBeacon não disponível neste navegador'
+          });
+          
           return false;
         }
 
@@ -194,6 +290,11 @@ if (typeof window !== 'undefined') {
             processedEvent.tempo_exposto = 0;
           }
           
+          // Adicionar timestamp se não existir
+          if (!processedEvent.timestamp) {
+            processedEvent.timestamp = new Date().toISOString();
+          }
+          
           return processedEvent;
         });
         
@@ -202,15 +303,43 @@ if (typeof window !== 'undefined') {
           type: 'application/json' 
         });
         
+        // Calcular tamanho do payload em bytes
+        const payloadSize = blob.size;
+        
         // Usar sendBeacon que foi projetado especificamente para este cenário
         const result = navigator.sendBeacon(fullUrl, blob);
         
         console.log(`%c[AdTracker] ${result ? 'SUCESSO' : 'FALHA'} ao enviar ${events.length} eventos via sendBeacon`, 
           result ? 'color: #4CAF50' : 'color: #F44336');
         
+        // Registrar resultado no sistema de logs centralizado
+        if (result) {
+          adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_SUCCESS, {
+            quantidade: events.length,
+            tamanho_payload: payloadSize,
+            timestamp_envio: new Date().toISOString()
+          });
+        } else {
+          adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
+            quantidade: events.length,
+            tamanho_payload: payloadSize,
+            motivo: 'beacon_retornou_falso',
+            timestamp_envio: new Date().toISOString()
+          });
+        }
+        
         return result;
       } catch (error) {
         console.error('%c[AdTracker] Erro ao enviar eventos via sendBeacon:', 'color: red', error);
+        
+        // Registrar erro no sistema de logs centralizado
+        adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
+          quantidade: events.length,
+          motivo: 'excecao',
+          erro: error.message,
+          stack: error.stack
+        });
+        
         return false;
       }
     };
@@ -271,6 +400,18 @@ const registerEvent = async (eventData) => {
       !eventData.anuncio_id ? 'anuncio_id ausente' : 
       !eventData.tipo_anuncio ? 'tipo_anuncio ausente' : 
       'pagina ausente');
+    
+    // Registrar erro no sistema de logs
+    adTrackerLogs.adicionarLog(LOG_TYPES.BUFFER_ADD, {
+      status: 'erro',
+      motivo: 'dados_incompletos',
+      detalhes: {
+        anuncio_id_presente: !!eventData.anuncio_id,
+        tipo_anuncio_presente: !!eventData.tipo_anuncio,
+        pagina_presente: !!eventData.pagina
+      }
+    });
+    
     return; // Não registrar o evento se algum dado essencial estiver faltando
   }
 
@@ -315,13 +456,22 @@ const registerEvent = async (eventData) => {
     pais: eventData.pais || 'Brasil',
     regiao: eventData.regiao || 'Desconhecido',
     session_id: eventData.session_id || sessionId.current,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    added_to_buffer_at: new Date().toISOString() // Adicionar timestamp de quando foi adicionado ao buffer
     // processado será definido como FALSE por padrão no servidor
   };
   
   // Adicionar o evento ao buffer
   eventsBuffer.push(mappedEvent);
   console.log(`%c[AdTracker] Evento adicionado ao buffer. Total de eventos pendentes: ${eventsBuffer.length}`, 'color: #8BC34A');
+  
+  // Registrar adição ao buffer no sistema de logs
+  adTrackerLogs.adicionarLog(LOG_TYPES.BUFFER_ADD, {
+    anuncio_id: mappedEvent.anuncio_id,
+    tipo_anuncio: mappedEvent.tipo_anuncio,
+    tipo_evento: mappedEvent.tipo_evento,
+    tempo_exposto: mappedEvent.tempo_exposto
+  });
   
   // Limpar o timer existente se houver
   if (bufferTimer) {
@@ -332,6 +482,13 @@ const registerEvent = async (eventData) => {
   // Se atingimos o limite de tamanho do buffer, enviar imediatamente
   if (eventsBuffer.length >= BUFFER_SIZE_LIMIT) {
     console.log(`%c[AdTracker] Buffer atingiu limite de ${BUFFER_SIZE_LIMIT} eventos. Enviando...`, 'background: #FF9800; color: black; padding: 2px 5px; border-radius: 3px');
+    
+    // Registrar overflow do buffer no sistema de logs
+    adTrackerLogs.adicionarLog(LOG_TYPES.BUFFER_OVERFLOW, {
+      quantidade: eventsBuffer.length,
+      limite: BUFFER_SIZE_LIMIT
+    });
+    
     await flushEventsBuffer();
   } else {
     // Configurar um novo timer para garantir que os eventos sejam enviados mesmo se não atingir o limite
@@ -413,6 +570,13 @@ const flushEventsBuffer = async () => {
   
   console.log(`%c[AdTracker] Preparando para enviar ${eventsBuffer.length} eventos do buffer...`, 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 3px');
   
+  // Registrar tentativa de flush no sistema de logs
+  adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_ATTEMPT, {
+    quantidade: eventsBuffer.length,
+    metodo: 'api_supabase',
+    timestamp_inicio: new Date().toISOString()
+  });
+  
   // Criar uma cópia dos eventos e limpar o buffer original
   const events = [...eventsBuffer];
   eventsBuffer = [];
@@ -421,6 +585,11 @@ const flushEventsBuffer = async () => {
   const processedEvents = events.map(event => {
     // Criar uma cópia do evento para não modificar o original
     const processedEvent = { ...event };
+    
+    // Adicionar timestamp de entrada no buffer se não existir
+    if (!processedEvent.added_to_buffer_at) {
+      processedEvent.added_to_buffer_at = new Date().toISOString();
+    }
     
     // Garantir que tempo_exposto seja um número válido
     if (processedEvent.tempo_exposto !== undefined) {
@@ -502,14 +671,50 @@ const flushEventsBuffer = async () => {
           console.log(`%c[AdTracker] SUCESSO! Lote ${batchIndex + 1} inserido diretamente na tabela`, 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
           batchSuccess = true;
           successCount += batch.length;
+          
+          // Registrar sucesso no sistema de logs
+          adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_SUCCESS, {
+            quantidade: batch.length,
+            metodo: 'insert_direto',
+            lote: batchIndex + 1,
+            total_lotes: batches.length
+          });
         } else if (error.code !== '404') {
           console.warn('%c[AdTracker] AVISO: Erro ao inserir diretamente na tabela:', 'color: orange', error);
+          
+          // Registrar erro no sistema de logs
+          adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+            quantidade: batch.length,
+            metodo: 'insert_direto',
+            lote: batchIndex + 1,
+            erro: error.message,
+            codigo_erro: error.code
+          });
+          
           // Continuar e tentar a função RPC como fallback
         } else {
           console.warn('%c[AdTracker] AVISO: Tabela não encontrada, tentando função RPC...', 'color: orange');
+          
+          // Registrar erro no sistema de logs
+          adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+            quantidade: batch.length,
+            metodo: 'insert_direto',
+            lote: batchIndex + 1,
+            erro: 'Tabela não encontrada',
+            codigo_erro: '404'
+          });
         }
       } catch (directInsertError) {
         console.warn('%c[AdTracker] AVISO: Erro ao tentar inserção direta:', 'color: orange', directInsertError);
+        
+        // Registrar erro no sistema de logs
+        adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+          quantidade: batch.length,
+          metodo: 'insert_direto',
+          lote: batchIndex + 1,
+          erro: directInsertError.message,
+          stack: directInsertError.stack
+        });
       }
       
       // Se a inserção direta falhou, tentar a função RPC
@@ -523,6 +728,15 @@ const flushEventsBuffer = async () => {
             
           if (error) {
             console.error('%c[AdTracker] ERRO ao enviar eventos via RPC:', 'color: red', error);
+            
+            // Registrar erro no sistema de logs
+            adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+              quantidade: batch.length,
+              metodo: 'rpc',
+              lote: batchIndex + 1,
+              erro: error.message,
+              codigo_erro: error.code
+            });
             
             // Verificar se é um erro 404 (função não encontrada)
             if (error.code === '404' || error.message.includes('Not Found')) {
@@ -548,12 +762,37 @@ const flushEventsBuffer = async () => {
                 individualSuccessCount > 0 ? 'background: #4CAF50; color: white;' : 'background: #F44336; color: white;', 
                 'padding: 3px 5px; border-radius: 3px');
               
+              // Registrar resultado no sistema de logs
               if (individualSuccessCount > 0) {
+                adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_SUCCESS, {
+                  quantidade: individualSuccessCount,
+                  metodo: 'insert_individual',
+                  lote: batchIndex + 1,
+                  total_eventos: batch.length
+                });
+                
+                if (individualSuccessCount < batch.length) {
+                  adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+                    quantidade: batch.length - individualSuccessCount,
+                    metodo: 'insert_individual',
+                    lote: batchIndex + 1,
+                    erro: 'Falha parcial em inserção individual'
+                  });
+                }
+                
                 successCount += individualSuccessCount;
                 failedCount += (batch.length - individualSuccessCount);
                 batchSuccess = individualSuccessCount === batch.length;
               } else {
                 failedCount += batch.length;
+                
+                // Registrar falha total no sistema de logs
+                adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+                  quantidade: batch.length,
+                  metodo: 'insert_individual',
+                  lote: batchIndex + 1,
+                  erro: 'Falha total em inserção individual'
+                });
               }
             } else {
               // Outro tipo de erro, propagar
@@ -563,10 +802,27 @@ const flushEventsBuffer = async () => {
             console.log(`%c[AdTracker] SUCESSO! Lote ${batchIndex + 1} inserido via RPC`, 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
             batchSuccess = true;
             successCount += batch.length;
+            
+            // Registrar sucesso no sistema de logs
+            adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_SUCCESS, {
+              quantidade: batch.length,
+              metodo: 'rpc',
+              lote: batchIndex + 1,
+              total_lotes: batches.length
+            });
           }
         } catch (rpcError) {
           console.error('%c[AdTracker] Erro ao processar lote via RPC:', 'color: red', rpcError);
           failedCount += batch.length;
+          
+          // Registrar erro no sistema de logs
+          adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+            quantidade: batch.length,
+            metodo: 'rpc',
+            lote: batchIndex + 1,
+            erro: rpcError.message,
+            stack: rpcError.stack
+          });
         }
       }
       
@@ -580,6 +836,15 @@ const flushEventsBuffer = async () => {
     console.log(`%c[AdTracker] ✅ Resumo do processamento: ${successCount} eventos enviados com sucesso, ${failedCount} falhas.`, 
       'background: #388E3C; color: white; font-weight: bold; padding: 5px; border-radius: 3px; font-size: 14px');
     
+    // Registrar resumo final no sistema de logs
+    adTrackerLogs.adicionarLog(failedCount > 0 ? LOG_TYPES.FLUSH_FAILURE : LOG_TYPES.FLUSH_SUCCESS, {
+      quantidade_total: processedEvents.length,
+      sucessos: successCount,
+      falhas: failedCount,
+      lotes: batches.length,
+      timestamp_fim: new Date().toISOString()
+    });
+    
     // Se tivermos falhas, adicionar de volta ao buffer
     if (failedCount > 0) {
       // Armazenar eventos que falharam para tentar novamente depois
@@ -588,11 +853,25 @@ const flushEventsBuffer = async () => {
         eventsBuffer = [...eventsBuffer, ...failedEvents];
         console.log(`%c[AdTracker] ${failedEvents.length} eventos que falharam foram adicionados de volta ao buffer para tentar novamente.`, 'background: #FF9800; color: white; padding: 3px 5px; border-radius: 3px');
         
+        // Registrar eventos que voltaram ao buffer no sistema de logs
+        adTrackerLogs.adicionarLog(LOG_TYPES.BUFFER_ADD, {
+          quantidade: failedEvents.length,
+          motivo: 'retry_apos_falha',
+          timestamp: new Date().toISOString()
+        });
+        
         // Salvar no localStorage como backup
         try {
           localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
         } catch (storageError) {
           console.error('%c[AdTracker] ERRO ao salvar eventos no localStorage:', 'color: red', storageError);
+          
+          // Registrar erro no sistema de logs
+          adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+            tipo: 'erro_localstorage',
+            erro: storageError.message,
+            stack: storageError.stack
+          });
         }
         
         // Tentar novamente em 30 segundos
@@ -614,12 +893,28 @@ const flushEventsBuffer = async () => {
       }
     } catch (e) {
       console.error('%c[AdTracker] ERRO ao limpar eventos pendentes:', 'color: red', e);
+      
+      // Registrar erro no sistema de logs
+      adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+        tipo: 'erro_limpar_localstorage',
+        erro: e.message,
+        stack: e.stack
+      });
     }
     
     return true;
     
   } catch (error) {
     console.error('%c[AdTracker] ERRO CRÍTICO ao enviar eventos para o Supabase:', 'background: #F44336; color: white; padding: 3px 5px; border-radius: 3px', error);
+    
+    // Registrar erro crítico no sistema de logs
+    adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+      quantidade: processedEvents.length,
+      tipo: 'erro_critico',
+      erro: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     
     // Adicionar de volta ao buffer em caso de falha
     eventsBuffer = [...eventsBuffer, ...processedEvents];
@@ -628,8 +923,22 @@ const flushEventsBuffer = async () => {
     try {
       localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
       console.log(`%c[AdTracker] ${eventsBuffer.length} eventos salvos no localStorage para recuperação posterior`, 'color: #FF9800');
+      
+      // Registrar backup no sistema de logs
+      adTrackerLogs.adicionarLog(LOG_TYPES.BUFFER_ADD, {
+        quantidade: processedEvents.length,
+        motivo: 'backup_apos_erro',
+        timestamp: new Date().toISOString()
+      });
     } catch (storageError) {
       console.error('%c[AdTracker] ERRO ao salvar eventos no localStorage:', 'color: red', storageError);
+      
+      // Registrar erro no sistema de logs
+      adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_FAILURE, {
+        tipo: 'erro_salvar_localstorage',
+        erro: storageError.message,
+        stack: storageError.stack
+      });
     }
     
     // Tentar novamente em 30 segundos
@@ -646,16 +955,41 @@ const flushEventsBuffer = async () => {
 const recoverPendingEvents = () => {
   if (typeof window === 'undefined') return;
   
+  // Registrar tentativa de recuperação no sistema de logs
+  adTrackerLogs.adicionarLog(LOG_TYPES.RECOVERY_ATTEMPT, {
+    timestamp: new Date().toISOString()
+  });
+  
   try {
     const pendingEventsString = localStorage.getItem(BUFFER_STORAGE_KEY);
     if (!pendingEventsString) {
       console.log('%c[AdTracker] Nenhum evento pendente encontrado no localStorage', 'color: #9E9E9E');
+      
+      // Registrar resultado no sistema de logs
+      adTrackerLogs.adicionarLog(LOG_TYPES.RECOVERY_SUCCESS, {
+        quantidade: 0,
+        mensagem: 'Nenhum evento pendente encontrado'
+      });
+      
       return;
     }
     
     let pendingEvents = JSON.parse(pendingEventsString);
     if (Array.isArray(pendingEvents) && pendingEvents.length > 0) {
       console.log(`%c[AdTracker] ♻️ Recuperados ${pendingEvents.length} eventos pendentes do localStorage`, 'background: #009688; color: white; padding: 3px 5px; border-radius: 3px');
+      
+      // Verificar idade dos eventos
+      const agora = Date.now();
+      let eventosAntigos = 0;
+      
+      pendingEvents.forEach(evento => {
+        if (evento.timestamp) {
+          const idade = agora - new Date(evento.timestamp).getTime();
+          if (idade > 24 * 60 * 60 * 1000) { // mais de 24h
+            eventosAntigos++;
+          }
+        }
+      });
       
       // Filtrar eventos com tipo_evento inválido (permitidos: 'impressao' e 'clique')
       const validEvents = pendingEvents.filter(evento => {
@@ -684,6 +1018,14 @@ const recoverPendingEvents = () => {
       
       eventsBuffer = [...eventsBuffer, ...validEvents];
       
+      // Registrar sucesso no sistema de logs
+      adTrackerLogs.adicionarLog(LOG_TYPES.RECOVERY_SUCCESS, {
+        quantidade: validEvents.length,
+        eventos_antigos: eventosAntigos,
+        tipos_anuncios: tiposAnuncios,
+        eventos_corrigidos: pendingEvents.length - validEvents.length
+      });
+      
       // Salvar a versão filtrada de volta ao localStorage
       localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(validEvents));
       
@@ -692,9 +1034,22 @@ const recoverPendingEvents = () => {
       flushEventsBuffer();
     } else {
       console.log('%c[AdTracker] Nenhum evento pendente válido encontrado no localStorage', 'color: #9E9E9E');
+      
+      // Registrar resultado no sistema de logs
+      adTrackerLogs.adicionarLog(LOG_TYPES.RECOVERY_SUCCESS, {
+        quantidade: 0,
+        mensagem: 'Nenhum evento pendente válido encontrado'
+      });
     }
   } catch (error) {
     console.error('%c[AdTracker] ERRO ao recuperar eventos pendentes do localStorage:', 'background: #F44336; color: white; padding: 3px 5px; border-radius: 3px', error);
+    
+    // Registrar erro no sistema de logs
+    adTrackerLogs.adicionarLog(LOG_TYPES.RECOVERY_FAILURE, {
+      erro: error.message,
+      stack: error.stack
+    });
+    
     // Limpar o item para evitar erros futuros
     localStorage.removeItem(BUFFER_STORAGE_KEY);
     console.log('%c[AdTracker] Item de armazenamento de eventos pendentes foi removido para evitar futuros erros', 'color: #FF9800');
@@ -776,6 +1131,51 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   };
   
   console.log('%c[AdTracker] Funções de debug disponíveis no console: window.limparEventosAdTracker(), window.verEventosAdTracker() e window.corrigirEventosAdTracker()', 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+}
+
+// Função para verificar eventos antigos no buffer
+const verificarEventosAntigos = () => {
+  if (typeof window === 'undefined' || !eventsBuffer.length) return;
+  
+  const agora = Date.now();
+  const LIMITE_TEMPO_BUFFER = 5 * 60 * 1000; // 5 minutos em milissegundos
+  let eventosAntigos = 0;
+  
+  eventsBuffer.forEach(evento => {
+    if (evento.added_to_buffer_at) {
+      const tempoNoBuffer = agora - new Date(evento.added_to_buffer_at).getTime();
+      
+      // Se o evento está no buffer há mais tempo que o limite
+      if (tempoNoBuffer > LIMITE_TEMPO_BUFFER) {
+        eventosAntigos++;
+        
+        // Registrar evento antigo no sistema de logs
+        adTrackerLogs.adicionarLog(LOG_TYPES.BUFFER_STALE, {
+          anuncio_id: evento.anuncio_id,
+          tipo_anuncio: evento.tipo_anuncio,
+          tipo_evento: evento.tipo_evento,
+          tempo_no_buffer: Math.round(tempoNoBuffer / 1000) + 's',
+          timestamp: evento.timestamp
+        });
+      }
+    }
+  });
+  
+  // Se encontrou eventos antigos, tentar enviar imediatamente
+  if (eventosAntigos > 0) {
+    console.log(`%c[AdTracker] Detectados ${eventosAntigos} eventos antigos no buffer. Forçando envio...`, 
+      'background: #FF9800; color: white; padding: 2px 5px; border-radius: 3px');
+    
+    // Tentar enviar imediatamente
+    flushEventsBuffer();
+  }
+  
+  return eventosAntigos;
+};
+
+// Configurar verificação periódica de eventos antigos (a cada 2 minutos)
+if (typeof window !== 'undefined') {
+  setInterval(verificarEventosAntigos, 2 * 60 * 1000);
 }
 
 // Componente principal AdTracker
@@ -861,6 +1261,15 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
       const handleBeforeUnload = () => {
         console.log(`%c[AdTracker] Fechamento de página detectado, enviando dados pendentes`, 'background: #FF5722; color: white; padding: 2px 5px; border-radius: 3px');
         
+        // Registrar evento de fechamento da página no sistema de logs
+        adTrackerLogs.adicionarLog(LOG_TYPES.PAGE_UNLOAD, {
+          anuncio_id: anuncioId,
+          tipo_anuncio: tipoAnuncio,
+          pagina: paginaId || window.location.pathname,
+          componente_id: componentIdRef.current,
+          tempo_visivel: isVisible && visibleStartTime ? Math.round((Date.now() - visibleStartTime) / 1000) : 0
+        });
+        
         // Se o anúncio estiver visível, calcular o tempo atual de exposição
         if (isVisible && visibleStartTime) {
           const timeVisible = (Date.now() - visibleStartTime) / 1000;
@@ -892,7 +1301,21 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
             
             // Adicionar ao buffer
             eventsBuffer.push(eventData);
+            
+            // Registrar adição ao buffer no sistema de logs
+            adTrackerLogs.adicionarLog(LOG_TYPES.BUFFER_ADD, {
+              anuncio_id: eventData.anuncio_id,
+              tipo_anuncio: eventData.tipo_anuncio,
+              tipo_evento: eventData.tipo_evento,
+              tempo_exposto: eventData.tempo_exposto,
+              motivo: 'fechamento_pagina'
+            });
           }
+        }
+        
+        // Forçar salvamento dos logs antes do fechamento
+        if (typeof adTrackerLogs.saveLogs === 'function') {
+          adTrackerLogs.saveLogs();
         }
         
         // Enviar todos os eventos pendentes usando a função centralizada
@@ -1719,3 +2142,53 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
 };
 
 export default AdTracker;
+
+// Adicionar função para diagnóstico no escopo global
+if (typeof window !== 'undefined') {
+  window.adTrackerDiagnostico = function() {
+    // Chamar a função de diagnóstico do sistema de logs
+    const stats = adTrackerLogs.diagnosticarAdTracker();
+    
+    // Informações adicionais específicas do AdTracker
+    console.log('%c[AdTracker] Diagnóstico do AdTracker', 'background: #4CAF50; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
+    
+    // Verificar eventos antigos
+    const eventosAntigos = verificarEventosAntigos();
+    
+    // Informações sobre o buffer atual
+    console.log('%c[AdTracker] Buffer atual:', 'color: #2196F3; font-weight: bold');
+    console.table({
+      tamanho_atual: eventsBuffer.length,
+      limite_tamanho: BUFFER_SIZE_LIMIT,
+      timeout: BUFFER_TIMEOUT / 1000 + 's',
+      eventos_antigos: eventosAntigos || 0,
+      timer_ativo: !!bufferTimer
+    });
+    
+    // Mostrar os eventos no buffer
+    if (eventsBuffer.length > 0) {
+      console.log('%c[AdTracker] Eventos no buffer:', 'color: #2196F3; font-weight: bold');
+      console.table(eventsBuffer.map(e => ({
+        anuncio_id: e.anuncio_id,
+        tipo_anuncio: e.tipo_anuncio,
+        tipo_evento: e.tipo_evento,
+        tempo_exposto: e.tempo_exposto,
+        timestamp: e.timestamp
+      })));
+    }
+    
+    // Retornar estatísticas combinadas
+    return {
+      ...stats,
+      buffer: {
+        tamanho_atual: eventsBuffer.length,
+        limite_tamanho: BUFFER_SIZE_LIMIT,
+        timeout: BUFFER_TIMEOUT / 1000 + 's',
+        eventos_antigos: eventosAntigos || 0,
+        timer_ativo: !!bufferTimer
+      }
+    };
+  };
+  
+  console.log('%c[AdTracker] Função de diagnóstico disponível: window.adTrackerDiagnostico()', 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+}

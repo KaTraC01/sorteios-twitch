@@ -285,4 +285,31 @@ Cada tipo de anúncio possui uma lista de configurações possíveis. Os anúnci
 
 O sistema registra automáticamente as métricas de visualização de anúncios na tabela `metricas_anuncios` do banco de dados.
 
+# Sistema de Rastreamento de Anúncios
+
+## Melhorias Recentes
+
+Foram implementadas melhorias significativas no sistema de rastreamento de anúncios para resolver o problema de perda de eventos ao fechar a página:
+
+1. **Sistema centralizado de logs** para monitoramento detalhado de eventos
+2. **Persistência de dados** com backup automático no localStorage
+3. **Detecção de eventos antigos** no buffer
+4. **Ferramentas de diagnóstico** acessíveis via console
+
+Para mais detalhes, consulte [documentação de melhorias](docs/adtracker-melhorias.md).
+
+## Funções de Diagnóstico
+
+Disponíveis no console do navegador:
+
+- `window.adTrackerDiagnostico()` - Diagnóstico completo do sistema
+- `window.limparLogsAdTracker()` - Limpa logs armazenados
+- `window.verEventosAdTracker()` - Visualiza eventos pendentes
+
+## Estrutura do Projeto
+
+- `src/components/AdTracker/index.js` - Componente principal de rastreamento
+- `src/components/AdTracker/adTrackerLogs.js` - Sistema centralizado de logs
+- `docs/adtracker-melhorias.md` - Documentação detalhada das melhorias
+
 
