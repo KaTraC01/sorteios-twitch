@@ -9,6 +9,7 @@
 const LOGS_STORAGE_KEY = 'adtracker_logs';
 const LOGS_MAX_SIZE = 200; // Máximo de logs armazenados
 const LOGS_RETENTION_DAYS = 3; // Dias para manter logs antigos
+const BUFFER_STORAGE_KEY = 'adtracker_events_buffer'; // Chave para localStorage
 
 // Tipos de logs
 export const LOG_TYPES = {
@@ -24,7 +25,12 @@ export const LOG_TYPES = {
   PAGE_UNLOAD: 'page_unload',            // Página fechada/recarregada
   RECOVERY_ATTEMPT: 'recovery_attempt',  // Tentativa de recuperar eventos
   RECOVERY_SUCCESS: 'recovery_success',  // Sucesso na recuperação de eventos
-  RECOVERY_FAILURE: 'recovery_failure'   // Falha na recuperação de eventos
+  RECOVERY_FAILURE: 'recovery_failure',  // Falha na recuperação de eventos
+  VISIBILITY_CHANGE: 'visibility_change', // Mudança de visibilidade da página
+  BATCH_DIVISION: 'batch_division',      // Divisão de eventos em lotes
+  PAYLOAD_OPTIMIZATION: 'payload_optimization', // Otimização de payload
+  COMPRESSION_APPLIED: 'compression_applied', // Compressão de dados aplicada
+  API_CALL: 'api_call'                   // Chamada para API
 };
 
 // Array global para armazenar logs em memória
@@ -71,9 +77,8 @@ export const initLogs = () => {
   
   // Adicionar funções de diagnóstico ao escopo global
   if (process.env.NODE_ENV === 'development') {
-    window.adTrackerDiagnostico = diagnosticarAdTracker;
     window.limparLogsAdTracker = limparLogs;
-    console.log('%c[AdTrackerLogs] Funções de diagnóstico disponíveis: window.adTrackerDiagnostico(), window.limparLogsAdTracker()', 'color: #9C27B0');
+    console.log('%c[AdTrackerLogs] Funções de diagnóstico disponíveis: window.limparLogsAdTracker()', 'color: #9C27B0');
   }
 };
 
@@ -152,6 +157,55 @@ export const limparLogs = () => {
 };
 
 /**
+ * Visualiza eventos pendentes no buffer
+ */
+export const verEventosPendentes = () => {
+  if (typeof window === 'undefined') return 'Indisponível no servidor';
+  
+  try {
+    // Recuperar eventos do buffer
+    const eventosBuffer = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
+    
+    if (eventosBuffer.length === 0) {
+      console.log('%c[AdTracker] Nenhum evento pendente no buffer', 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+      return 'Nenhum evento pendente no buffer';
+    }
+    
+    console.log('%c[AdTracker] Eventos pendentes no buffer:', 'background: #2196F3; color: white; padding: 3px 5px; border-radius: 3px');
+    console.table(eventosBuffer);
+    
+    // Calcular idade dos eventos
+    const agora = new Date();
+    const eventosComIdade = eventosBuffer.map(evento => {
+      const timestamp = evento.timestamp ? new Date(evento.timestamp) : null;
+      const idadeMs = timestamp ? agora - timestamp : null;
+      const idadeMin = idadeMs ? Math.round(idadeMs / 60000) : 'N/A';
+      
+      return {
+        ...evento,
+        idade_minutos: idadeMin
+      };
+    });
+    
+    // Eventos antigos (mais de 5 minutos)
+    const eventosAntigos = eventosComIdade.filter(e => e.idade_minutos !== 'N/A' && e.idade_minutos > 5);
+    if (eventosAntigos.length > 0) {
+      console.log('%c[AdTracker] ALERTA: Eventos antigos detectados!', 'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
+      console.table(eventosAntigos);
+    }
+    
+    return {
+      total: eventosBuffer.length,
+      eventos: eventosComIdade,
+      eventos_antigos: eventosAntigos.length
+    };
+  } catch (error) {
+    console.error('%c[AdTracker] Erro ao verificar eventos pendentes:', 'color: red', error);
+    return `Erro ao verificar eventos pendentes: ${error.message}`;
+  }
+};
+
+/**
  * Função de diagnóstico para analisar logs e eventos
  */
 export const diagnosticarAdTracker = () => {
@@ -159,7 +213,7 @@ export const diagnosticarAdTracker = () => {
   
   try {
     // Recuperar eventos do buffer
-    const eventosBuffer = JSON.parse(localStorage.getItem('adtracker_events_buffer') || '[]');
+    const eventosBuffer = JSON.parse(localStorage.getItem(BUFFER_STORAGE_KEY) || '[]');
     
     // Estatísticas de logs
     const stats = {
@@ -172,7 +226,23 @@ export const diagnosticarAdTracker = () => {
       eventos_por_tipo: {},
       tempo_medio_no_buffer: 0,
       eventos_antigos: 0,
-      erros_frequentes: {}
+      erros_frequentes: {},
+      otimizacao_payload: {
+        aplicada: 0,
+        tamanho_original: 0,
+        tamanho_otimizado: 0,
+        reducao_media: '0%'
+      },
+      divisao_lotes: {
+        ocorrencias: 0,
+        lotes_totais: 0,
+        media_por_divisao: 0
+      },
+      visibilidade: {
+        mudancas: 0,
+        oculta: 0,
+        visivel: 0
+      }
     };
     
     // Contar logs por tipo
@@ -181,13 +251,40 @@ export const diagnosticarAdTracker = () => {
       
       // Contar tentativas e resultados de beacon
       if (log.tipo === LOG_TYPES.BEACON_ATTEMPT) stats.beacon_attempts++;
-      if (log.tipo === LOG_TYPES.BEACON_SUCCESS) stats.beacon_success++;
+      if (log.tipo === LOG_TYPES.BEACON_SUCCESS) {
+        stats.beacon_success++;
+        
+        // Verificar se houve otimização de payload
+        if (log.tamanho_otimizado) {
+          stats.otimizacao_payload.aplicada++;
+          
+          // Se tiver informação sobre tamanho original vs otimizado
+          if (log.tamanho_original && log.tamanho_payload) {
+            stats.otimizacao_payload.tamanho_original += log.tamanho_original;
+            stats.otimizacao_payload.tamanho_otimizado += log.tamanho_payload;
+          }
+        }
+      }
+      
       if (log.tipo === LOG_TYPES.BEACON_FAILURE) {
         stats.beacon_failure++;
         
         // Contar erros frequentes
         const motivo = log.motivo || 'desconhecido';
         stats.erros_frequentes[motivo] = (stats.erros_frequentes[motivo] || 0) + 1;
+      }
+      
+      // Estatísticas de divisão em lotes
+      if (log.tipo === LOG_TYPES.BATCH_DIVISION) {
+        stats.divisao_lotes.ocorrencias++;
+        stats.divisao_lotes.lotes_totais += (log.numero_lotes || 0);
+      }
+      
+      // Estatísticas de visibilidade
+      if (log.tipo === LOG_TYPES.VISIBILITY_CHANGE) {
+        stats.visibilidade.mudancas++;
+        if (log.visibilidade === 'oculta') stats.visibilidade.oculta++;
+        if (log.visibilidade === 'visivel') stats.visibilidade.visivel++;
       }
     });
     
@@ -196,90 +293,108 @@ export const diagnosticarAdTracker = () => {
       ? (stats.beacon_success / stats.beacon_attempts * 100).toFixed(1) + '%' 
       : 'N/A';
     
-    // Analisar eventos pendentes
-    if (eventosBuffer.length > 0) {
-      // Contar por tipo de anúncio
-      eventosBuffer.forEach(evento => {
-        const tipo = evento.tipo_anuncio || 'desconhecido';
-        stats.eventos_por_tipo[tipo] = (stats.eventos_por_tipo[tipo] || 0) + 1;
-        
-        // Verificar idade do evento
-        if (evento.timestamp) {
-          const idade = Date.now() - new Date(evento.timestamp).getTime();
-          if (idade > 24 * 60 * 60 * 1000) { // mais de 24h
-            stats.eventos_antigos++;
-          }
-        }
-      });
-      
-      // Verificar tempo médio no buffer
-      const agora = Date.now();
-      let tempoTotal = 0;
-      let eventosComTimestamp = 0;
-      
-      eventosBuffer.forEach(evento => {
-        if (evento.timestamp) {
-          tempoTotal += agora - new Date(evento.timestamp).getTime();
-          eventosComTimestamp++;
-        }
-      });
-      
-      if (eventosComTimestamp > 0) {
-        stats.tempo_medio_no_buffer = Math.round(tempoTotal / eventosComTimestamp / 1000) + 's';
-      }
+    // Calcular média de lotes por divisão
+    if (stats.divisao_lotes.ocorrencias > 0) {
+      stats.divisao_lotes.media_por_divisao = 
+        (stats.divisao_lotes.lotes_totais / stats.divisao_lotes.ocorrencias).toFixed(1);
     }
     
-    // Exibir relatório no console
-    console.log('%c[AdTrackerDiagnóstico] Relatório de Saúde do Sistema', 
-      'background: #4CAF50; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
+    // Calcular redução média de payload
+    if (stats.otimizacao_payload.aplicada > 0 && 
+        stats.otimizacao_payload.tamanho_original > 0 &&
+        stats.otimizacao_payload.tamanho_otimizado > 0) {
+      const reducao = (1 - (stats.otimizacao_payload.tamanho_otimizado / stats.otimizacao_payload.tamanho_original)) * 100;
+      stats.otimizacao_payload.reducao_media = reducao.toFixed(1) + '%';
+    }
     
-    console.log('%c[AdTrackerDiagnóstico] Estatísticas de Logs:', 'color: #2196F3; font-weight: bold');
+    // Contar eventos por tipo
+    const tiposEvento = {};
+    eventosBuffer.forEach(evento => {
+      const tipo = evento.tipo_evento || 'desconhecido';
+      tiposEvento[tipo] = (tiposEvento[tipo] || 0) + 1;
+    });
+    stats.eventos_por_tipo = tiposEvento;
+    
+    // Verificar eventos antigos
+    const agora = new Date();
+    let somaIdade = 0;
+    let contadorComTimestamp = 0;
+    
+    eventosBuffer.forEach(evento => {
+      if (evento.timestamp) {
+        const timestamp = new Date(evento.timestamp);
+        const idadeMs = agora - timestamp;
+        const idadeMin = idadeMs / 60000; // em minutos
+        
+        somaIdade += idadeMin;
+        contadorComTimestamp++;
+        
+        // Contar eventos com mais de 5 minutos
+        if (idadeMin > 5) {
+          stats.eventos_antigos++;
+        }
+      }
+    });
+    
+    // Calcular tempo médio no buffer (em minutos)
+    if (contadorComTimestamp > 0) {
+      stats.tempo_medio_no_buffer = (somaIdade / contadorComTimestamp).toFixed(1);
+    }
+    
+    // Exibir estatísticas no console
+    console.group('%c[AdTracker] Diagnóstico', 'background: #2196F3; color: white; padding: 3px 5px; border-radius: 3px');
+    
+    console.log('📊 Estatísticas de logs:');
     console.table(stats.logs_por_tipo);
     
-    console.log('%c[AdTrackerDiagnóstico] Estatísticas de SendBeacon:', 'color: #2196F3; font-weight: bold');
-    console.table({
-      tentativas: stats.beacon_attempts,
-      sucessos: stats.beacon_success,
-      falhas: stats.beacon_failure,
-      taxa_sucesso: stats.beacon_taxa_sucesso
-    });
+    console.log(`📤 Taxa de sucesso do sendBeacon: ${stats.beacon_taxa_sucesso} (${stats.beacon_success}/${stats.beacon_attempts})`);
     
-    console.log('%c[AdTrackerDiagnóstico] Eventos Pendentes:', 'color: #2196F3; font-weight: bold');
-    console.table({
-      total: stats.eventos_pendentes,
-      tempo_medio_no_buffer: stats.tempo_medio_no_buffer,
-      eventos_antigos: stats.eventos_antigos
-    });
-    
-    if (Object.keys(stats.eventos_por_tipo).length > 0) {
-      console.log('%c[AdTrackerDiagnóstico] Eventos por Tipo de Anúncio:', 'color: #2196F3; font-weight: bold');
+    console.log(`🔄 Eventos pendentes: ${stats.eventos_pendentes} (${stats.eventos_antigos} antigos)`);
+    if (stats.eventos_pendentes > 0) {
+      console.log(`⏱️ Tempo médio no buffer: ${stats.tempo_medio_no_buffer} minutos`);
       console.table(stats.eventos_por_tipo);
     }
     
     if (Object.keys(stats.erros_frequentes).length > 0) {
-      console.log('%c[AdTrackerDiagnóstico] Erros Frequentes:', 'color: #2196F3; font-weight: bold');
+      console.log('❌ Erros frequentes:');
       console.table(stats.erros_frequentes);
     }
     
-    // Últimos 10 logs para análise
-    console.log('%c[AdTrackerDiagnóstico] Últimos 10 logs:', 'color: #2196F3; font-weight: bold');
-    console.table(adTrackerLogs.slice(-10));
+    if (stats.otimizacao_payload.aplicada > 0) {
+      console.log('📦 Otimização de payload:');
+      console.log(`- Aplicada em ${stats.otimizacao_payload.aplicada} envios`);
+      console.log(`- Redução média: ${stats.otimizacao_payload.reducao_media}`);
+    }
+    
+    if (stats.divisao_lotes.ocorrencias > 0) {
+      console.log('📚 Divisão em lotes:');
+      console.log(`- Ocorrências: ${stats.divisao_lotes.ocorrencias}`);
+      console.log(`- Média de lotes por divisão: ${stats.divisao_lotes.media_por_divisao}`);
+    }
+    
+    if (stats.visibilidade.mudancas > 0) {
+      console.log('👁️ Mudanças de visibilidade:');
+      console.log(`- Total: ${stats.visibilidade.mudancas}`);
+      console.log(`- Página oculta: ${stats.visibilidade.oculta}`);
+      console.log(`- Página visível: ${stats.visibilidade.visivel}`);
+    }
+    
+    console.groupEnd();
     
     return stats;
   } catch (error) {
-    console.error('%c[AdTrackerDiagnóstico] Erro ao gerar diagnóstico:', 'color: red', error);
-    return 'Erro ao gerar diagnóstico. Veja o console para detalhes.';
+    console.error('%c[AdTrackerLogs] Erro ao gerar diagnóstico:', 'color: red', error);
+    return `Erro ao gerar diagnóstico: ${error.message}`;
   }
 };
 
-// Inicializar automaticamente
-if (typeof window !== 'undefined') {
-  initLogs();
-}
-
+// Exportar funções principais
 export default {
+  initLogs,
   adicionarLog,
-  LOG_TYPES,
+  saveLogs,
+  limparLogs,
+  verEventosPendentes,
   diagnosticarAdTracker,
-  limparLogs
+  LOG_TYPES
 }; 

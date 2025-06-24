@@ -248,68 +248,37 @@ O sistema de anúncios utiliza a seguinte estrutura de pastas:
    /video/           - Para anúncios em formato de vídeo
    /fixo-inferior/   - Para anúncios fixos na parte inferior
    /tela-inteira/    - Para anúncios de tela inteira
-   config.json       - Arquivo de configuração dos anúncios
 ```
 
-### Como Adicionar ou Alterar Anúncios
+### Sistema de Rastreamento de Anúncios (AdTracker)
 
-1. Adicione a imagem do anúncio na pasta correspondente ao seu tipo
-2. Edite o arquivo `config.json` para adicionar ou modificar as configurações do anúncio
+O projeto conta com um sistema avançado de rastreamento de anúncios que monitora visualizações, cliques e tempo de exposição. O sistema foi otimizado para garantir que nenhum dado seja perdido, mesmo quando o usuário fecha a página ou navega para outra URL.
 
-### Formato do Arquivo de Configuração
+#### Principais Funcionalidades
 
-O arquivo `config.json` tem a seguinte estrutura:
+- **Rastreamento preciso**: Monitora visualizações, cliques e tempo de exposição de cada anúncio
+- **Persistência de dados**: Garante que nenhum evento seja perdido, mesmo ao fechar a página
+- **Sistema de logs centralizado**: Registra todas as operações para diagnóstico e auditoria
+- **Otimização de payload**: Reduz o tamanho dos dados enviados para economizar banda
+- **Priorização inteligente**: Eventos mais importantes são enviados primeiro
+- **Detecção de visibilidade**: Aproveita momentos em que o usuário não está interagindo com a página
+- **Envio em lotes otimizados**: Divide eventos em lotes menores para aumentar a taxa de sucesso
 
-```json
-{
-  "banner": [
-    {
-      "id": "banner1",
-      "imagem": "/anuncios/banner/banner1.jpg",
-      "titulo": "Oferta Especial",
-      "descricao": "Desconto de 20%",
-      "urlDestino": "https://exemplo.com/oferta",
-      "ativo": true
-    }
-  ],
-  "lateral": [
-    // configurações para anúncios laterais
-  ],
-  // outros tipos de anúncios
-}
+#### Ferramentas de Diagnóstico
+
+O sistema oferece ferramentas avançadas de diagnóstico acessíveis via console:
+
+```javascript
+// Exibir diagnóstico completo do sistema
+window.adTrackerDiagnostico()
+
+// Limpar logs armazenados
+window.limparLogsAdTracker()
+
+// Visualizar eventos pendentes
+window.verEventosAdTracker()
 ```
 
-Cada tipo de anúncio possui uma lista de configurações possíveis. Os anúncios com `"ativo": true` serão exibidos aleatoriamente.
-
-### Métricas de Anúncios
-
-O sistema registra automáticamente as métricas de visualização de anúncios na tabela `metricas_anuncios` do banco de dados.
-
-# Sistema de Rastreamento de Anúncios
-
-## Melhorias Recentes
-
-Foram implementadas melhorias significativas no sistema de rastreamento de anúncios para resolver o problema de perda de eventos ao fechar a página:
-
-1. **Sistema centralizado de logs** para monitoramento detalhado de eventos
-2. **Persistência de dados** com backup automático no localStorage
-3. **Detecção de eventos antigos** no buffer
-4. **Ferramentas de diagnóstico** acessíveis via console
-
-Para mais detalhes, consulte [documentação de melhorias](docs/adtracker-melhorias.md).
-
-## Funções de Diagnóstico
-
-Disponíveis no console do navegador:
-
-- `window.adTrackerDiagnostico()` - Diagnóstico completo do sistema
-- `window.limparLogsAdTracker()` - Limpa logs armazenados
-- `window.verEventosAdTracker()` - Visualiza eventos pendentes
-
-## Estrutura do Projeto
-
-- `src/components/AdTracker/index.js` - Componente principal de rastreamento
-- `src/components/AdTracker/adTrackerLogs.js` - Sistema centralizado de logs
-- `docs/adtracker-melhorias.md` - Documentação detalhada das melhorias
+Para mais detalhes sobre as melhorias implementadas no sistema de rastreamento de anúncios, consulte o arquivo [docs/adtracker-melhorias.md](./docs/adtracker-melhorias.md).
 
 

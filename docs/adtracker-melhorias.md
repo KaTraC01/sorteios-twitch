@@ -36,6 +36,30 @@ Foi implementado um sistema centralizado de logs (`adTrackerLogs.js`) que:
 - **Estatísticas em tempo real**: Taxa de sucesso, erros frequentes, eventos pendentes
 - **Detecção de eventos antigos**: Alerta sobre eventos que ficam muito tempo no buffer
 
+### 5. Otimização de Payload (Nova)
+
+- **Redução de tamanho**: Abreviação de nomes de campos para reduzir o tamanho do payload
+- **Extração de dados comuns**: Dados repetitivos são enviados apenas uma vez no nível superior
+- **Monitoramento de tamanho**: Registro do tamanho original vs. otimizado para análise de eficiência
+
+### 6. Priorização de Eventos (Nova)
+
+- **Ordenação inteligente**: Eventos mais valiosos (cliques) são enviados primeiro
+- **Priorização por tempo de exposição**: Eventos com maior tempo de exposição têm prioridade
+- **Priorização por recência**: Eventos mais recentes têm prioridade sobre os mais antigos
+
+### 7. Detecção de Visibilidade da Página (Nova)
+
+- **Monitoramento de visibilidade**: Detecta quando a página fica oculta (troca de aba)
+- **Envio proativo**: Envia eventos pendentes quando a página fica oculta
+- **Verificação de eventos antigos**: Verifica eventos antigos quando a página volta a ficar visível
+
+### 8. Envio em Lotes Otimizados (Nova)
+
+- **Divisão em lotes menores**: Eventos são divididos em lotes menores durante o fechamento da página
+- **Monitoramento de lotes**: Registra estatísticas sobre a divisão e envio de lotes
+- **Aumento da taxa de sucesso**: Lotes menores têm maior chance de serem enviados com sucesso
+
 ## Como Usar
 
 ### Diagnóstico
@@ -52,6 +76,9 @@ Isso exibirá:
 - Eventos pendentes e sua idade
 - Erros frequentes
 - Buffer atual
+- Estatísticas de otimização de payload
+- Estatísticas de divisão em lotes
+- Estatísticas de mudanças de visibilidade
 
 ### Limpeza de Logs
 
@@ -76,12 +103,16 @@ window.verEventosAdTracker()
    - O buffer atinge um limite de tamanho (5 eventos)
    - Um timeout expira (10 segundos)
    - A página está sendo fechada (evento beforeunload)
+   - A página fica oculta (evento visibilitychange)
    - Eventos antigos são detectados (verificação a cada 2 minutos)
 
 3. Ao fechar a página:
+   - Os eventos são priorizados (cliques primeiro, maior tempo de exposição, mais recentes)
+   - Os eventos são divididos em lotes menores (10 eventos por lote)
+   - O payload é otimizado (campos abreviados, dados comuns extraídos)
    - Os eventos são salvos no localStorage
    - Os logs são persistidos para análise futura
-   - O `navigator.sendBeacon()` tenta enviar os eventos em background
+   - O `navigator.sendBeacon()` tenta enviar os lotes em background
 
 4. Na próxima visita:
    - O sistema recupera eventos pendentes do localStorage
@@ -94,10 +125,14 @@ window.verEventosAdTracker()
 - **Diagnóstico preciso**: Capacidade de identificar exatamente onde e por que ocorrem falhas
 - **Monitoramento proativo**: Detecção automática de problemas (eventos antigos, falhas recorrentes)
 - **Análise pós-falha**: Logs persistentes permitem analisar o que aconteceu mesmo após erros
+- **Maior eficiência**: Payload reduzido e otimizado diminui o consumo de banda e aumenta a taxa de sucesso
+- **Priorização inteligente**: Eventos mais importantes são enviados primeiro
+- **Detecção de visibilidade**: Aproveitamento de momentos em que o usuário não está interagindo com a página
 
 ## Próximos Passos Recomendados
 
-1. **Implementar compressão de dados**: Reduzir o tamanho do payload enviado
-2. **Sincronização entre abas**: Permitir que uma aba envie eventos de outra que falhou
-3. **Endpoint de fallback**: Criar um endpoint secundário para casos em que o principal falhe
-4. **Retry com backoff exponencial**: Implementar tentativas com intervalos crescentes 
+1. **Sincronização entre abas**: Permitir que uma aba envie eventos de outra que falhou
+2. **Endpoint de fallback**: Criar um endpoint secundário para casos em que o principal falhe
+3. **Retry com backoff exponencial**: Implementar tentativas com intervalos crescentes 
+4. **Interface visual para logs**: Criar uma interface amigável para visualização dos logs
+5. **Compressão avançada**: Implementar algoritmos de compressão para payloads muito grandes 
