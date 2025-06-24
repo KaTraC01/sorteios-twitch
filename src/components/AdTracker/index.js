@@ -19,17 +19,83 @@ const CLOSE_BATCH_SIZE = 10; // Tamanho do lote para fechamento de página (meno
 const componentIds = {}; // Armazenar IDs dos componentes rastreados
 const STALE_EVENT_THRESHOLD = 5 * 60 * 1000; // 5 minutos em ms
 
+// Novo: Set para armazenar IDs de eventos já processados (evitar duplicidade)
+const processedEventIds = new Set();
+const PROCESSED_IDS_STORAGE_KEY = 'adtracker_processed_event_ids';
+const MAX_PROCESSED_IDS = 1000; // Limitar o número de IDs armazenados
+
+// Novo: Função para gerar ID único para evento
+const generateEventId = (eventData) => {
+  const { anuncio_id, tipo_anuncio, tipo_evento, pagina, tempo_exposto } = eventData;
+  const timestamp = new Date().getTime();
+  // Criar um hash simples combinando os dados do evento
+  return `${anuncio_id}_${tipo_anuncio}_${tipo_evento}_${pagina}_${Math.round(tempo_exposto * 100)}_${timestamp}`;
+};
+
+// Novo: Carregar IDs de eventos processados do localStorage
+const loadProcessedEventIds = () => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const storedIds = localStorage.getItem(PROCESSED_IDS_STORAGE_KEY);
+    if (storedIds) {
+      const ids = JSON.parse(storedIds);
+      ids.forEach(id => processedEventIds.add(id));
+      console.log(`%c[AdTracker] ${processedEventIds.size} IDs de eventos processados carregados`, 'color: #9C27B0');
+    }
+  } catch (error) {
+    console.error('%c[AdTracker] Erro ao carregar IDs de eventos processados:', 'color: red', error);
+  }
+};
+
+// Novo: Salvar IDs de eventos processados no localStorage
+const saveProcessedEventIds = () => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    // Converter Set para Array e limitar tamanho
+    const idsArray = Array.from(processedEventIds);
+    const limitedIds = idsArray.slice(-MAX_PROCESSED_IDS);
+    
+    localStorage.setItem(PROCESSED_IDS_STORAGE_KEY, JSON.stringify(limitedIds));
+  } catch (error) {
+    console.error('%c[AdTracker] Erro ao salvar IDs de eventos processados:', 'color: red', error);
+  }
+};
+
 // Adicionar listener para quando a página for fechada
 if (typeof window !== 'undefined') {
+  // Novo: Carregar IDs de eventos processados
+  loadProcessedEventIds();
+  
   // Função para enviar eventos usando sendBeacon (ideal para fechamento de página)
   const sendEventsByBeacon = (events) => {
     if (!events || events.length === 0) {
       return false;
     }
     
+    // Novo: Filtrar eventos já processados
+    const uniqueEvents = events.filter(event => {
+      // Se o evento já tem ID, verificar se já foi processado
+      if (event.event_id && processedEventIds.has(event.event_id)) {
+        return false;
+      }
+      // Se não tem ID, gerar um
+      if (!event.event_id) {
+        event.event_id = generateEventId(event);
+      }
+      return true;
+    });
+    
+    // Se todos os eventos já foram processados, não fazer nada
+    if (uniqueEvents.length === 0) {
+      console.log('%c[AdTracker] Todos os eventos já foram processados, ignorando envio', 'color: #FF9800');
+      return true;
+    }
+    
     // Registrar tentativa de envio no sistema de logs centralizado
     adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_ATTEMPT, {
-      quantidade: events.length,
+      quantidade: uniqueEvents.length,
       timestamp_envio: new Date().toISOString()
     });
     
@@ -39,7 +105,7 @@ if (typeof window !== 'undefined') {
         
         // Registrar falha no sistema de logs centralizado
         adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
-          quantidade: events.length,
+          quantidade: uniqueEvents.length,
           motivo: 'api_indisponivel',
           erro: 'API sendBeacon não disponível neste navegador'
         });
@@ -57,11 +123,11 @@ if (typeof window !== 'undefined') {
       adTrackerLogs.adicionarLog(LOG_TYPES.API_CALL, {
         tipo: 'next_api',
         url: fullUrl,
-        quantidade_eventos: events.length
+        quantidade_eventos: uniqueEvents.length
       });
       
       // Processar valores numéricos antes de enviar
-      const processedEvents = events.map(event => {
+      const processedEvents = uniqueEvents.map(event => {
         // Criar uma cópia para não alterar o original
         const processedEvent = { ...event };
         
@@ -106,19 +172,29 @@ if (typeof window !== 'undefined') {
         tamanho_original: originalSize,
         tamanho_otimizado: payloadSize,
         reducao_percentual: ((originalSize - payloadSize) / originalSize * 100).toFixed(1) + '%',
-        quantidade_eventos: events.length
+        quantidade_eventos: uniqueEvents.length
       });
       
       // Usar sendBeacon que foi projetado especificamente para este cenário
       const result = navigator.sendBeacon(fullUrl, blob);
       
-      console.log(`%c[AdTracker] ${result ? 'SUCESSO' : 'FALHA'} ao enviar ${events.length} eventos via sendBeacon`, 
+      console.log(`%c[AdTracker] ${result ? 'SUCESSO' : 'FALHA'} ao enviar ${uniqueEvents.length} eventos via sendBeacon`, 
         result ? 'color: #4CAF50' : 'color: #F44336');
       
       // Registrar resultado no sistema de logs centralizado
       if (result) {
+        // Novo: Marcar eventos como processados
+        uniqueEvents.forEach(event => {
+          if (event.event_id) {
+            processedEventIds.add(event.event_id);
+          }
+        });
+        
+        // Novo: Salvar IDs processados
+        saveProcessedEventIds();
+        
         adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_SUCCESS, {
-          quantidade: events.length,
+          quantidade: uniqueEvents.length,
           tamanho_payload: payloadSize,
           tamanho_original: originalSize,
           tamanho_otimizado: true,
@@ -126,7 +202,7 @@ if (typeof window !== 'undefined') {
         });
       } else {
         adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
-          quantidade: events.length,
+          quantidade: uniqueEvents.length,
           tamanho_payload: payloadSize,
           motivo: 'beacon_retornou_falso',
           timestamp_envio: new Date().toISOString()
@@ -139,7 +215,7 @@ if (typeof window !== 'undefined') {
       
       // Registrar erro no sistema de logs centralizado
       adTrackerLogs.adicionarLog(LOG_TYPES.BEACON_FAILURE, {
-        quantidade: events.length,
+        quantidade: uniqueEvents.length,
         motivo: 'excecao',
         erro: error.message,
         stack: error.stack
@@ -198,9 +274,28 @@ const registerEvent = async (eventData) => {
   if (!eventData) return;
   
   try {
-    // Adicionar timestamp ao evento
+    // Novo: Gerar ID único para o evento
+    const eventId = generateEventId(eventData);
+    
+    // Novo: Verificar se o evento já foi processado
+    if (processedEventIds.has(eventId)) {
+      console.log(`%c[AdTracker] Evento duplicado detectado e ignorado: ${eventId}`, 'color: #FF9800');
+      
+      // Registrar evento duplicado no sistema de logs
+      adTrackerLogs.adicionarLog(LOG_TYPES.EVENT_DUPLICATE, {
+        event_id: eventId,
+        tipo_evento: eventData.tipo_evento,
+        anuncio_id: eventData.anuncio_id,
+        tipo_anuncio: eventData.tipo_anuncio
+      });
+      
+      return false;
+    }
+    
+    // Adicionar timestamp e ID ao evento
     const eventWithTimestamp = {
       ...eventData,
+      event_id: eventId,
       timestamp: new Date().toISOString() // Adicionar timestamp para rastrear idade do evento
     };
     
@@ -212,7 +307,8 @@ const registerEvent = async (eventData) => {
       tipo_evento: eventWithTimestamp.tipo_evento,
       anuncio_id: eventWithTimestamp.anuncio_id,
       tipo_anuncio: eventWithTimestamp.tipo_anuncio,
-      buffer_size: eventsBuffer.length
+      buffer_size: eventsBuffer.length,
+      event_id: eventId
     });
     
     // Se o buffer atingir o limite, enviar imediatamente
@@ -265,8 +361,21 @@ const flushEventsBuffer = async () => {
   });
   
   try {
-    // Fazer uma cópia dos eventos para enviar
-    const eventsToSend = [...eventsBuffer];
+    // Novo: Filtrar eventos já processados
+    const eventsToSend = eventsBuffer.filter(event => {
+      return !event.event_id || !processedEventIds.has(event.event_id);
+    });
+    
+    // Se todos os eventos já foram processados, limpar o buffer e retornar
+    if (eventsToSend.length === 0) {
+      console.log('%c[AdTracker] Todos os eventos já foram processados, limpando buffer', 'color: #FF9800');
+      eventsBuffer = [];
+      localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
+      return true;
+    }
+    
+    // Fazer uma cópia dos IDs para marcar como processados em caso de sucesso
+    const eventIds = eventsToSend.map(event => event.event_id).filter(Boolean);
     
     // Limpar o buffer antes de enviar para evitar duplicação
     // se o usuário interagir durante o envio
@@ -325,6 +434,14 @@ const flushEventsBuffer = async () => {
       throw new Error(`Falha ao processar eventos: ${result.message || 'Erro desconhecido'}`);
     }
     
+    // Novo: Marcar eventos como processados
+    eventIds.forEach(id => {
+      if (id) processedEventIds.add(id);
+    });
+    
+    // Novo: Salvar IDs processados
+    saveProcessedEventIds();
+    
     // Registrar sucesso
     adTrackerLogs.adicionarLog(LOG_TYPES.FLUSH_SUCCESS, {
       quantidade: eventsToSend.length,
@@ -354,14 +471,20 @@ const flushEventsBuffer = async () => {
       if (storedEvents.length > 0) {
         eventsBuffer = [...eventsBuffer, ...storedEvents];
         
-        // Remover possíveis duplicatas (por ID de evento se disponível)
-        if (eventsBuffer.length > 0 && eventsBuffer[0].id) {
-          const uniqueEvents = {};
-          eventsBuffer.forEach(event => {
-            uniqueEvents[event.id] = event;
-          });
-          eventsBuffer = Object.values(uniqueEvents);
-        }
+        // Novo: Remover possíveis duplicatas por ID de evento
+        const uniqueEvents = {};
+        eventsBuffer.forEach(event => {
+          if (event.event_id) {
+            // Se o evento já tem ID, usar como chave
+            uniqueEvents[event.event_id] = event;
+          } else {
+            // Se não tem ID, gerar um
+            const id = generateEventId(event);
+            event.event_id = id;
+            uniqueEvents[id] = event;
+          }
+        });
+        eventsBuffer = Object.values(uniqueEvents);
         
         // Salvar buffer atualizado
         localStorage.setItem(BUFFER_STORAGE_KEY, JSON.stringify(eventsBuffer));
@@ -390,21 +513,35 @@ const recoverPendingEvents = () => {
     if (storedEvents.length > 0) {
       console.log(`%c[AdTracker] Recuperando ${storedEvents.length} eventos pendentes do localStorage`, 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 3px');
       
-      // Adicionar eventos recuperados ao buffer
-      eventsBuffer = [...eventsBuffer, ...storedEvents];
+      // Novo: Filtrar eventos já processados
+      const uniqueEvents = storedEvents.filter(event => {
+        // Se o evento já tem ID, verificar se já foi processado
+        if (event.event_id && processedEventIds.has(event.event_id)) {
+          return false;
+        }
+        // Se não tem ID, gerar um
+        if (!event.event_id) {
+          event.event_id = generateEventId(event);
+        }
+        return true;
+      });
       
-      // Remover possíveis duplicatas (por ID de evento se disponível)
-      if (eventsBuffer.length > 0 && eventsBuffer[0].id) {
-        const uniqueEvents = {};
-        eventsBuffer.forEach(event => {
-          uniqueEvents[event.id] = event;
-        });
-        eventsBuffer = Object.values(uniqueEvents);
-      }
+      // Adicionar eventos recuperados ao buffer
+      eventsBuffer = [...eventsBuffer, ...uniqueEvents];
+      
+      // Novo: Remover possíveis duplicatas por ID de evento
+      const uniqueEventsMap = {};
+      eventsBuffer.forEach(event => {
+        if (event.event_id) {
+          uniqueEventsMap[event.event_id] = event;
+        }
+      });
+      eventsBuffer = Object.values(uniqueEventsMap);
       
       // Registrar sucesso na recuperação
       adTrackerLogs.adicionarLog(LOG_TYPES.RECOVERY_SUCCESS, {
-        quantidade: storedEvents.length,
+        quantidade_total: storedEvents.length,
+        quantidade_unica: uniqueEvents.length,
         timestamp: new Date().toISOString()
       });
       
@@ -419,7 +556,7 @@ const recoverPendingEvents = () => {
         }
       }, 3000);
       
-      return storedEvents.length;
+      return uniqueEvents.length;
     }
     
     return 0;
@@ -466,6 +603,7 @@ const otimizarPayload = (eventos) => {
       t_exp: evento.tempo_exposto, // tempo_exposto
       ts: evento.timestamp, // timestamp
       s_id: evento.session_id, // session_id
+      e_id: evento.event_id, // event_id (novo)
       disp: evento.dispositivo === 'mobile' ? 'm' : evento.dispositivo === 'desktop' ? 'd' : evento.dispositivo // dispositivo
       // Dados comuns são omitidos aqui
     };

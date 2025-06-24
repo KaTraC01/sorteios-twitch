@@ -30,7 +30,8 @@ export const LOG_TYPES = {
   BATCH_DIVISION: 'batch_division',      // Divisão de eventos em lotes
   PAYLOAD_OPTIMIZATION: 'payload_optimization', // Otimização de payload
   COMPRESSION_APPLIED: 'compression_applied', // Compressão de dados aplicada
-  API_CALL: 'api_call'                   // Chamada para API
+  API_CALL: 'api_call',                  // Chamada para API
+  EVENT_DUPLICATE: 'event_duplicate'     // Evento duplicado detectado
 };
 
 // Array global para armazenar logs em memória
@@ -388,6 +389,55 @@ export const diagnosticarAdTracker = () => {
   }
 };
 
+/**
+ * Função de diagnóstico para verificar duplicidade
+ */
+export const diagnosticarDuplicidade = () => {
+  if (typeof window === 'undefined') return 'Indisponível no servidor';
+  
+  try {
+    // Recuperar IDs processados
+    const storedIds = localStorage.getItem('adtracker_processed_event_ids');
+    const idsProcessados = storedIds ? JSON.parse(storedIds) : [];
+    
+    // Recuperar eventos do buffer
+    const eventosBuffer = JSON.parse(localStorage.getItem('adtracker_events_buffer') || '[]');
+    
+    // Verificar eventos com IDs já processados
+    const eventosDuplicados = eventosBuffer.filter(evento => 
+      evento.event_id && idsProcessados.includes(evento.event_id)
+    );
+    
+    // Estatísticas
+    const stats = {
+      total_ids_processados: idsProcessados.length,
+      total_eventos_buffer: eventosBuffer.length,
+      eventos_duplicados_no_buffer: eventosDuplicados.length,
+      percentual_duplicados: eventosBuffer.length > 0 
+        ? ((eventosDuplicados.length / eventosBuffer.length) * 100).toFixed(1) + '%'
+        : '0%'
+    };
+    
+    console.log('%c[AdTracker] Diagnóstico de Duplicidade:', 'background: #9C27B0; color: white; padding: 3px 5px; border-radius: 3px');
+    console.table(stats);
+    
+    if (eventosDuplicados.length > 0) {
+      console.log('%c[AdTracker] Eventos duplicados detectados no buffer:', 'color: #F44336');
+      console.table(eventosDuplicados);
+    }
+    
+    return stats;
+  } catch (error) {
+    console.error('%c[AdTracker] Erro ao diagnosticar duplicidade:', 'color: red', error);
+    return `Erro ao diagnosticar duplicidade: ${error.message}`;
+  }
+};
+
+// Expor função no escopo global para debugging
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  window.diagnosticarDuplicidadeAdTracker = diagnosticarDuplicidade;
+}
+
 // Exportar funções principais
 export default {
   initLogs,
@@ -396,5 +446,6 @@ export default {
   limparLogs,
   verEventosPendentes,
   diagnosticarAdTracker,
+  diagnosticarDuplicidade,
   LOG_TYPES
 }; 

@@ -44,6 +44,7 @@ export default async function handler(req, res) {
         tempo_exposto: evento.t_exp,
         timestamp: evento.ts,
         session_id: evento.s_id,
+        event_id: evento.e_id,
         dispositivo: evento.disp === 'm' ? 'mobile' : evento.disp === 'd' ? 'desktop' : evento.disp,
         // Adicionar dados comuns
         navegador: comuns.navegador,
@@ -53,10 +54,55 @@ export default async function handler(req, res) {
       };
     });
     
-    // Inserir eventos na tabela
+    // Novo: Verificar eventos duplicados no banco de dados
+    const eventIds = eventosExpandidos
+      .filter(evento => evento.event_id) // Filtrar apenas eventos com ID
+      .map(evento => evento.event_id);   // Extrair apenas os IDs
+    
+    let eventosUnicos = eventosExpandidos;
+    
+    // Se houver IDs para verificar
+    if (eventIds.length > 0) {
+      try {
+        // Consultar eventos existentes com os mesmos IDs
+        const { data: eventosExistentes } = await supabase
+          .from('eventos_anuncios')
+          .select('event_id')
+          .in('event_id', eventIds);
+        
+        // Se encontrou eventos existentes
+        if (eventosExistentes && eventosExistentes.length > 0) {
+          // Criar um Set com os IDs existentes para verificação rápida
+          const idsExistentes = new Set(eventosExistentes.map(e => e.event_id));
+          
+          // Filtrar apenas eventos que não existem no banco
+          eventosUnicos = eventosExpandidos.filter(evento => 
+            !evento.event_id || !idsExistentes.has(evento.event_id)
+          );
+          
+          console.log(`[AdTracker API] Filtrados ${eventosExpandidos.length - eventosUnicos.length} eventos duplicados`);
+        }
+      } catch (error) {
+        console.warn('[AdTracker API] Erro ao verificar duplicidade:', error);
+        // Em caso de erro na verificação, continuar com todos os eventos
+        // É melhor arriscar duplicidade do que perder eventos
+      }
+    }
+    
+    // Se todos os eventos forem duplicados, retornar sucesso
+    if (eventosUnicos.length === 0) {
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Todos os eventos já existem no banco de dados',
+        duplicados: eventosExpandidos.length,
+        inseridos: 0
+      });
+    }
+    
+    // Inserir eventos únicos na tabela
     const { data, error } = await supabase
       .from('eventos_anuncios')
-      .insert(eventosExpandidos);
+      .insert(eventosUnicos);
     
     if (error) {
       console.error('Erro ao inserir eventos otimizados:', error);
@@ -65,7 +111,7 @@ export default async function handler(req, res) {
       try {
         const { data: rpcData, error: rpcError } = await supabase
           .rpc('inserir_eventos_anuncios_lote', {
-            eventos: eventosExpandidos
+            eventos: eventosUnicos
           });
         
         if (rpcError) {
@@ -75,7 +121,8 @@ export default async function handler(req, res) {
         return res.status(200).json({ 
           success: true, 
           message: 'Eventos inseridos com sucesso via RPC',
-          count: eventosExpandidos.length
+          count: eventosUnicos.length,
+          duplicados: eventosExpandidos.length - eventosUnicos.length
         });
       } catch (rpcError) {
         return res.status(500).json({ 
@@ -90,7 +137,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       success: true, 
       message: 'Eventos inseridos com sucesso',
-      count: eventosExpandidos.length
+      count: eventosUnicos.length,
+      duplicados: eventosExpandidos.length - eventosUnicos.length
     });
     
   } catch (error) {
