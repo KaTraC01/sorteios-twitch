@@ -1,76 +1,56 @@
-// Este arquivo pode ser usado para injetar variáveis de ambiente no frontend
-// Será carregado antes da aplicação React
-//.
-// AVISO: Este arquivo não deve conter credenciais reais em produção!
-// As variáveis de ambiente devem ser injetadas pelo processo de build da Vercel
+// CONFIGURAÇÃO SEGURA DE AMBIENTE - SEM INJEÇÃO DE CREDENCIAIS
+// Este arquivo apenas verifica se as variáveis de ambiente da Vercel estão disponíveis
+// Comentário de teste: .
 
-// Definir window.__ENV__ apenas se não existir (evita expor a estrutura)
-window.__ENV__ = window.__ENV__ || {};
+// IMPORTANTE: Este arquivo NÃO deve ter credenciais hardcoded
+// As variáveis vem exclusivamente via Next.js process.env
 
-// Função para verificar se estamos em ambiente de produção
+// Função para verificar ambiente
 function isProduction() {
-  // Verificar se a URL atual contém 'localhost' ou é um ambiente de desenvolvimento
   return !(
     window.location.hostname.includes('localhost') || 
-    window.location.hostname.includes('127.0.0.1') ||
-    window.location.hostname.includes('.vercel.app') // ambientes de preview
+    window.location.hostname.includes('127.0.0.1')
   );
 }
 
-// Função para log seguro (só mostra em desenvolvimento)
+// Log seguro
 function logSeguro(mensagem, ...args) {
   if (!isProduction()) {
     console.log(mensagem, ...args);
   }
 }
 
-// Função para log de erro (mostrar versão simplificada em produção)
+// Log de erro
 function logErro(mensagem, ...args) {
   if (isProduction()) {
-    console.error("Erro de configuração. Verifique as variáveis de ambiente.");
+    console.error("Erro de configuração. Verificar variáveis de ambiente na Vercel.");
   } else {
     console.error(mensagem, ...args);
   }
 }
 
-// Função para verificar e configurar as variáveis de ambiente
-function configurarVariaveisSupabase() {
-  // SEGURANÇA APRIMORADA: Verificar apenas variáveis já injetadas durante o build
+// Verificação de configuração (SEM FALLBACKS INSEGUROS)
+function verificarConfiguracao() {
+  // Verificar apenas se as variáveis do Next.js estão disponíveis
+  const urlDisponivel = !!window.NEXT_PUBLIC_SUPABASE_URL;
+  const keyDisponivel = !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  // Verificar se as variáveis já estão disponíveis (injetadas pela Vercel)
-  let supabaseUrl = window.NEXT_PUBLIC_SUPABASE_URL;
-  let supabaseAnonKey = window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  // Fallback para window.__ENV__ se necessário (apenas se injetado de forma segura)
-  if (!supabaseUrl && window.__ENV__ && window.__ENV__.SUPABASE_URL) {
-    supabaseUrl = window.__ENV__.SUPABASE_URL;
-    window.NEXT_PUBLIC_SUPABASE_URL = supabaseUrl;
-  }
-  
-  if (!supabaseAnonKey && window.__ENV__ && window.__ENV__.SUPABASE_ANON_KEY) {
-    supabaseAnonKey = window.__ENV__.SUPABASE_ANON_KEY;
-    window.NEXT_PUBLIC_SUPABASE_ANON_KEY = supabaseAnonKey;
-  }
-  
-  // Verificar configuração (sem expor as chaves)
-  const urlConfigurada = !!supabaseUrl;
-  const keyConfigurada = !!supabaseAnonKey;
-  
-  if (urlConfigurada && keyConfigurada) {
-    logSeguro('✅ Variáveis do Supabase configuradas com sucesso no frontend!');
-    logSeguro(`✅ URL detectada: ${supabaseUrl ? '***.' + supabaseUrl.split('.').slice(-2).join('.') : 'Não'}`);
-    logSeguro(`✅ Chave detectada: ${supabaseAnonKey ? `***${supabaseAnonKey.slice(-4)}` : 'Não'}`);
+  if (urlDisponivel && keyDisponivel) {
+    logSeguro('✅ Configuração Supabase OK via Next.js');
+    logSeguro('✅ URL: ***supabase.co');
+    logSeguro('✅ Key: ***' + (window.NEXT_PUBLIC_SUPABASE_ANON_KEY ? window.NEXT_PUBLIC_SUPABASE_ANON_KEY.slice(-4) : '????'));
   } else {
-    logErro('❌ ERRO: Falha ao configurar variáveis do Supabase no frontend!');
-    logErro(`URL configurada: ${urlConfigurada ? 'Sim' : 'Não'}`);
-    logErro(`Chave configurada: ${keyConfigurada ? 'Sim' : 'Não'}`);
-    logErro('🔧 Verifique as variáveis de ambiente na Vercel:');
-    logErro('   - NEXT_PUBLIC_SUPABASE_URL');
-    logErro('   - NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    logErro('❌ Configuração Supabase incompleta!');
+    logErro(`URL: ${urlDisponivel ? 'OK' : 'FALTA'}`);
+    logErro(`Key: ${keyDisponivel ? 'OK' : 'FALTA'}`);
+    logErro('Verificar variáveis na Vercel: NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
+  
+  return urlDisponivel && keyDisponivel;
 }
 
-// Executar a configuração apenas no navegador
+// Executar verificação
 if (typeof window !== 'undefined') {
-  configurarVariaveisSupabase();
-} 
+  // Aguardar um pouco para as variáveis do Next.js estarem disponíveis
+  setTimeout(verificarConfiguracao, 100);
+}
