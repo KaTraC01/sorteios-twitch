@@ -7,28 +7,8 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
-  // Configurações para o processamento de HTML
-  webpack: (config, { isServer, dev }) => {
-    // Adicionar regra para substituir placeholders nos arquivos HTML
-    config.module.rules.push({
-      test: /\.html$/,
-      use: [
-        {
-          loader: 'html-loader',
-          options: {
-            minimize: !dev,
-            preprocessor: (content) => {
-              // Substituir placeholders de variáveis de ambiente
-              return content
-                .replace(/%NEXT_PUBLIC_SUPABASE_URL%/g, process.env.NEXT_PUBLIC_SUPABASE_URL || '')
-                .replace(/%NEXT_PUBLIC_SUPABASE_ANON_KEY%/g, '**valor definido nas variáveis de ambiente**'); // Não expor a chave
-            },
-          },
-        },
-      ],
-    });
-    return config;
-  },
+  // SEGURANÇA: Configuração webpack removida para evitar vazamento de credenciais
+  // As variáveis de ambiente são injetadas automaticamente pelo Next.js via 'env'
   // Configuração para suportar páginas HTML estáticas
   trailingSlash: true,
 };

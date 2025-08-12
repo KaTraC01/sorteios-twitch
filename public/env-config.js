@@ -35,48 +35,38 @@ function logErro(mensagem, ...args) {
 
 // Função para verificar e configurar as variáveis de ambiente
 function configurarVariaveisSupabase() {
-  // Função auxiliar para obter valor de variável de diversas fontes
-  function obterValor(metaName, envKey, placeholder) {
-    // 1. Verificar meta tag
-    const meta = document.querySelector(`meta[name="${metaName}"]`);
-    if (meta) {
-      const valor = meta.getAttribute('content');
-      // Garantir que o valor não é um placeholder (mantendo a verificação exata como antes)
-      if (valor && valor !== placeholder) {
-        return valor;
-      }
-    }
-    
-    // 2. Verificar window.__ENV__
-    return window.__ENV__ && window.__ENV__[envKey] ? window.__ENV__[envKey] : null;
-  }
+  // SEGURANÇA APRIMORADA: Verificar apenas variáveis já injetadas durante o build
   
-  // Obter valores das variáveis de ambiente
-  const supabaseUrl = window.NEXT_PUBLIC_SUPABASE_URL || 
-                      obterValor('supabase-url', 'SUPABASE_URL', '%NEXT_PUBLIC_SUPABASE_URL%');
+  // Verificar se as variáveis já estão disponíveis (injetadas pela Vercel)
+  let supabaseUrl = window.NEXT_PUBLIC_SUPABASE_URL;
+  let supabaseAnonKey = window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  const supabaseAnonKey = window.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
-                          obterValor('supabase-anon-key', 'SUPABASE_ANON_KEY', '%NEXT_PUBLIC_SUPABASE_ANON_KEY%');
-  
-  // Atribuir valores encontrados às variáveis globais
-  if (supabaseUrl) {
+  // Fallback para window.__ENV__ se necessário (apenas se injetado de forma segura)
+  if (!supabaseUrl && window.__ENV__ && window.__ENV__.SUPABASE_URL) {
+    supabaseUrl = window.__ENV__.SUPABASE_URL;
     window.NEXT_PUBLIC_SUPABASE_URL = supabaseUrl;
   }
   
-  if (supabaseAnonKey) {
+  if (!supabaseAnonKey && window.__ENV__ && window.__ENV__.SUPABASE_ANON_KEY) {
+    supabaseAnonKey = window.__ENV__.SUPABASE_ANON_KEY;
     window.NEXT_PUBLIC_SUPABASE_ANON_KEY = supabaseAnonKey;
   }
   
   // Verificar configuração (sem expor as chaves)
-  const urlConfigurada = !!window.NEXT_PUBLIC_SUPABASE_URL;
-  const keyConfigurada = !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const urlConfigurada = !!supabaseUrl;
+  const keyConfigurada = !!supabaseAnonKey;
   
   if (urlConfigurada && keyConfigurada) {
     logSeguro('✅ Variáveis do Supabase configuradas com sucesso no frontend!');
+    logSeguro(`✅ URL detectada: ${supabaseUrl ? '***.' + supabaseUrl.split('.').slice(-2).join('.') : 'Não'}`);
+    logSeguro(`✅ Chave detectada: ${supabaseAnonKey ? `***${supabaseAnonKey.slice(-4)}` : 'Não'}`);
   } else {
     logErro('❌ ERRO: Falha ao configurar variáveis do Supabase no frontend!');
     logErro(`URL configurada: ${urlConfigurada ? 'Sim' : 'Não'}`);
     logErro(`Chave configurada: ${keyConfigurada ? 'Sim' : 'Não'}`);
+    logErro('🔧 Verifique as variáveis de ambiente na Vercel:');
+    logErro('   - NEXT_PUBLIC_SUPABASE_URL');
+    logErro('   - NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
 }
 
