@@ -1,0 +1,5 @@
+[33mff9c6020[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m  SEGURANÇA: Correção crítica de vazamento de credenciais
+[33m1aa61959[m tentanro remover as duplicações ao inserir track no banco
+[33m2bb1f18c[m  espero que nao quebre tudo apos mexer tanto na otimização do lote adtrackre
+[33me3beb9f2[m  adicionado e modificado logs para tentar entender pq as métricas nao estao sendo enviadas ao banco de dados ao fechar a página
+[33m9a54d05e[m  acertando impressão e clicque do tela inteira
