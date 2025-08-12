@@ -1,6 +1,6 @@
 // Este arquivo pode ser usado para injetar variáveis de ambiente no frontend
 // Será carregado antes da aplicação React
-
+//.
 // AVISO: Este arquivo não deve conter credenciais reais em produção!
 // As variáveis de ambiente devem ser injetadas pelo processo de build da Vercel
 
