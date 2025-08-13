@@ -100,6 +100,7 @@ const Anuncio = ({
   
   const handleFechar = (e) => {
     e.preventDefault();
+    e.stopPropagation(); // 🎯 ADICIONAR ESTA LINHA
     setFechado(true);
     
     if (onFechar && typeof onFechar === 'function') {
