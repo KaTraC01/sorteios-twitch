@@ -38,7 +38,7 @@ function verificarConfiguracao() {
   if (urlDisponivel && keyDisponivel) {
     logSeguro('✅ Configuração Supabase OK via Next.js');
     logSeguro('✅ URL: ***supabase.co');
-    logSeguro('✅ Key: ***' + (window.NEXT_PUBLIC_SUPABASE_ANON_KEY ? window.NEXT_PUBLIC_SUPABASE_ANON_KEY.slice(-4) : '????'));
+    logSeguro('✅ Key: ***[CONFIGURADA]');
   } else {
     logErro('❌ Configuração Supabase incompleta!');
     logErro(`URL: ${urlDisponivel ? 'OK' : 'FALTA'}`);
