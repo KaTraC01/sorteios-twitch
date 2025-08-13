@@ -1081,17 +1081,11 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     const componentId = componentIdRef.current;
     
     // Verificar se temos todos os dados necessários
-    if (!anuncioId || !tipoAnuncio || !anuncioRef.current || !observerElementRef.current) {
+    if (!anuncioId || !tipoAnuncio) {
       console.warn(`%c[AdTracker] [${componentIdRef.current}] ERRO: Dados incompletos para configurar detecção de visibilidade`, 'color: red', {
-        anuncioId, tipoAnuncio, refExiste: !!anuncioRef.current, observerElementExiste: !!observerElementRef.current
+        anuncioId, tipoAnuncio
       });
       return; // Não configurar o observer se faltar qualquer dado essencial
-    }
-    
-    // Limpar observer anterior se existir
-    if (observerRef.current && observerElementRef.current) {
-      observerRef.current.unobserve(observerElementRef.current);
-      observerRef.current = null;
     }
     
     // Usar o paginaId fornecido ou cair para o pathname como fallback
@@ -1099,6 +1093,150 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     const pagina = paginaId || currentPath || '/';
     
     console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): Configurando observer em ${pagina}`, 'color: #3F51B5');
+    
+    // NOVA LÓGICA ESPECÍFICA PARA TELA-INTEIRA
+    if (tipoAnuncio === 'tela-inteira') {
+      console.log(`%c[AdTracker] [${componentIdRef.current}] Configurando detecção específica para tela-inteira via portal`, 'color: #FF9800; font-weight: bold');
+      
+      let telaInteiraElement = null;
+      let visibilityStartTime = null;
+      let impressionRegistered = false;
+      let clickListener = null;
+      
+      const registerImpression = (timeVisible) => {
+        if (impressionRegistered) return; // Evitar duplicatas
+        
+        console.log(`%c[AdTracker] [${componentIdRef.current}] Registrando IMPRESSÃO tela-inteira: ${timeVisible.toFixed(2)}s`, 'background: #4CAF50; color: white; padding: 3px 5px; border-radius: 3px');
+        
+        registerEvent({
+          anuncio_id: anuncioId,
+          tipo_anuncio: tipoAnuncio,
+          pagina: paginaId,
+          tipo_evento: 'impressao', // SEM INVERSÃO - impressão é impressão
+          tempo_exposto: timeVisible,
+          visivel: false,
+          dispositivo: getDeviceInfo(),
+          pais: locationInfo.pais,
+          regiao: locationInfo.regiao,
+          session_id: sessionId.current,
+          timestamp: new Date().toISOString()
+        });
+        
+        impressionRegistered = true;
+      };
+      
+      const registerClick = () => {
+        const timeToClick = visibilityStartTime ? (Date.now() - visibilityStartTime) / 1000 : 0.1;
+        
+        console.log(`%c[AdTracker] [${componentIdRef.current}] Registrando CLIQUE tela-inteira: ${timeToClick.toFixed(2)}s`, 'background: #E91E63; color: white; padding: 3px 5px; border-radius: 3px');
+        
+        registerEvent({
+          anuncio_id: anuncioId,
+          tipo_anuncio: tipoAnuncio,
+          pagina: paginaId,
+          tipo_evento: 'clique', // SEM INVERSÃO - clique é clique
+          tempo_exposto: timeToClick,
+          visivel: true,
+          dispositivo: getDeviceInfo(),
+          pais: locationInfo.pais,
+          regiao: locationInfo.regiao,
+          session_id: sessionId.current,
+          timestamp: new Date().toISOString()
+        });
+      };
+      
+      const checkTelaInteiraVisibility = () => {
+        const newElement = document.body.querySelector('.anuncio-tela-inteira');
+        
+        if (newElement && !telaInteiraElement) {
+          // ANÚNCIO APARECEU - INICIAR IMPRESSÃO
+          telaInteiraElement = newElement;
+          visibilityStartTime = Date.now();
+          setIsVisible(true);
+          setVisibleStartTime(Date.now());
+          
+          console.log(`%c[AdTracker] [${componentIdRef.current}] Tela-inteira APARECEU - iniciando contagem de impressão`, 'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px');
+          
+          // ADICIONAR LISTENER DE CLIQUE CORRETO
+          clickListener = (e) => {
+            // Verificar se NÃO foi clique no botão X
+            if (!e.target.closest('.anuncio-tela-inteira-fechar')) {
+              registerClick();
+            }
+          };
+          
+          telaInteiraElement.addEventListener('click', clickListener);
+          
+        } else if (!newElement && telaInteiraElement) {
+          // ANÚNCIO DESAPARECEU - REGISTRAR IMPRESSÃO
+          const timeVisible = visibilityStartTime ? (Date.now() - visibilityStartTime) / 1000 : 0;
+          
+          if (timeVisible >= 0.5) { // Mínimo de 0.5s para impressão
+            registerImpression(timeVisible);
+          }
+          
+          // Limpar listeners
+          if (clickListener && telaInteiraElement) {
+            telaInteiraElement.removeEventListener('click', clickListener);
+            clickListener = null;
+          }
+          
+          telaInteiraElement = null;
+          visibilityStartTime = null;
+          setIsVisible(false);
+          setVisibleStartTime(null);
+          
+          console.log(`%c[AdTracker] [${componentIdRef.current}] Tela-inteira DESAPARECEU - impressão registrada`, 'background: #FF5722; color: white; padding: 2px 5px; border-radius: 3px');
+        }
+      };
+      
+      // Verificação inicial e periódica
+      checkTelaInteiraVisibility();
+      const timer = setInterval(checkTelaInteiraVisibility, 250);
+      
+      // MutationObserver para detectar mudanças no DOM
+      const observer = new MutationObserver(checkTelaInteiraVisibility);
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+      
+      // Cleanup
+      return () => {
+        clearInterval(timer);
+        observer.disconnect();
+        
+        // Se ainda estiver visível ao desmontar, registrar impressão
+        if (telaInteiraElement && visibilityStartTime) {
+          const timeVisible = (Date.now() - visibilityStartTime) / 1000;
+          if (timeVisible >= 0.5) {
+            registerImpression(timeVisible);
+          }
+        }
+        
+        // Limpar listener se ainda existir
+        if (clickListener && telaInteiraElement) {
+          telaInteiraElement.removeEventListener('click', clickListener);
+        }
+      };
+    }
+    
+    // LÓGICA EXISTENTE PARA TODOS OS OUTROS TIPOS
+    // Verificar refs necessários apenas para outros tipos
+    if (!anuncioRef.current || !observerElementRef.current) {
+      console.warn(`%c[AdTracker] [${componentIdRef.current}] ERRO: Refs incompletos para configurar IntersectionObserver`, 'color: red', {
+        anuncioId, tipoAnuncio, refExiste: !!anuncioRef.current, observerElementExiste: !!observerElementRef.current
+      });
+      return;
+    }
+    
+    // Limpar observer anterior se existir
+    if (observerRef.current && observerElementRef.current) {
+      observerRef.current.unobserve(observerElementRef.current);
+      observerRef.current = null;
+    }
     
     // Flag para controlar se já enviamos evento neste ciclo de vida do componente
     let hasReportedExposure = false;
@@ -1498,6 +1636,12 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
   const handleClick = () => {
     const componentId = componentIdRef.current;
     
+    // Para tela-inteira, o clique já é tratado na lógica específica acima
+    if (tipoAnuncio === 'tela-inteira') {
+      console.log(`%c[AdTracker] [${componentIdRef.current}] Clique em tela-inteira ignorado - tratado pela lógica específica`, 'color: #FF9800');
+      return;
+    }
+    
     // Verificar se temos todos os dados necessários
     if (!anuncioId || !tipoAnuncio) {
       console.warn(`%c[AdTracker] [${componentIdRef.current}] ERRO: Tentativa de registrar clique sem dados essenciais`, 'color: red');
@@ -1515,13 +1659,8 @@ const AdTracker = ({ children, anuncioId, tipoAnuncio, paginaId, preservarLayout
     // Garantir que o tempo seja um número válido e arredondado (mas não acumular tempo total)
     const tempoArredondado = Math.max(0.1, Math.round(tempoReacao * 100) / 100);
     
-    // Determinar o tipo de evento a ser registrado, invertendo para tela-inteira
+    // Para outros tipos de anúncios (não tela-inteira), registrar clique normalmente
     let tipoEvento = 'clique';
-    if (tipoAnuncio === 'tela-inteira') {
-      tipoEvento = 'impressao'; // Inverter para tela-inteira
-      console.log(`%c[AdTracker] [${componentIdRef.current}] Invertendo tipo_evento para tela-inteira: clique -> impressao`, 
-        'background: #FF5722; color: white; padding: 3px 5px; border-radius: 3px');
-    }
     
     console.log(`%c[AdTracker] [${componentIdRef.current}] Anúncio ${tipoAnuncio} (${anuncioId}): CLIQUE detectado! Registrando como ${tipoEvento}. Tempo de reação: ${tempoArredondado.toFixed(2)}s`, 'background: #E91E63; color: white; font-size: 14px; padding: 5px; border-radius: 3px');
     
