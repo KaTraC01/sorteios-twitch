@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import logger from '../../lib/logger';
 import { errorResponse, successResponse, withErrorHandling } from '../../lib/apiResponse';
+import { createClient } from '@supabase/supabase-js';
 
 async function handler(req, res) {
   // Identificação única para esta execução do cron
@@ -138,9 +139,83 @@ async function handler(req, res) {
     logger.cron(`[${cronRunId}] ✅ Streamer: ${vencedorStreamer}`);
     logger.cron(`[${cronRunId}] ✅ ID do Sorteio: ${sorteioId}`);
     
+    // ============================================================================
+    // SEÇÃO DE MÉTRICAS - AGREGAÇÃO E LIMPEZA
+    // ============================================================================
+    logger.cron(`[${cronRunId}] 🔄 Iniciando processamento de métricas de anúncios...`);
+    
+    try {
+      // Inicializar cliente Supabase
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        logger.cron(`[${cronRunId}] ❌ Configuração Supabase incompleta`);
+        throw new Error('Configuração Supabase incompleta para métricas');
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // 1. AGREGAÇÃO DE MÉTRICAS DIÁRIAS
+      logger.cron(`[${cronRunId}] 📊 Executando agregação de métricas diárias...`);
+      const { data: resultadosDiarios, error: erroDiarios } = await supabase.rpc('atualizar_metricas_resumo');
+      
+      if (erroDiarios) {
+        logger.cron(`[${cronRunId}] ❌ Erro na agregação diária: ${erroDiarios.message}`);
+      } else {
+        logger.cron(`[${cronRunId}] ✅ Agregação diária: ${resultadosDiarios} registros processados`);
+      }
+      
+      // 2. AGREGAÇÃO DE MÉTRICAS MENSAIS (primeira semana do mês)
+      const hoje = new Date();
+      if (hoje.getDate() <= 7) { // Executar na primeira semana do mês
+        logger.cron(`[${cronRunId}] 📅 Executando agregação de métricas mensais...`);
+        const { data: resultadosMensais, error: erroMensais } = await supabase.rpc('agregar_metricas_mensais');
+        
+        if (erroMensais) {
+          logger.cron(`[${cronRunId}] ❌ Erro na agregação mensal: ${erroMensais.message}`);
+        } else {
+          logger.cron(`[${cronRunId}] ✅ Agregação mensal: ${resultadosMensais} registros processados`);
+        }
+      }
+      
+      // 3. AGREGAÇÃO DE MÉTRICAS TRIMESTRAIS (primeira semana do trimestre)
+      const isInicioTrimestre = (hoje.getMonth() % 3 === 0) && (hoje.getDate() <= 7);
+      if (isInicioTrimestre) {
+        logger.cron(`[${cronRunId}] 📈 Executando agregação de métricas trimestrais...`);
+        const { data: resultadosTrimestrais, error: erroTrimestrais } = await supabase.rpc('agregar_metricas_trimestrais');
+        
+        if (erroTrimestrais) {
+          logger.cron(`[${cronRunId}] ❌ Erro na agregação trimestral: ${erroTrimestrais.message}`);
+        } else {
+          logger.cron(`[${cronRunId}] ✅ Agregação trimestral: ${resultadosTrimestrais} registros processados`);
+        }
+      }
+      
+      // 4. LIMPEZA DE DADOS ANTIGOS (manter 60 dias)
+      logger.cron(`[${cronRunId}] 🗑️ Executando limpeza de dados antigos...`);
+      const { data: resultadosLimpeza, error: erroLimpeza } = await supabase.rpc('limpar_eventos_anuncios_antigos', { dias_retencao: 60 });
+      
+      if (erroLimpeza) {
+        logger.cron(`[${cronRunId}] ❌ Erro na limpeza: ${erroLimpeza.message}`);
+      } else if (resultadosLimpeza && resultadosLimpeza.length > 0) {
+        const limpeza = resultadosLimpeza[0];
+        logger.cron(`[${cronRunId}] ✅ Limpeza: ${limpeza.registros_removidos} registros removidos, ${limpeza.tamanho_liberado} liberados`);
+      }
+      
+      logger.cron(`[${cronRunId}] 🎉 Processamento de métricas concluído com sucesso!`);
+      
+    } catch (errorMetricas) {
+      logger.cron(`[${cronRunId}] ❌ ERRO no processamento de métricas: ${errorMetricas.message}`);
+      // Não falhar o cron por erro de métricas, continuar...
+    }
+    
     // Processo concluído
     logger.cron(`[${cronRunId}] ===== FIM CRON JOB [SUCESSO] =====`);
-    return successResponse(res, 'Sorteio realizado com sucesso', resultadoSorteio);
+    return successResponse(res, 'Sorteio e métricas processados com sucesso', {
+      sorteio: resultadoSorteio,
+      metricas: 'Processadas com sucesso'
+    });
 
   } catch (error) {
     logger.cron(`[${cronRunId}] ❌❌❌ ERRO CRÍTICO NO CRON JOB ❌❌❌`);
