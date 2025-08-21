@@ -131,11 +131,10 @@ function ListaSorteio({ onReiniciarLista }) {
         fetchUltimoVencedor();
         verificarListaCongelada();
         
-        // Configurar canais Realtime para atualizações em tempo real
-        
-        // 1. Canal para participantes
-        const participantesChannel = supabase
-            .channel('public:participantes_ativos')
+        // Configurar canal único consolidado para atualizações em tempo real
+        const sessionId = Math.random().toString(36).substring(2, 15);
+        const consolidatedChannel = supabase
+            .channel(`sorteio-realtime-${sessionId}`)
             .on('postgres_changes', 
                 { event: '*', schema: 'public', table: 'participantes_ativos' }, 
                 (payload) => {
@@ -143,22 +142,12 @@ function ListaSorteio({ onReiniciarLista }) {
                     fetchParticipantes();
                 }
             )
-            .subscribe();
-            
-        // 2. Canal para sorteios (último vencedor)
-        const sorteiosChannel = supabase
-            .channel('public:sorteios')
             .on('postgres_changes', 
                 { event: 'INSERT', schema: 'public', table: 'sorteios' }, 
                 (payload) => {
                     fetchUltimoVencedor();
                 }
             )
-            .subscribe();
-            
-        // 3. Canal para configurações (lista congelada)
-        const configChannel = supabase
-            .channel('public:configuracoes')
             .on('postgres_changes', 
                 { event: 'UPDATE', schema: 'public', table: 'configuracoes' }, 
                 (payload) => {
@@ -169,10 +158,8 @@ function ListaSorteio({ onReiniciarLista }) {
 
         // Limpeza ao desmontar o componente
         return () => {
-            // Remover todos os canais de atualização em tempo real
-            supabase.removeChannel(participantesChannel);
-            supabase.removeChannel(sorteiosChannel);
-            supabase.removeChannel(configChannel);
+            // Remover o canal consolidado
+            supabase.removeChannel(consolidatedChannel);
         };
     }, []);
 
