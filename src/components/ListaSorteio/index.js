@@ -353,10 +353,10 @@ function ListaSorteio({ onReiniciarLista }) {
             // Limpar o formulário, mas manter a plataforma selecionada
             setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
             
-            // Definir tempo de espera (10 segundos)
-            const expiracao = Date.now() + 10000;
+            // Definir tempo de espera (60 segundos - 1 minuto)
+            const expiracao = Date.now() + 60000;
             localStorage.setItem("tempoExpiracao", expiracao.toString());
-            setTempoEspera(10);
+            setTempoEspera(60);
 
             // Forçar atualização imediata da lista
             await fetchParticipantes();
@@ -414,10 +414,10 @@ function ListaSorteio({ onReiniciarLista }) {
                 // Limpar o formulário
                 setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
                 
-                // Definir tempo de espera (30 segundos)
-                const expiracao = Date.now() + 30000;
+                // Definir tempo de espera (300 segundos - 5 minutos)
+                const expiracao = Date.now() + 300000;
                 localStorage.setItem("tempoExpiracao", expiracao.toString());
-                setTempoEspera(30);
+                setTempoEspera(300);
                 
                 // Mostrar mensagem de sucesso com o número real de inserções
                 if (data && data.sucesso) {
@@ -506,10 +506,10 @@ function ListaSorteio({ onReiniciarLista }) {
             // Limpar o formulário mas manter a plataforma
             setNovoParticipante({ nome: "", streamer: "", plataforma });
             
-            // Definir tempo de espera (30 segundos para o método manual)
-            const expiracao = Date.now() + 30000;
+            // Definir tempo de espera (300 segundos para o método manual - 5 minutos)
+            const expiracao = Date.now() + 300000;
             localStorage.setItem("tempoExpiracao", expiracao.toString());
-            setTempoEspera(30);
+            setTempoEspera(300);
             
             if (inseridos > 0) {
                 mostrarFeedback(t('listaSorteio.participacoesRegistradas', { quantidade: inseridos }), "sucesso");
