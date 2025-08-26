@@ -1,6 +1,9 @@
 ﻿import React, { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next'; // Importar hook de tradução
-import { supabase } from "../../utils/supabaseClient"; // Importando Supabase
+import { getSupabaseClient } from "../../lib/supabaseManager"; // Importando gerenciador otimizado
+
+// Usar cliente otimizado para operações de frontend  
+const supabase = getSupabaseClient();
 import "../../styles/Ganhadores.css"; // Caminho do CSS
 import Anuncio from "../../components/Anuncio"; // Importando o componente de anúncio
 import PlataformaIcon from "../../components/PlataformaIcon"; // Importando o componente de ícone

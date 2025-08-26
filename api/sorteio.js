@@ -1,30 +1,12 @@
 // Função serverless para realizar o sorteio automaticamente
 // Esta função será executada por um cron job da Vercel
 
-import { createClient } from "@supabase/supabase-js";
-import { sanitizarEntrada } from '../lib/supabaseClient';
+import { getSupabaseServiceClient, sanitizarEntrada } from '../lib/supabaseManager';
 import logger from '../lib/logger';
 import { errorResponse, successResponse, withErrorHandling } from '../lib/apiResponse';
 
-// Configuração do Supabase
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-
-// Verificar se as variáveis necessárias estão configuradas
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  logger.critical('As variáveis de ambiente SUPABASE_URL e/ou SUPABASE_SERVICE_KEY não estão configuradas.');
-}
-
-// Log das configurações (apenas em desenvolvimento)
-logger.debug(`Config - URL configurada: ${SUPABASE_URL ? 'Sim' : 'Não'}`);
-if (SUPABASE_SERVICE_KEY) {
-  logger.debug(`Config - KEY configurada: Sim (últimos 4 caracteres: ${SUPABASE_SERVICE_KEY.slice(-4)})`);
-} else {
-  logger.debug('Config - KEY configurada: NÃO CONFIGURADA');
-}
-
-// Criando o cliente Supabase com a chave de serviço para acesso total
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// Usar cliente de serviço otimizado para sorteio automático
+const supabase = getSupabaseServiceClient();
 
 async function handler(req, res) {
   try {

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { supabase, testSupabaseConnection } from '../lib/supabaseClient';
+import { getSupabaseClient, testSupabaseConnection } from '../lib/supabaseManager';
+
+// Usar cliente otimizado para diagnóstico
+const supabase = getSupabaseClient();
 
 export default function DiagnosticoPage() {
   const [status, setStatus] = useState('carregando');

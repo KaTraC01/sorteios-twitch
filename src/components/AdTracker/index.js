@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../config/supabaseClient';
+import { getSupabaseClient } from '../../lib/supabaseManager';
+
+// Usar cliente otimizado para operações de frontend
+const supabase = getSupabaseClient();
 import './AdTracker.css';
 import adTrackerLogs, { LOG_TYPES } from './adTrackerLogs';
 

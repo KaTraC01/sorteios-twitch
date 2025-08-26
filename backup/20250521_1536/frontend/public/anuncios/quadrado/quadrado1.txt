@@ -1,6 +1,0 @@
-Este arquivo é um exemplo para simular a imagem quadrado1.png.
-
-IMPORTANTE: Você precisa adicionar um arquivo PNG real chamado "quadrado1.png" nesta pasta (public/anuncios/quadrado/).
-A configuração no arquivo config.json já está apontando para este arquivo.
-
-Em um ambiente real, você colocaria uma imagem PNG, JPG ou WebP neste local. 

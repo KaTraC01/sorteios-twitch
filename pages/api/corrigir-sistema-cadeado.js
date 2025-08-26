@@ -1,5 +1,7 @@
-import { supabase } from "../../lib/supabaseClient";
-import { sanitizarEntrada } from '../../lib/supabaseClient';
+import { getSupabaseServiceClient, sanitizarEntrada } from "../../lib/supabaseManager";
+
+// Usar cliente de serviço para correção do sistema
+const supabase = getSupabaseServiceClient();
 
 export default async function handler(req, res) {
   try {

@@ -9,13 +9,10 @@
 import fetch from 'node-fetch';
 import logger from '../../lib/logger';
 import { errorResponse, successResponse, withErrorHandling } from '../../lib/apiResponse';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServiceClient } from '../../lib/supabaseManager';
 
-// Inicializar cliente Supabase para operações de manutenção
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+// Usar cliente de serviço otimizado para manutenção
+const supabase = getSupabaseServiceClient();
 
 async function handler(req, res) {
   const cronRunId = `cron-${Date.now()}-${Math.floor(Math.random() * 1000)}`;

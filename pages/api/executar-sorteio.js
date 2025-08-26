@@ -1,5 +1,7 @@
-import { supabase } from "../../lib/supabaseClient";
-import { sanitizarEntrada } from '../../lib/supabaseClient';
+import { getSupabaseServiceClient, sanitizarEntrada } from "../../lib/supabaseManager";
+
+// Usar cliente de serviço para operações administrativas
+const supabase = getSupabaseServiceClient();
 import { withErrorHandling, successResponse, errorResponse } from "../../src/utils/apiResponse";
 
 async function handler(req, res) {

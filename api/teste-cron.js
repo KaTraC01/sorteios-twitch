@@ -1,7 +1,7 @@
 // Endpoint para testar o cron job manualmente
 // Acesse: https://seu-site.vercel.app/api/teste-cron
 
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from '../lib/supabaseManager';
 
 export default async function handler(req, res) {
   try {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       });
     }
     
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = getSupabaseServiceClient();
     
     // Registrar o teste nos logs do sistema
     const { error: erroLog } = await supabase

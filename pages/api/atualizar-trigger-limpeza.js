@@ -1,4 +1,7 @@
-import { supabase } from "../../lib/supabaseClient";
+import { getSupabaseServiceClient } from "../../lib/supabaseManager";
+
+// Usar cliente de serviço para operações administrativas
+const supabase = getSupabaseServiceClient();
 import fs from 'fs';
 import path from 'path';
 

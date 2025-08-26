@@ -1,2 +1,0 @@
-Este arquivo é um exemplo para simular a imagem lateral1.jpg.
-Em um ambiente real, você colocaria uma imagem JPG, PNG ou WebP neste local. 

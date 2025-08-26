@@ -1,4 +1,7 @@
-import { supabase } from "../../lib/supabaseClient";
+import { getSupabaseServiceClient } from "../../lib/supabaseManager";
+
+// Usar cliente de serviço para cron jobs
+const supabase = getSupabaseServiceClient();
 import { withErrorHandling, successResponse, errorResponse } from "../../src/utils/apiResponse";
 import logger from "../../src/utils/logger";
 

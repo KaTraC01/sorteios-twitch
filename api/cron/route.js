@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import logger from '../../lib/logger';
 import { errorResponse, successResponse, withErrorHandling } from '../../lib/apiResponse';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServiceClient } from '../../lib/supabaseManager';
 
 async function handler(req, res) {
   // Identificação única para esta execução do cron
@@ -145,16 +145,8 @@ async function handler(req, res) {
     logger.cron(`[${cronRunId}] 🔄 Iniciando processamento de métricas de anúncios...`);
     
     try {
-      // Inicializar cliente Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
-        logger.cron(`[${cronRunId}] ❌ Configuração Supabase incompleta`);
-        throw new Error('Configuração Supabase incompleta para métricas');
-      }
-      
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      // Usar cliente de serviço otimizado para cron
+      const supabase = getSupabaseServiceClient();
       
       // 1. AGREGAÇÃO DE MÉTRICAS DIÁRIAS
       logger.cron(`[${cronRunId}] 📊 Executando agregação de métricas diárias...`);

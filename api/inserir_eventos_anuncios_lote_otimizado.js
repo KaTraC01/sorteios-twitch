@@ -1,9 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServiceClient } from '../lib/supabaseManager';
 
-// Inicializar o cliente Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Usar cliente de serviço otimizado para inserção em lote
+const supabase = getSupabaseServiceClient();
 
 /**
  * API para inserir eventos de anúncios em lote com formato otimizado
