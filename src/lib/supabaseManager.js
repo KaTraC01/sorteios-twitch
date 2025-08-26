@@ -19,6 +19,20 @@ import logger from '../utils/logger';
 // CONFIGURAÇÃO DE VARIÁVEIS DE AMBIENTE
 // ===================================================================
 
+// Debug: verificar variáveis disponíveis
+if (typeof window !== 'undefined') {
+  console.log('🔍 [DEBUG] Variáveis disponíveis no frontend:');
+  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configurada' : 'FALTANDO');
+  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configurada' : 'FALTANDO');
+  console.log('URL final usada:', supabaseUrl ? 'OK' : 'VAZIA');
+  console.log('Key final usada:', supabaseAnonKey ? 'OK' : 'VAZIA');
+} else {
+  console.log('🔍 [DEBUG] Variáveis disponíveis no backend:');
+  console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Configurada' : 'FALTANDO');
+  console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Configurada' : 'FALTANDO');
+  console.log('SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'Configurada' : 'FALTANDO');
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
@@ -52,11 +66,52 @@ let serviceClient = null;
  * Pool: Conexões anônimas limitadas
  */
 export function getSupabaseClient() {
-  // Se não temos URL/Key, retornar null ao invés de erro
+  // Se não temos URL/Key, retornar um cliente mock no frontend
   if (!supabaseUrl || !supabaseAnonKey) {
     if (isBrowser) {
-      console.warn('⚠️ Supabase não configurado no frontend. Verifique as variáveis NEXT_PUBLIC_*');
-      return null;
+      console.warn('⚠️ Supabase não configurado no frontend. Usando cliente mock.');
+      // Retornar objeto mock que não quebrará a aplicação
+      return {
+        from: (table) => ({
+          select: (columns) => Promise.resolve({ 
+            data: [], 
+            error: { message: 'Supabase não configurado no frontend' } 
+          }),
+          insert: (data) => Promise.resolve({ 
+            data: null, 
+            error: { message: 'Supabase não configurado no frontend' } 
+          }),
+          update: (data) => Promise.resolve({ 
+            data: null, 
+            error: { message: 'Supabase não configurado no frontend' } 
+          }),
+          delete: () => Promise.resolve({ 
+            data: null, 
+            error: { message: 'Supabase não configurado no frontend' } 
+          }),
+          rpc: (name, params) => Promise.resolve({ 
+            data: null, 
+            error: { message: 'Supabase não configurado no frontend' } 
+          })
+        }),
+        channel: (name) => ({
+          on: (event, callback) => ({ unsubscribe: () => {} }),
+          subscribe: () => 'SUBSCRIBED',
+          unsubscribe: () => 'UNSUBSCRIBED'
+        }),
+        realtime: {
+          channel: (name) => ({
+            on: () => ({}),
+            subscribe: () => ({}),
+            unsubscribe: () => ({})
+          })
+        },
+        auth: {
+          getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+          signIn: () => Promise.resolve({ error: { message: 'Supabase não configurado no frontend' } }),
+          signOut: () => Promise.resolve({ error: { message: 'Supabase não configurado no frontend' } })
+        }
+      };
     }
     throw new Error('Supabase não configurado no backend');
   }
