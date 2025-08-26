@@ -23,15 +23,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
+// Verificar se estamos no browser ou servidor
+const isBrowser = typeof window !== 'undefined';
+
 // Validação de configuração
-if (!supabaseUrl) {
-  const error = 'ERRO CRÍTICO: URL do Supabase não configurada';
+if (!supabaseUrl && !isBrowser) {
+  const error = 'ERRO CRÍTICO: URL do Supabase não configurada (backend)';
   logger.error(error);
   throw new Error(error);
 }
 
-if (!supabaseAnonKey) {
-  const error = 'ERRO CRÍTICO: Chave anônima do Supabase não configurada';
+if (!supabaseAnonKey && !isBrowser) {
+  const error = 'ERRO CRÍTICO: Chave anônima do Supabase não configurada (backend)';
   logger.error(error);
   throw new Error(error);
 }
@@ -49,14 +52,25 @@ let serviceClient = null;
  * Pool: Conexões anônimas limitadas
  */
 export function getSupabaseClient() {
+  // Se não temos URL/Key, retornar null ao invés de erro
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (isBrowser) {
+      console.warn('⚠️ Supabase não configurado no frontend. Verifique as variáveis NEXT_PUBLIC_*');
+      return null;
+    }
+    throw new Error('Supabase não configurado no backend');
+  }
+  
   if (!anonClient) {
-    logger.debug('Inicializando cliente Supabase anônimo (singleton)');
+    if (!isBrowser) {
+      logger.debug('Inicializando cliente Supabase anônimo (singleton)');
+    }
     
     anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
+        autoRefreshToken: isBrowser,
+        persistSession: isBrowser,
+        detectSessionInUrl: isBrowser
       },
       realtime: {
         params: {
@@ -65,7 +79,9 @@ export function getSupabaseClient() {
       }
     });
     
-    logger.info('Cliente Supabase anônimo inicializado com sucesso');
+    if (!isBrowser) {
+      logger.info('Cliente Supabase anônimo inicializado com sucesso');
+    }
   }
   
   return anonClient;
