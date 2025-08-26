@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSupabaseClient } from '../../../lib/supabaseManager'; // Importando gerenciador otimizado
+import { getSupabaseClient } from '../../lib/supabaseManager'; // Importando gerenciador otimizado
 
 // Usar cliente otimizado para operações de frontend
 const supabase = getSupabaseClient();

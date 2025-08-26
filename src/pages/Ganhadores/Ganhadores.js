@@ -1,15 +1,15 @@
-ï»¿import React, { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next'; // Importar hook de traduÃ§Ã£o
-import { getSupabaseClient } from "../../../lib/supabaseManager"; // Importando gerenciador otimizado
+import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next'; // Importar hook de tradução
+import { getSupabaseClient } from "../../lib/supabaseManager"; // Importando gerenciador otimizado
 
-// Usar cliente otimizado para operaÃ§Ãµes de frontend  
+// Usar cliente otimizado para operações de frontend  
 const supabase = getSupabaseClient();
 import "../../styles/Ganhadores.css"; // Caminho do CSS
-import Anuncio from "../../components/Anuncio"; // Importando o componente de anÃºncio
-import PlataformaIcon from "../../components/PlataformaIcon"; // Importando o componente de Ã­cone
+import Anuncio from "../../components/Anuncio"; // Importando o componente de anúncio
+import PlataformaIcon from "../../components/PlataformaIcon"; // Importando o componente de ícone
 
 function Ganhadores() {
-    const { t } = useTranslation(); // Hook de traduÃ§Ã£o
+    const { t } = useTranslation(); // Hook de tradução
     const [historico, setHistorico] = useState([]);
     const [emailVisivel, setEmailVisivel] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -17,14 +17,14 @@ function Ganhadores() {
     const [listaParticipantes, setListaParticipantes] = useState([]);
     const [sorteioSelecionado, setSorteioSelecionado] = useState(null);
     const [loadingLista, setLoadingLista] = useState(false);
-    // Estados para controlar a paginaÃ§Ã£o
+    // Estados para controlar a paginação
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [itensPorPagina, setItensPorPagina] = useState(10);
-    // Estado para controlar a paginaÃ§Ã£o da lista de participantes
+    // Estado para controlar a paginação da lista de participantes
     const [paginaParticipantes, setPaginaParticipantes] = useState(1);
-    const itensPorPaginaParticipantes = 10; // Constante para quantidade de participantes por pÃ¡gina
+    const itensPorPaginaParticipantes = 10; // Constante para quantidade de participantes por página
 
-    // ðŸ”„ **Carrega o histÃ³rico dos sorteios do Supabase**
+    // ?? **Carrega o histórico dos sorteios do Supabase**
     useEffect(() => {
         const fetchHistorico = async () => {
             setLoading(true); // Exibe o carregamento
@@ -34,7 +34,7 @@ function Ganhadores() {
                 .order("data", { ascending: false });
 
             if (error) {
-                console.error("Erro ao carregar histÃ³rico:", error);
+                console.error("Erro ao carregar histórico:", error);
             } else {
                 setHistorico(data);
             }
@@ -44,12 +44,12 @@ function Ganhadores() {
         fetchHistorico();
     }, []);
 
-    // FunÃ§Ã£o para buscar a lista de participantes de um sorteio especÃ­fico
+    // Função para buscar a lista de participantes de um sorteio específico
     const buscarParticipantesSorteio = async (sorteioId, sorteioData) => {
-        // Verificar se os dados do sorteio estÃ£o disponÃ­veis (usando o valor do backend)
+        // Verificar se os dados do sorteio estão disponíveis (usando o valor do backend)
         const sorteio = historico.find(s => s.id === sorteioId);
         if (!sorteio || sorteio.dados_disponiveis === false) {
-            return; // NÃ£o busca participantes se os dados nÃ£o estiverem disponÃ­veis
+            return; // Não busca participantes se os dados não estiverem disponíveis
         }
         
         setLoadingLista(true);
@@ -58,14 +58,14 @@ function Ganhadores() {
             data: sorteioData
         });
         
-        // Resetar a pÃ¡gina dos participantes ao abrir um novo modal
+        // Resetar a página dos participantes ao abrir um novo modal
         setPaginaParticipantes(1);
         
         const { data, error } = await supabase
             .from("historico_participantes")
             .select("*")
             .eq("sorteio_id", sorteioId)
-            .order("posicao_original", { ascending: true }); // Ordenar pela posiÃ§Ã£o original em vez de created_at
+            .order("posicao_original", { ascending: true }); // Ordenar pela posição original em vez de created_at
             
         if (error) {
             console.error("Erro ao buscar participantes do sorteio:", error);
@@ -77,69 +77,69 @@ function Ganhadores() {
         setLoadingLista(false);
     };
     
-    // FunÃ§Ã£o para fechar o modal da lista de participantes
+    // Função para fechar o modal da lista de participantes
     const fecharListaParticipantes = () => {
         setSorteioSelecionado(null);
         setListaParticipantes([]);
-        setPaginaParticipantes(1); // Resetar a pÃ¡gina quando fechar o modal
+        setPaginaParticipantes(1); // Resetar a página quando fechar o modal
     };
 
-    // FunÃ§Ã£o para lidar com cliques no overlay do modal
+    // Função para lidar com cliques no overlay do modal
     const handleModalOverlayClick = (e) => {
-        // Verifica se o clique foi diretamente no overlay (nÃ£o em um de seus filhos)
+        // Verifica se o clique foi diretamente no overlay (não em um de seus filhos)
         if (e.target.className === 'modal-overlay') {
             fecharListaParticipantes();
         }
     };
 
-    // FunÃ§Ã£o para alternar a exibiÃ§Ã£o de mais participantes no modal
+    // Função para alternar a exibição de mais participantes no modal
     const alternarMostrarMaisParticipantes = () => {
         if (paginaParticipantes * itensPorPaginaParticipantes >= listaParticipantes.length) {
-            // Se jÃ¡ estamos mostrando todos, voltar para a primeira pÃ¡gina
+            // Se já estamos mostrando todos, voltar para a primeira página
             setPaginaParticipantes(1);
         } else {
-            // Caso contrÃ¡rio, avanÃ§ar para a prÃ³xima pÃ¡gina
+            // Caso contrário, avançar para a próxima página
             setPaginaParticipantes(paginaParticipantes + 1);
         }
     };
     
-    // Calcular quais participantes mostrar na pÃ¡gina atual do modal
+    // Calcular quais participantes mostrar na página atual do modal
     const participantesPaginados = listaParticipantes.slice(0, paginaParticipantes * itensPorPaginaParticipantes);
     
-    // Verificar se hÃ¡ mais participantes para mostrar
+    // Verificar se há mais participantes para mostrar
     const temMaisParticipantes = listaParticipantes.length > paginaParticipantes * itensPorPaginaParticipantes;
 
-    // FunÃ§Ã£o para retornar o emoji da plataforma - mantido para retrocompatibilidade
+    // Função para retornar o emoji da plataforma - mantido para retrocompatibilidade
     const getPlataformaEmoji = (plataforma) => {
         switch(plataforma) {
             case "youtube":
-                return "â¤ï¸"; // CoraÃ§Ã£o vermelho para YouTube
+                return "??"; // Coração vermelho para YouTube
             case "steam":
-                return "ðŸ’™"; // CoraÃ§Ã£o azul para Steam
+                return "??"; // Coração azul para Steam
             case "xbox":
-                return "ðŸ’š"; // CoraÃ§Ã£o verde para Xbox
+                return "??"; // Coração verde para Xbox
             case "playstation":
-                return "ðŸ”µ"; // CÃ­rculo azul para PlayStation
+                return "??"; // Círculo azul para PlayStation
             default:
-                return "ðŸ‘¾"; // Emoji de game para Twitch como padrÃ£o
+                return "??"; // Emoji de game para Twitch como padrão
         }
     };
     
-    // FunÃ§Ã£o para alternar a exibiÃ§Ã£o de mais itens (mostrar mais/menos)
+    // Função para alternar a exibição de mais itens (mostrar mais/menos)
     const alternarMostrarMais = () => {
         if (paginaAtual * itensPorPagina >= historico.length) {
-            // Se jÃ¡ estamos mostrando todos, voltar para a primeira pÃ¡gina
+            // Se já estamos mostrando todos, voltar para a primeira página
             setPaginaAtual(1);
         } else {
-            // Caso contrÃ¡rio, avanÃ§ar para a prÃ³xima pÃ¡gina
+            // Caso contrário, avançar para a próxima página
             setPaginaAtual(paginaAtual + 1);
         }
     };
     
-    // Calcular quais sorteios mostrar na pÃ¡gina atual
+    // Calcular quais sorteios mostrar na página atual
     const historicoPaginado = historico.slice(0, paginaAtual * itensPorPagina);
     
-    // Verificar se hÃ¡ mais sorteios para mostrar
+    // Verificar se há mais sorteios para mostrar
     const temMaisSorteios = historico.length > paginaAtual * itensPorPagina;
 
     // Renderizar os participantes com propagandas intercaladas
@@ -149,7 +149,7 @@ function Ganhadores() {
         participantesPaginados.forEach((participante, index) => {
             // Obter o sorteio atual
             const sorteioAtual = historico.find(s => s.id === sorteioSelecionado.id);
-            // Verificar se este participante Ã© o vencedor
+            // Verificar se este participante é o vencedor
             const isVencedor = participante.nome_twitch === sorteioAtual?.nome;
             
             // Adicionar o participante
@@ -164,7 +164,7 @@ function Ganhadores() {
                 </tr>
             );
             
-            // Adicionar anÃºncio especÃ­fico entre as linhas 10 e 11
+            // Adicionar anúncio específico entre as linhas 10 e 11
             if (index === 9) {
                 linhasTabela.push(
                     <tr key="propaganda-linha-10-11" className="linha-propaganda">
@@ -180,7 +180,7 @@ function Ganhadores() {
                     </tr>
                 );
             }
-            // A cada 10 participantes adicionais (apÃ³s a linha 11), adicionar uma linha de propaganda do tipo cursos
+            // A cada 10 participantes adicionais (após a linha 11), adicionar uma linha de propaganda do tipo cursos
             else if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
                 linhasTabela.push(
                     <tr key={`propaganda-${index}`} className="linha-propaganda">
@@ -203,7 +203,7 @@ function Ganhadores() {
 
     return (
         <div className="ganhadores-container">
-            {/* Banner superior - exibido sempre no topo, apÃ³s o cabeÃ§alho */}
+            {/* Banner superior - exibido sempre no topo, após o cabeçalho */}
             <div className="anuncio-container-superior">
                 <Anuncio 
                     tipo="fixo-superior" 
@@ -214,11 +214,11 @@ function Ganhadores() {
                 />
             </div>
             
-            {/* EspaÃ§amento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
+            {/* Espaçamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
             
             <h2>{t('ganhadores.title')}</h2>
 
-            {/* BotÃ£o para instruÃ§Ãµes */}
+            {/* Botão para instruções */}
             <button className="como-participar-btn" onClick={() => setMostrarInstrucoes(!mostrarInstrucoes)}>
                 {mostrarInstrucoes ? t('ganhadores.fecharInstrucoes') : t('ganhadores.listaGanhadores')}
             </button>
@@ -230,12 +230,12 @@ function Ganhadores() {
                 </div>
             )}
 
-            {/* BotÃ£o "Fale Conosco" */}
+            {/* Botão "Fale Conosco" */}
             <button className="fale-conosco" onClick={() => setEmailVisivel(!emailVisivel)}>
                 {emailVisivel ? "contact@subgg.com" : t('ganhadores.faleConosco')}
             </button>
 
-            {/* AnÃºncio de cursos no topo da tabela */}
+            {/* Anúncio de cursos no topo da tabela */}
             <Anuncio 
                 tipo="cursos" 
                 posicao="principal" 
@@ -288,12 +288,12 @@ function Ganhadores() {
                                                 className="ver-lista-btn" 
                                                 onClick={() => buscarParticipantesSorteio(sorteio.id, sorteio.data)}
                                             >
-                                                ðŸ“œ
+                                                ??
                                             </button>
                                         )}
                                     </td>
                                 </tr>
-                                {/* Adiciona anÃºncios do tipo cursos a cada 10 linhas */}
+                                {/* Adiciona anúncios do tipo cursos a cada 10 linhas */}
                                 {(index + 1) % 10 === 0 && index !== historicoPaginado.length - 1 && (
                                     <tr className="linha-propaganda">
                                         <td colSpan="6" className="banner-row">
@@ -313,7 +313,7 @@ function Ganhadores() {
                 </table>
             )}
             
-            {/* BotÃ£o "Mostrar Mais" */}
+            {/* Botão "Mostrar Mais" */}
             {!loading && historico.length > itensPorPagina && (
                 <button 
                     className={`botao-mostrar-mais ${!temMaisSorteios ? 'mostrar-menos' : ''}`} 
@@ -355,10 +355,10 @@ function Ganhadores() {
                                 <table className="participantes-tabela">
                                     <thead>
                                         <tr>
-                                            <th>NÂ°</th>
+                                            <th>N°</th>
                                             <th>{t('listaSorteio.nome')}</th>
                                             <th>{t('listaSorteio.streamer')}</th>
-                                            <th>ðŸŽ¥</th>
+                                            <th>??</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -366,7 +366,7 @@ function Ganhadores() {
                                     </tbody>
                                 </table>
                                 
-                                {/* BotÃ£o "Mostrar Mais" para participantes */}
+                                {/* Botão "Mostrar Mais" para participantes */}
                                 {listaParticipantes.length > itensPorPaginaParticipantes && (
                                     <button 
                                         className={`botao-mostrar-mais ${!temMaisParticipantes ? 'mostrar-menos' : ''}`} 
@@ -381,7 +381,7 @@ function Ganhadores() {
                 </div>
             )}
             
-            {/* AnÃºncio de vÃ­deo no final da pÃ¡gina */}
+            {/* Anúncio de vídeo no final da página */}
             <Anuncio 
                 tipo="video" 
                 posicao="rodape" 
@@ -391,8 +391,8 @@ function Ganhadores() {
             />
             
             <div className="footer-info">
-                <p>Todos os sorteios sÃ£o realizados de forma transparente e automÃ¡tica.</p>
-                <p>Â© {new Date().getFullYear()} Sistema de Sorteio - Todos os direitos reservados</p>
+                <p>Todos os sorteios são realizados de forma transparente e automática.</p>
+                <p>© {new Date().getFullYear()} Sistema de Sorteio - Todos os direitos reservados</p>
             </div>
         </div>
     );
