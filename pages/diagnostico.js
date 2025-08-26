@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { getSupabaseClient, testSupabaseConnection } from '../lib/supabaseManager';
+import { getSupabaseClient, testSupabaseConnection } from '../src/lib/supabaseManager';
 
 // Usar cliente otimizado para diagnóstico
 const supabase = getSupabaseClient();

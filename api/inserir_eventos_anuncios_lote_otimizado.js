@@ -1,4 +1,4 @@
-import { getSupabaseServiceClient } from '../lib/supabaseManager';
+import { getSupabaseServiceClient } from '../src/lib/supabaseManager';
 
 // Usar cliente de serviço otimizado para inserção em lote
 const supabase = getSupabaseServiceClient();

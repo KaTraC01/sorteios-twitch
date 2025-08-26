@@ -13,7 +13,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import logger from './logger';
+import logger from '../utils/logger';
 
 // ===================================================================
 // CONFIGURAÇÃO DE VARIÁVEIS DE AMBIENTE

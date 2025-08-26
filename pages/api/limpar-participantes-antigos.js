@@ -1,4 +1,4 @@
-import { getSupabaseServiceClient, sanitizarEntrada } from "../../lib/supabaseManager";
+import { getSupabaseServiceClient, sanitizarEntrada } from "../../src/lib/supabaseManager";
 
 // Usar cliente de serviço para limpeza
 const supabase = getSupabaseServiceClient();

@@ -1,7 +1,7 @@
 // Endpoint para testar o cron job manualmente
 // Acesse: https://seu-site.vercel.app/api/teste-cron
 
-import { getSupabaseServiceClient } from '../lib/supabaseManager';
+import { getSupabaseServiceClient } from '../src/lib/supabaseManager';
 
 export default async function handler(req, res) {
   try {

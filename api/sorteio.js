@@ -1,7 +1,7 @@
 // Função serverless para realizar o sorteio automaticamente
 // Esta função será executada por um cron job da Vercel
 
-import { getSupabaseServiceClient, sanitizarEntrada } from '../lib/supabaseManager';
+import { getSupabaseServiceClient, sanitizarEntrada } from '../src/lib/supabaseManager';
 import logger from '../lib/logger';
 import { errorResponse, successResponse, withErrorHandling } from '../lib/apiResponse';
 
