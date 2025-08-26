@@ -19,7 +19,15 @@ import logger from '../utils/logger';
 // CONFIGURAÇÃO DE VARIÁVEIS DE AMBIENTE
 // ===================================================================
 
-// Debug: verificar variáveis disponíveis
+// FALLBACK TEMPORÁRIO - usar apenas se variáveis não chegarem
+const FALLBACK_SUPABASE_URL = 'https://nsqiytflqwlyqhdmueki.supabase.co';
+const FALLBACK_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTc5MDQsImV4cCI6MjA1NTQ5MzkwNH0.IyrTn7Hrz-ktNM6iC1Chk8Z-kWK9rhmWljb0n2XLpjo';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || FALLBACK_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+// Debug: verificar variáveis disponíveis (APÓS declaração)
 if (typeof window !== 'undefined') {
   console.log('🔍 [DEBUG] Variáveis disponíveis no frontend:');
   console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configurada' : 'FALTANDO');
@@ -32,10 +40,6 @@ if (typeof window !== 'undefined') {
   console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Configurada' : 'FALTANDO');
   console.log('SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'Configurada' : 'FALTANDO');
 }
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 // Verificar se estamos no browser ou servidor
 const isBrowser = typeof window !== 'undefined';

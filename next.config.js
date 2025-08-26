@@ -1,14 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Garantir que as variáveis de ambiente sejam injetadas corretamente
+  
+  // FORÇAR injeção das variáveis de ambiente
   env: {
-    // Essas variáveis serão substituídas durante o build com os valores reais
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
-  // SEGURANÇA: Configuração webpack removida para evitar vazamento de credenciais
-  // As variáveis de ambiente são injetadas automaticamente pelo Next.js via 'env'
+  
+  // Configuração adicional para garantir variáveis em produção
+  publicRuntimeConfig: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  },
+  
   // Configuração para suportar páginas HTML estáticas
   trailingSlash: true,
 };
