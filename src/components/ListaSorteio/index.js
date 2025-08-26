@@ -1,28 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next'; // Importar hook de traduÁ„o
+Ôªøimport React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next'; // Importar hook de tradu√ß√£o
 import { getSupabaseClient } from "../../lib/supabaseManager"; // Importando gerenciador otimizado
 
-// Usar cliente otimizado para operaÁıes de frontend
+// Usar cliente otimizado para opera√ß√µes de frontend
 const supabase = getSupabaseClient();
 import "./ListaSorteio.css"; // Importando o CSS
-import Anuncio from "../Anuncio"; // Importando o componente de an˙ncio
-import PlataformaIcon from "../PlataformaIcon"; // Importando o componente de Ìcone de plataforma
+import Anuncio from "../Anuncio"; // Importando o componente de an√∫ncio
+import PlataformaIcon from "../PlataformaIcon"; // Importando o componente de √≠cone de plataforma
 
-// FunÁ„o de sanitizaÁ„o de entrada (atualizada para suportar Unicode)
+// Fun√ß√£o de sanitiza√ß√£o de entrada (atualizada para suportar Unicode)
 const sanitizarEntrada = (texto) => {
   if (!texto) return "";
   let sanitizado = texto
-    // Remove apenas caracteres realmente perigosos, mas permite letras e n˙meros de qualquer idioma
+    // Remove apenas caracteres realmente perigosos, mas permite letras e n√∫meros de qualquer idioma
     .replace(/[<>'"\\/\{\}\[\];]/g, '') // Remove caracteres potencialmente perigosos
-    .replace(/--/g, '_')                      // Remove possÌveis injeÁıes SQL
+    .replace(/--/g, '_')                      // Remove poss√≠veis inje√ß√µes SQL
     .replace(/script/gi, '')                  // Remove tentativas de XSS
-    .trim();                                  // Remove espaÁos extras
+    .trim();                                  // Remove espa√ßos extras
   // Limitar comprimento
   return sanitizado.substring(0, 25);
 };
 
 function ListaSorteio({ onReiniciarLista }) {
-    const { t } = useTranslation(); // Hook de traduÁ„o
+    const { t } = useTranslation(); // Hook de tradu√ß√£o
     const [participantes, setParticipantes] = useState([]);
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "", plataforma: "twitch" });
     const [tempoEspera, setTempoEspera] = useState(0);
@@ -32,13 +32,13 @@ function ListaSorteio({ onReiniciarLista }) {
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
     const [feedback, setFeedback] = useState({ mensagem: "", tipo: "", visivel: false });
     const [ultimaAtualizacao, setUltimaAtualizacao] = useState(Date.now());
-    // Estados para controlar a paginaÁ„o
+    // Estados para controlar a pagina√ß√£o
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [itensPorPagina, setItensPorPagina] = useState(10);
-    // Novo estado para controlar a visibilidade do an˙ncio de tela inteira
+    // Novo estado para controlar a visibilidade do an√∫ncio de tela inteira
     const [mostrarAnuncioTelaInteira, setMostrarAnuncioTelaInteira] = useState(false);
 
-    // FunÁ„o para verificar o tempo de espera baseado na expiraÁ„o
+    // Fun√ß√£o para verificar o tempo de espera baseado na expira√ß√£o
     const verificarTempoEspera = () => {
         const tempoExpiracao = localStorage.getItem("tempoExpiracao");
         if (tempoExpiracao) {
@@ -46,7 +46,7 @@ function ListaSorteio({ onReiniciarLista }) {
             const expiracao = parseInt(tempoExpiracao);
             
             if (agora >= expiracao) {
-                // Tempo j· expirou
+                // Tempo j√° expirou
                 localStorage.removeItem("tempoExpiracao");
                 setTempoEspera(0);
             } else {
@@ -59,7 +59,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // ?? **FunÁ„o para buscar participantes no Supabase**
+    // üîÑ **Fun√ß√£o para buscar participantes no Supabase**
     const fetchParticipantes = async () => {
         console.log("Buscando participantes ativos...");
         const { data, error } = await supabase
@@ -75,7 +75,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // ?? **FunÁ„o para buscar o ˙ltimo vencedor do Supabase**
+    // üèÜ **Fun√ß√£o para buscar o √∫ltimo vencedor do Supabase**
     const fetchUltimoVencedor = async () => {
         const { data, error } = await supabase
             .from("sorteios")
@@ -84,7 +84,7 @@ function ListaSorteio({ onReiniciarLista }) {
             .limit(1);
 
         if (error) {
-            console.error("Erro ao buscar ˙ltimo vencedor:", error);
+            console.error("Erro ao buscar √∫ltimo vencedor:", error);
         } else if (data && data.length > 0) {
             const vencedor = data[0];
             setUltimoVencedor({
@@ -95,7 +95,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 plataforma: vencedor.plataforma_premio || "twitch"
             });
             
-            // Salva no localStorage tambÈm como backup
+            // Salva no localStorage tamb√©m como backup
             localStorage.setItem("ultimoVencedor", JSON.stringify({
                 nome: vencedor.nome,
                 streamer: vencedor.streamer,
@@ -106,7 +106,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // ?? **FunÁ„o para verificar se a lista est· congelada**
+    // üîí **Fun√ß√£o para verificar se a lista est√° congelada**
     const verificarListaCongelada = async () => {
         const { data, error } = await supabase
             .from("configuracoes")
@@ -121,9 +121,9 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // ?? **Carrega os dados iniciais e configura atualizaÁıes em tempo real com Supabase Realtime**
+    // üîÑ **Carrega os dados iniciais e configura atualiza√ß√µes em tempo real com Supabase Realtime**
     useEffect(() => {
-        // Verificar se h· um ˙ltimo vencedor no localStorage
+        // Verificar se h√° um √∫ltimo vencedor no localStorage
         const vencedorSalvo = localStorage.getItem("ultimoVencedor");
         if (vencedorSalvo && !ultimoVencedor) {
             setUltimoVencedor(JSON.parse(vencedorSalvo));
@@ -134,14 +134,14 @@ function ListaSorteio({ onReiniciarLista }) {
         fetchUltimoVencedor();
         verificarListaCongelada();
         
-        // Configurar canal ˙nico consolidado para atualizaÁıes em tempo real
+        // Configurar canal √∫nico consolidado para atualiza√ß√µes em tempo real
         const sessionId = Math.random().toString(36).substring(2, 15);
         const consolidatedChannel = supabase
             .channel(`sorteio-realtime-${sessionId}`)
             .on('postgres_changes', 
                 { event: '*', schema: 'public', table: 'participantes_ativos' }, 
                 (payload) => {
-                    // Atualiza a lista completa para garantir a ordenaÁ„o correta
+                    // Atualiza a lista completa para garantir a ordena√ß√£o correta
                     fetchParticipantes();
                 }
             )
@@ -166,7 +166,7 @@ function ListaSorteio({ onReiniciarLista }) {
         };
     }, []);
 
-    // ? **Atualiza o temporizador de espera**
+    // ‚è≥ **Atualiza o temporizador de espera**
     useEffect(() => {
         // Verifica o tempo restante ao iniciar o componente
         verificarTempoEspera();
@@ -179,7 +179,7 @@ function ListaSorteio({ onReiniciarLista }) {
         return () => clearInterval(timer);
     }, []);
 
-    // ?? **FunÁ„o para realizar o sorteio - Mantida apenas para uso manual pela interface administrativa**
+    // üé≤ **Fun√ß√£o para realizar o sorteio - Mantida apenas para uso manual pela interface administrativa**
     const realizarSorteio = async () => {
         if (participantes.length === 0) {
             mostrarFeedback(t('listaSorteio.nenhumParticipante'), "erro");
@@ -193,14 +193,14 @@ function ListaSorteio({ onReiniciarLista }) {
         const dataAtual = new Date();
         const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
         
-        // Gerar um n˙mero baseado no Ìndice do participante na lista (1-based)
-        // Assim garantimos que o n˙mero sorteado corresponde a um participante real
+        // Gerar um n√∫mero baseado no √≠ndice do participante na lista (1-based)
+        // Assim garantimos que o n√∫mero sorteado corresponde a um participante real
         const numeroSorteado = vencedorIndex + 1;
         
         const dadosVencedor = {
             nome: vencedor.nome_twitch,
             streamer: vencedor.streamer_escolhido,
-            numero: numeroSorteado, // Usar o n˙mero baseado no Ìndice real do participante
+            numero: numeroSorteado, // Usar o n√∫mero baseado no √≠ndice real do participante
             data: dataFormatada,
             plataforma: vencedor.plataforma_premio || "twitch"
         };
@@ -211,9 +211,9 @@ function ListaSorteio({ onReiniciarLista }) {
 
         setSorteioRealizado(true);
 
-        // Ajustar a data para o fuso hor·rio local antes de salvar
+        // Ajustar a data para o fuso hor√°rio local antes de salvar
         const dataHoraBrasil = new Date();
-        // Garantir que a data seja salva com o fuso hor·rio correto
+        // Garantir que a data seja salva com o fuso hor√°rio correto
         const dataISO = new Date(
             dataHoraBrasil.getFullYear(),
             dataHoraBrasil.getMonth(),
@@ -224,11 +224,11 @@ function ListaSorteio({ onReiniciarLista }) {
         ).toISOString();
 
         try {
-            // ?? **Salva o resultado do sorteio no Supabase**
+            // üîπ **Salva o resultado do sorteio no Supabase**
             const { data: sorteioSalvo, error: erroSorteio } = await supabase.from("sorteios").insert([
                 {
                     data: dataISO,
-                    numero: numeroSorteado, // Usar o n˙mero baseado no Ìndice real do participante
+                    numero: numeroSorteado, // Usar o n√∫mero baseado no √≠ndice real do participante
                     nome: vencedor.nome_twitch,
                     streamer: vencedor.streamer_escolhido,
                     plataforma_premio: vencedor.plataforma_premio || "twitch"
@@ -240,31 +240,31 @@ function ListaSorteio({ onReiniciarLista }) {
                 return;
             }
 
-            // ?? **Salva a lista completa de participantes no histÛrico**
+            // üîπ **Salva a lista completa de participantes no hist√≥rico**
             if (sorteioSalvo && sorteioSalvo.length > 0) {
                 const sorteioId = sorteioSalvo[0].id;
                 
-                // Prepara os dados dos participantes para inserÁ„o no histÛrico
+                // Prepara os dados dos participantes para inser√ß√£o no hist√≥rico
                 const participantesHistorico = participantes.map((participante, index) => ({
                     sorteio_id: sorteioId,
                     nome_twitch: participante.nome_twitch,
                     streamer_escolhido: participante.streamer_escolhido,
                     plataforma_premio: participante.plataforma_premio || "twitch",
-                    posicao_original: index + 1 // Adicionando a posiÁ„o original (comeÁando em 1)
+                    posicao_original: index + 1 // Adicionando a posi√ß√£o original (come√ßando em 1)
                 }));
                 
-                // Insere todos os participantes no histÛrico
+                // Insere todos os participantes no hist√≥rico
                 const { error: erroHistorico } = await supabase
                     .from("historico_participantes")
                     .insert(participantesHistorico);
                     
                 if (erroHistorico) {
-                    console.error("Erro ao salvar histÛrico de participantes:", erroHistorico);
+                    console.error("Erro ao salvar hist√≥rico de participantes:", erroHistorico);
                 } else {
-                    // console.log("HistÛrico de participantes salvo com sucesso!");
+                    // console.log("Hist√≥rico de participantes salvo com sucesso!");
                 }
                 
-                // Resetar a lista imediatamente apÛs salvar o histÛrico
+                // Resetar a lista imediatamente ap√≥s salvar o hist√≥rico
                 await resetarLista();
             }
         } catch (err) {
@@ -272,14 +272,14 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // ?? **FunÁ„o para resetar a lista apÛs o sorteio**
+    // üîÑ **Fun√ß√£o para resetar a lista ap√≥s o sorteio**
     const resetarLista = async () => {
         // Limpar os participantes do estado
         setParticipantes([]);
         setListaCongelada(false);
         setSorteioRealizado(false);
         
-        // N„o limpa o ultimoVencedor para manter a exibiÁ„o do ˙ltimo vencedor
+        // N√£o limpa o ultimoVencedor para manter a exibi√ß√£o do √∫ltimo vencedor
 
         // Limpar todos os participantes da tabela no banco de dados
         const { error } = await supabase.from("participantes_ativos").delete().neq("id", "");
@@ -288,7 +288,7 @@ function ListaSorteio({ onReiniciarLista }) {
             console.error("Erro ao limpar a lista:", error);
         } else {
             // console.log("Lista resetada com sucesso!");
-            // Atualizar a configuraÁ„o para indicar que a lista n„o est· mais congelada
+            // Atualizar a configura√ß√£o para indicar que a lista n√£o est√° mais congelada
             await supabase
                 .from("configuracoes")
                 .upsert([
@@ -307,7 +307,7 @@ function ListaSorteio({ onReiniciarLista }) {
         // Exibe mensagem informando que a lista foi resetada
         mostrarFeedback(t('listaSorteio.listaResetada'), "sucesso");
         
-        // ForÁa uma atualizaÁ„o dos dados
+        // For√ßa uma atualiza√ß√£o dos dados
         fetchParticipantes();
         fetchUltimoVencedor();
         verificarListaCongelada();
@@ -320,9 +320,9 @@ function ListaSorteio({ onReiniciarLista }) {
         setNovoParticipante({ ...novoParticipante, [field]: valor });
     };
 
-    // ? **FunÁ„o para adicionar participante**
+    // ‚ûï **Fun√ß√£o para adicionar participante**
     const adicionarParticipante = async () => {
-        // ValidaÁıes b·sicas
+        // Valida√ß√µes b√°sicas
         if (!novoParticipante.nome || !novoParticipante.streamer) {
             mostrarFeedback(t('listaSorteio.preenchaTodosCampos'), "erro");
             return;
@@ -353,7 +353,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
             console.log("Participante adicionado com sucesso:", data);
             
-            // Limpar o formul·rio, mas manter a plataforma selecionada
+            // Limpar o formul√°rio, mas manter a plataforma selecionada
             setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
             
             // Definir tempo de espera (60 segundos - 1 minuto)
@@ -361,7 +361,7 @@ function ListaSorteio({ onReiniciarLista }) {
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(60);
 
-            // ForÁar atualizaÁ„o imediata da lista
+            // For√ßar atualiza√ß√£o imediata da lista
             await fetchParticipantes();
 
             // Mostrar feedback de sucesso
@@ -373,7 +373,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // FunÁ„o para adicionar participantes de uma vez - atualizada para mostrar an˙ncio de tela inteira
+    // Fun√ß√£o para adicionar participantes de uma vez - atualizada para mostrar an√∫ncio de tela inteira
     const adicionarDezParticipantes = async () => {
         if (!novoParticipante.nome || !novoParticipante.streamer) {
             mostrarFeedback(t('listaSorteio.preenchaTodosCampos'), "erro");
@@ -399,7 +399,7 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback(t('listaSorteio.adicionandoParticipacoes'), "aviso");
             
-            // Chamar a funÁ„o RPC do Supabase para adicionar participantes sem n˙meros
+            // Chamar a fun√ß√£o RPC do Supabase para adicionar participantes sem n√∫meros
             const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
@@ -414,7 +414,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 10, plataformaSelecionada);
             } else {
                 // Processamento normal se a RPC funcionou
-                // Limpar o formul·rio
+                // Limpar o formul√°rio
                 setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
                 
                 // Definir tempo de espera (300 segundos - 5 minutos)
@@ -422,19 +422,19 @@ function ListaSorteio({ onReiniciarLista }) {
                 localStorage.setItem("tempoExpiracao", expiracao.toString());
                 setTempoEspera(300);
                 
-                // Mostrar mensagem de sucesso com o n˙mero real de inserÁıes
+                // Mostrar mensagem de sucesso com o n√∫mero real de inser√ß√µes
                 if (data && data.sucesso) {
                     const quantidade = data.inseridos || 10;
                     mostrarFeedback(t('listaSorteio.participacoesRegistradas', { quantidade }), "sucesso");
                 } else if (data) {
-                    // Se a operaÁ„o falhou mas retornou uma mensagem
+                    // Se a opera√ß√£o falhou mas retornou uma mensagem
                     mostrarFeedback(data.mensagem || t('listaSorteio.erroAdicionarParticipantes'), "erro");
                 } else {
                     mostrarFeedback(t('listaSorteio.dezParticipacoesRegistradas'), "sucesso");
                 }
             }
             
-            // ForÁar atualizaÁ„o da lista independentemente do mÈtodo usado
+            // For√ßar atualiza√ß√£o da lista independentemente do m√©todo usado
             await fetchParticipantes();
             
         } catch (error) {
@@ -442,10 +442,10 @@ function ListaSorteio({ onReiniciarLista }) {
             mostrarFeedback(`${t('listaSorteio.erro')}: ${error.message}`, "erro");
         }
 
-        // Mostrar an˙ncio de tela inteira apÛs processar as entradas
+        // Mostrar an√∫ncio de tela inteira ap√≥s processar as entradas
         setMostrarAnuncioTelaInteira(true);
         
-        // Registrar a exibiÁ„o do an˙ncio para mÈtricas
+        // Registrar a exibi√ß√£o do an√∫ncio para m√©tricas
         try {
             await supabase.from("metricas_anuncios").insert([{
                 tipo_anuncio: "botao_mais_10",
@@ -454,19 +454,19 @@ function ListaSorteio({ onReiniciarLista }) {
                     streamer: streamerSanitizado,
                     plataforma: plataformaSelecionada
                 },
-                detalhes: `Usu·rio adicionou 10 participaÁıes - Nome: ${nomeSanitizado}`
+                detalhes: `Usu√°rio adicionou 10 participa√ß√µes - Nome: ${nomeSanitizado}`
             }]);
         } catch (error) {
-            console.error("Erro ao registrar mÈtrica de an˙ncio:", error);
+            console.error("Erro ao registrar m√©trica de an√∫ncio:", error);
         }
     };
 
-    // FunÁ„o simplificada apenas para fechar o an˙ncio
+    // Fun√ß√£o simplificada apenas para fechar o an√∫ncio
     const processarAdicaoParticipantes = () => {
         setMostrarAnuncioTelaInteira(false);
     };
 
-    // MÈtodo fallback para inserÁ„o manual de participantes
+    // M√©todo fallback para inser√ß√£o manual de participantes
     const inserirParticipantesManualmente = async (nome, streamer, quantidade, plataforma) => {
         let inseridos = 0;
         let mensagensErro = [];
@@ -474,12 +474,12 @@ function ListaSorteio({ onReiniciarLista }) {
         try {
             // Registrar lote no log para que o trigger de rate limit permita
             await supabase.from("logs").insert([{
-                descricao: `Lote autorizado: ${nome} - iniciando ${quantidade} inserÁıes (fallback)`
+                descricao: `Lote autorizado: ${nome} - iniciando ${quantidade} inser√ß√µes (fallback)`
             }]);
             
             for (let i = 1; i <= quantidade; i++) {
                 try {
-                    // Inserir o mesmo nome sem numeraÁ„o
+                    // Inserir o mesmo nome sem numera√ß√£o
                     const { error } = await supabase.from("participantes_ativos").insert([
                         {
                             nome_twitch: nome,
@@ -493,23 +493,23 @@ function ListaSorteio({ onReiniciarLista }) {
                         console.error(`Erro ao inserir participante ${i}:`, error);
                     } else {
                         inseridos++;
-                        // Pequena pausa entre inserÁıes para evitar rate limiting
+                        // Pequena pausa entre inser√ß√µes para evitar rate limiting
                         await new Promise(resolve => setTimeout(resolve, 100));
                     }
                 } catch (err) {
-                    mensagensErro.push(`ExceÁ„o ao inserir ${i}: ${err.message}`);
+                    mensagensErro.push(`Exce√ß√£o ao inserir ${i}: ${err.message}`);
                 }
             }
             
-            // Registrar conclus„o do lote
+            // Registrar conclus√£o do lote
             await supabase.from("logs").insert([{
-                descricao: `Conclus„o do lote: ${nome} - inseridos ${inseridos}/${quantidade} (fallback)`
+                descricao: `Conclus√£o do lote: ${nome} - inseridos ${inseridos}/${quantidade} (fallback)`
             }]);
             
-            // Limpar o formul·rio mas manter a plataforma
+            // Limpar o formul√°rio mas manter a plataforma
             setNovoParticipante({ nome: "", streamer: "", plataforma });
             
-            // Definir tempo de espera (300 segundos para o mÈtodo manual - 5 minutos)
+            // Definir tempo de espera (300 segundos para o m√©todo manual - 5 minutos)
             const expiracao = Date.now() + 300000;
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(300);
@@ -518,58 +518,58 @@ function ListaSorteio({ onReiniciarLista }) {
                 mostrarFeedback(t('listaSorteio.participacoesRegistradas', { quantidade: inseridos }), "sucesso");
             } else {
                 mostrarFeedback(t('listaSorteio.naoFoiPossivelAdicionar'), "erro");
-                console.error("Erros durante inserÁ„o manual:", mensagensErro);
+                console.error("Erros durante inser√ß√£o manual:", mensagensErro);
             }
         } catch (error) {
-            console.error("Erro na inserÁ„o manual:", error);
+            console.error("Erro na inser√ß√£o manual:", error);
             mostrarFeedback(t('listaSorteio.erroAdicionarParticipantesManualmente'), "erro");
         }
         
         return inseridos;
     };
 
-    // FunÁ„o para mostrar feedback
+    // Fun√ß√£o para mostrar feedback
     const mostrarFeedback = (mensagem, tipo) => {
         setFeedback({ mensagem, tipo, visivel: true });
         
-        // Se for uma mensagem de sucesso para participante adicionado, mostrar notificaÁ„o centralizada
+        // Se for uma mensagem de sucesso para participante adicionado, mostrar notifica√ß√£o centralizada
         if (tipo === 'sucesso' && mensagem.includes('Participante adicionado')) {
             const notificacao = document.getElementById('notificacao-sucesso');
             if (notificacao) {
                 notificacao.textContent = mensagem;
                 notificacao.style.display = 'block';
                 
-                // Esconder apÛs 3 segundos
+                // Esconder ap√≥s 3 segundos
                 setTimeout(() => {
                     notificacao.style.display = 'none';
                 }, 3000);
             }
         }
         
-        // Esconder o feedback apÛs 3 segundos
+        // Esconder o feedback ap√≥s 3 segundos
         setTimeout(() => {
             setFeedback(prev => ({ ...prev, visivel: false }));
         }, 3000);
     };
 
-    // FunÁ„o para carregar mais participantes ou retrair a lista
+    // Fun√ß√£o para carregar mais participantes ou retrair a lista
     const alternarMostrarMais = () => {
         if (paginaAtual * itensPorPagina >= participantes.length) {
-            // Se j· estamos mostrando todos, voltar para a primeira p·gina
+            // Se j√° estamos mostrando todos, voltar para a primeira p√°gina
             setPaginaAtual(1);
         } else {
-            // Caso contr·rio, avanÁar para a prÛxima p·gina
+            // Caso contr√°rio, avan√ßar para a pr√≥xima p√°gina
             setPaginaAtual(paginaAtual + 1);
         }
     };
 
-    // Calcular quais participantes mostrar na p·gina atual
+    // Calcular quais participantes mostrar na p√°gina atual
     const participantesPaginados = participantes.slice(0, paginaAtual * itensPorPagina);
     
-    // Verificar se h· mais participantes para mostrar
+    // Verificar se h√° mais participantes para mostrar
     const temMaisParticipantes = participantes.length > paginaAtual * itensPorPagina;
 
-    // FunÁ„o para renderizar os participantes com espaÁos para propaganda
+    // Fun√ß√£o para renderizar os participantes com espa√ßos para propaganda
     const renderizarParticipantesComPropaganda = () => {
         if (!participantesPaginados || participantesPaginados.length === 0) {
             return (
@@ -583,8 +583,8 @@ function ListaSorteio({ onReiniciarLista }) {
         const linhasTabela = [];
         
         participantesPaginados.forEach((participante, index) => {
-            // Usar o nome completo sem remover os n˙meros
-            // Isso permite que os n˙meros nos nomes sejam exibidos na tabela
+            // Usar o nome completo sem remover os n√∫meros
+            // Isso permite que os n√∫meros nos nomes sejam exibidos na tabela
             const nomeExibicao = participante.nome_twitch;
             const plataforma = participante.plataforma_premio || "twitch";
             
@@ -600,7 +600,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 </tr>
             );
             
-            // Adicionar an˙ncio especÌfico entre as linhas 10 e 11
+            // Adicionar an√∫ncio espec√≠fico entre as linhas 10 e 11
             if (index === 9) {
                 linhasTabela.push(
                     <tr key="propaganda-linha-10-11" className="linha-propaganda">
@@ -616,7 +616,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     </tr>
                 );
             }
-            // A cada 10 participantes adicionais (apÛs a linha 11), adicionar uma linha de propaganda do tipo cursos
+            // A cada 10 participantes adicionais (ap√≥s a linha 11), adicionar uma linha de propaganda do tipo cursos
             else if ((index + 1) % 10 === 0 && index !== 9 && index !== participantesPaginados.length - 1) {
                 linhasTabela.push(
                     <tr key={`propaganda-${index}`} className="linha-propaganda">
@@ -639,14 +639,14 @@ function ListaSorteio({ onReiniciarLista }) {
 
     return (
         <div className="lista-sorteio">
-            {/* NotificaÁ„o de sucesso centralizada */}
+            {/* Notifica√ß√£o de sucesso centralizada */}
             <div id="notificacao-sucesso" className="notificacao-centralizada">
                 {t('listaSorteio.participanteAdicionado')}
             </div>
             
-            {/* EspaÁamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
+            {/* Espa√ßamento adicionado naturalmente pela margin-bottom do anuncio-container-superior */}
             
-            {/* Banner superior - exibido sempre no topo, apÛs o cabeÁalho */}
+            {/* Banner superior - exibido sempre no topo, ap√≥s o cabe√ßalho */}
             <div className="anuncio-container-superior">
                 <Anuncio 
                   tipo="fixo-superior" 
@@ -660,22 +660,22 @@ function ListaSorteio({ onReiniciarLista }) {
             
             {ultimoVencedor && (
                 <div className="vencedor-info">
-                    <h3><span className="icon-trophy">??</span> {t('listaSorteio.ultimoVencedor')}: {ultimoVencedor.nome}</h3>
+                    <h3><span className="icon-trophy">üèÜ</span> {t('listaSorteio.ultimoVencedor')}: {ultimoVencedor.nome}</h3>
                     <div className="vencedor-detalhes">
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-streamer">??</span> {t('listaSorteio.streamer')}</div>
+                            <div className="detalhe-label"><span className="icon-streamer">üé•</span> {t('listaSorteio.streamer')}</div>
                             <div className="detalhe-valor">{ultimoVencedor.streamer}</div>
                         </div>
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-number">??</span> {t('listaSorteio.numeroSorteado')}</div>
+                            <div className="detalhe-label"><span className="icon-number">üî¢</span> {t('listaSorteio.numeroSorteado')}</div>
                             <div className="detalhe-valor">{ultimoVencedor.numero}</div>
                         </div>
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-date">??</span> {t('listaSorteio.data')}</div>
+                            <div className="detalhe-label"><span className="icon-date">üìÖ</span> {t('listaSorteio.data')}</div>
                             <div className="detalhe-valor">{ultimoVencedor.data}</div>
                         </div>
                         <div className="detalhe">
-                            <div className="detalhe-label"><span className="icon-platform">??</span> {t('listaSorteio.plataforma')}</div>
+                            <div className="detalhe-label"><span className="icon-platform">üé•</span> {t('listaSorteio.plataforma')}</div>
                             <div className="detalhe-valor">
                                 {ultimoVencedor.plataforma || "twitch"}
                                 <span className="plataforma-emoji">
@@ -691,7 +691,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 </div>
             )}
 
-            {/* An˙ncio de cursos acima do bot„o Como Participar */}
+            {/* An√∫ncio de cursos acima do bot√£o Como Participar */}
             <div className="anuncio-sobre-participar">
                 <Anuncio 
                   tipo="cursos" 
@@ -702,13 +702,13 @@ function ListaSorteio({ onReiniciarLista }) {
                 />
             </div>
             
-            {/* Script para verificar se o AdTracker est· registrando este an˙ncio */}
+            {/* Script para verificar se o AdTracker est√° registrando este an√∫ncio */}
             {useEffect(() => {
-                console.log("An˙ncio 'cursos' acima do bot„o 'Como Participar' montado com pageId: lista-sorteio_antes_participar");
+                console.log("An√∫ncio 'cursos' acima do bot√£o 'Como Participar' montado com pageId: lista-sorteio_antes_participar");
                 
-                // Verificar no console se o AdTracker est· inicializando este an˙ncio
+                // Verificar no console se o AdTracker est√° inicializando este an√∫ncio
                 return () => {
-                    console.log("An˙ncio 'cursos' acima do bot„o 'Como Participar' desmontado");
+                    console.log("An√∫ncio 'cursos' acima do bot√£o 'Como Participar' desmontado");
                 };
             }, [])}
 
@@ -725,7 +725,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 </div>
             )}
 
-            <h2>{t('listaSorteio.participantes')} {listaCongelada && `(?? ${t('listaSorteio.listaCongelada')} ??)`}</h2>
+            <h2>{t('listaSorteio.participantes')} {listaCongelada && `(‚ùÑÔ∏è ${t('listaSorteio.listaCongelada')} ‚ùÑÔ∏è)`}</h2>
 
             <div className="formulario form-horizontal">
                 <input
@@ -759,14 +759,14 @@ function ListaSorteio({ onReiniciarLista }) {
                     */}
                 </select>
                 <button onClick={adicionarDezParticipantes} disabled={tempoEspera > 0 || listaCongelada}>
-                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ??` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionar10Participantes')}
+                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ‚ùÑÔ∏è` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionar10Participantes')}
                 </button>
                 <button onClick={adicionarParticipante} disabled={tempoEspera > 0 || listaCongelada}>
-                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ??` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionarParticipante')}
+                    {listaCongelada ? `${t('listaSorteio.listaCongelada')} ‚ùÑÔ∏è` : tempoEspera > 0 ? t('listaSorteio.aguarde', { segundos: tempoEspera }) : t('listaSorteio.adicionarParticipante')}
                 </button>
             </div>
 
-            {/* Banner de an˙ncio no topo da lista */}
+            {/* Banner de an√∫ncio no topo da lista */}
             <Anuncio 
               tipo="cursos" 
               posicao="principal" 
@@ -781,7 +781,7 @@ function ListaSorteio({ onReiniciarLista }) {
                         <th>#</th>
                         <th>{t('listaSorteio.nome')}</th>
                         <th>{t('listaSorteio.streamer')}</th>
-                        <th>??</th>
+                        <th>üé•</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -798,7 +798,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 </button>
             )}
 
-            {/* An˙ncio de vÌdeo no final da lista */}
+            {/* An√∫ncio de v√≠deo no final da lista */}
             <Anuncio 
               tipo="video" 
               posicao="rodape" 
@@ -806,16 +806,16 @@ function ListaSorteio({ onReiniciarLista }) {
               paginaId="lista-sorteio_rodape" 
             />
 
-            {/* An˙ncio de tela inteira quando o bot„o +10 È clicado */}
+            {/* An√∫ncio de tela inteira quando o bot√£o +10 √© clicado */}
             {mostrarAnuncioTelaInteira && (
                 <Anuncio 
                     tipo="tela-inteira"
-                    titulo="PROMO«√O EXCLUSIVA"
-                    descricao="Para adicionar +10 participaÁıes, confira nossa oferta especial"
+                    titulo="PROMO√á√ÉO EXCLUSIVA"
+                    descricao="Para adicionar +10 participa√ß√µes, confira nossa oferta especial"
                     urlDestino="#"
-                    imagemSrc="/images/promo.jpg" // Opcional: O caminho para a imagem do an˙ncio
+                    imagemSrc="/images/promo.jpg" // Opcional: O caminho para a imagem do an√∫ncio
                     mostrarFechar={true}
-                    avisos="Ao clicar vocÍ concorda com os termos de uso."
+                    avisos="Ao clicar voc√™ concorda com os termos de uso."
                     onFechar={() => {
                         setMostrarAnuncioTelaInteira(false);
                     }}
