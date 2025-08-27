@@ -3,21 +3,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "installCommand": "npm install",
-  "functions": {
-    "pages/api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    },
-    "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "routes": [
-    { "src": "/api/cron/route", "dest": "/api/cron/route.js" },
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
   "headers": [
     {
