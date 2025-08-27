@@ -7,10 +7,15 @@
     "pages/api/**/*.js": {
       "memory": 1024,
       "maxDuration": 30
+    },
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 30
     }
   },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/pages/api/$1" },
+    { "src": "/api/cron/route", "dest": "/api/cron/route.js" },
+    { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
