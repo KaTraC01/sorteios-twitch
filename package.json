@@ -23,7 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "@modelcontextprotocol/server-postgres": "^0.6.2",
-    "@supabase/supabase-js": "2.48.1",
+    "@supabase/supabase-js": "^2.56.0",
     "html-loader": "^4.2.0",
     "i18next": "22.4.9",
     "i18next-browser-languagedetector": "^7.0.1",
