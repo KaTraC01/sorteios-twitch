@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import './Anuncio.css';
 import AdTracker from '../AdTracker';
+import AnuncioConfigCache from '../../utils/AnuncioConfigCache';
 
 const Anuncio = ({ 
   tipo = 'reservado', 
@@ -51,33 +52,31 @@ const Anuncio = ({
     }
   }, [paginaId, tipo, posicao]);
   
-  // Carregar o arquivo de configuração de anúncios
+  // Carregar o arquivo de configuração de anúncios com cache otimizado
   useEffect(() => {
     setIsLoading(true);
     
-    fetch('/anuncios/config.json')
-      .then(response => response.json())
-      .then(data => {
-        // Se existem anúncios deste tipo e ativos
-        if (data[tipo] && data[tipo].length > 0) {
-          const anunciosAtivos = data[tipo].filter(a => a.ativo);
-          if (anunciosAtivos.length > 0) {
-            // Se for banner na tabela, procurar por um anúncio específico para essa posição
-            if (tipo === 'banner' && posicao === 'na-tabela') {
-              // Procurar por um anúncio com posição específica 'na-tabela'
-              const anuncioEspecifico = anunciosAtivos.find(a => a.posicao === 'na-tabela');
-              // Se encontrar, usar esse anúncio, senão usar o primeiro da lista
-              setAnuncioConfig(anuncioEspecifico || anunciosAtivos[0]);
-            } 
-            // Se for do tipo fixo-superior, sempre usar o primeiro anúncio da lista
-            else if (tipo === 'fixo-superior') {
-              setAnuncioConfig(anunciosAtivos[0]);
-            }
-            else {
-              // Para outros casos, seleciona um anúncio aleatório do tipo especificado
-              const anuncioSelecionado = anunciosAtivos[Math.floor(Math.random() * anunciosAtivos.length)];
-              setAnuncioConfig(anuncioSelecionado);
-            }
+    // ✅ MANTÉM: Toda a lógica de métricas intacta
+    // ✅ MELHORIA: Usa cache para reduzir requisições
+    AnuncioConfigCache.getAnunciosByTipo(tipo)
+      .then(anunciosAtivos => {
+        if (anunciosAtivos.length > 0) {
+          // ✅ PRESERVA: Lógica original de seleção de anúncios
+          // Se for banner na tabela, procurar por um anúncio específico para essa posição
+          if (tipo === 'banner' && posicao === 'na-tabela') {
+            // Procurar por um anúncio com posição específica 'na-tabela'
+            const anuncioEspecifico = anunciosAtivos.find(a => a.posicao === 'na-tabela');
+            // Se encontrar, usar esse anúncio, senão usar o primeiro da lista
+            setAnuncioConfig(anuncioEspecifico || anunciosAtivos[0]);
+          } 
+          // Se for do tipo fixo-superior, sempre usar o primeiro anúncio da lista
+          else if (tipo === 'fixo-superior') {
+            setAnuncioConfig(anunciosAtivos[0]);
+          }
+          else {
+            // Para outros casos, seleciona um anúncio aleatório do tipo especificado
+            const anuncioSelecionado = anunciosAtivos[Math.floor(Math.random() * anunciosAtivos.length)];
+            setAnuncioConfig(anuncioSelecionado);
           }
         }
         setIsLoading(false);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSupabaseClient } from '../../lib/supabaseManager'; // Importando gerenciador otimizado
+import AnuncioConfigCache from '../../utils/AnuncioConfigCache';
 
 // Usar cliente otimizado para operações de frontend
 const supabase = getSupabaseClient();
@@ -21,11 +22,12 @@ const RelatorioAnuncios = () => {
     carregarConfigAnuncios();
   }, [periodoSelecionado, tipoRelatorio]);
 
-  // Carregar a configuração de anúncios
+  // Carregar a configuração de anúncios com cache otimizado
   const carregarConfigAnuncios = async () => {
     try {
-      const response = await fetch('/anuncios/config.json');
-      const data = await response.json();
+      // ✅ MANTÉM: Funcionalidade de relatórios intacta
+      // ✅ MELHORIA: Usa cache para melhor performance
+      const data = await AnuncioConfigCache.getConfig();
       
       // Transformar o objeto de configuração em uma lista plana
       const anunciosLista = [];

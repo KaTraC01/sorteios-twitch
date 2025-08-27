@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next'; // Importar hook de tradução
 import { getSupabaseClient } from "../../lib/supabaseManager"; // Importando gerenciador otimizado
+import { usePaginatedParticipants } from "../../hooks/usePaginatedParticipants"; // Hook de paginação otimizada
 
 // Usar cliente otimizado para operações de frontend
 const supabase = getSupabaseClient();
@@ -23,7 +24,22 @@ const sanitizarEntrada = (texto) => {
 
 function ListaSorteio({ onReiniciarLista }) {
     const { t } = useTranslation(); // Hook de tradução
-    const [participantes, setParticipantes] = useState([]);
+    
+    // ✅ MELHORIA: Hook de paginação otimizada no modo acumulativo (como era antes!)
+    const {
+        participantes,
+        isLoading: participantesLoading,
+        allParticipants,
+        fetchAllParticipantsForSorteio,
+        totalParticipants,
+        mostrarMais,
+        mostrarMenos,
+        mostrandoTodos,
+        participantesCarregados,
+        refresh: refreshParticipantes
+    } = usePaginatedParticipants(10, 'cumulative'); // 10 por página, modo acumulativo
+    
+    // ✅ PRESERVA: Estados originais necessários para funcionalidades
     const [novoParticipante, setNovoParticipante] = useState({ nome: "", streamer: "", plataforma: "twitch" });
     const [tempoEspera, setTempoEspera] = useState(0);
     const [listaCongelada, setListaCongelada] = useState(false);
@@ -32,10 +48,8 @@ function ListaSorteio({ onReiniciarLista }) {
     const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
     const [feedback, setFeedback] = useState({ mensagem: "", tipo: "", visivel: false });
     const [ultimaAtualizacao, setUltimaAtualizacao] = useState(Date.now());
-    // Estados para controlar a paginação
-    const [paginaAtual, setPaginaAtual] = useState(1);
-    const [itensPorPagina, setItensPorPagina] = useState(10);
-    // Novo estado para controlar a visibilidade do anúncio de tela inteira
+    
+    // ✅ PRESERVA: Estados para anúncios
     const [mostrarAnuncioTelaInteira, setMostrarAnuncioTelaInteira] = useState(false);
 
     // Função para verificar o tempo de espera baseado na expiração
@@ -59,20 +73,10 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // 🔄 **Função para buscar participantes no Supabase**
+    // ✅ MANTÉM: Função compatível para casos especiais (agora usa hook)
     const fetchParticipantes = async () => {
-        console.log("Buscando participantes ativos...");
-        const { data, error } = await supabase
-            .from("participantes_ativos")
-            .select("*")
-            .order("created_at", { ascending: true });
-
-        if (error) {
-            console.error("Erro ao buscar participantes:", error);
-        } else {
-            console.log(`Participantes encontrados: ${data.length}`, data);
-            setParticipantes(data);
-        }
+        console.log("🔄 Atualizando participantes via hook otimizado...");
+        refreshParticipantes();
     };
 
     // 🏆 **Função para buscar o último vencedor do Supabase**
@@ -121,7 +125,7 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // 🔄 **Carrega os dados iniciais e configura atualizações em tempo real com Supabase Realtime**
+    // ✅ PRESERVA: Carrega dados iniciais e configura realtime otimizado
     useEffect(() => {
         // Verificar se há um último vencedor no localStorage
         const vencedorSalvo = localStorage.getItem("ultimoVencedor");
@@ -129,22 +133,14 @@ function ListaSorteio({ onReiniciarLista }) {
             setUltimoVencedor(JSON.parse(vencedorSalvo));
         }
         
-        // Carregar dados iniciais
-        fetchParticipantes();
+        // Carregar dados iniciais (participantes já são carregados pelo hook)
         fetchUltimoVencedor();
         verificarListaCongelada();
         
-        // Configurar canal único consolidado para atualizações em tempo real
+        // ✅ MELHORIA: Realtime adicional para sorteios e configurações
         const sessionId = Math.random().toString(36).substring(2, 15);
-        const consolidatedChannel = supabase
-            .channel(`sorteio-realtime-${sessionId}`)
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'participantes_ativos' }, 
-                (payload) => {
-                    // Atualiza a lista completa para garantir a ordenação correta
-                    fetchParticipantes();
-                }
-            )
+        const additionalChannel = supabase
+            .channel(`sorteio-additional-${sessionId}`)
             .on('postgres_changes', 
                 { event: 'INSERT', schema: 'public', table: 'sorteios' }, 
                 (payload) => {
@@ -161,8 +157,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
         // Limpeza ao desmontar o componente
         return () => {
-            // Remover o canal consolidado
-            supabase.removeChannel(consolidatedChannel);
+            supabase.removeChannel(additionalChannel);
         };
     }, []);
 
@@ -181,13 +176,16 @@ function ListaSorteio({ onReiniciarLista }) {
 
     // 🎲 **Função para realizar o sorteio - Mantida apenas para uso manual pela interface administrativa**
     const realizarSorteio = async () => {
-        if (participantes.length === 0) {
+        // ✅ PRESERVA: Lógica original, mas usa dados completos para sorteio
+        const todosParticipantes = await fetchAllParticipantsForSorteio();
+        
+        if (todosParticipantes.length === 0) {
             mostrarFeedback(t('listaSorteio.nenhumParticipante'), "erro");
             return;
         }
 
-        const vencedorIndex = Math.floor(Math.random() * participantes.length);
-        const vencedor = participantes[vencedorIndex];
+        const vencedorIndex = Math.floor(Math.random() * todosParticipantes.length);
+        const vencedor = todosParticipantes[vencedorIndex];
         
         // Obter a data atual no formato correto
         const dataAtual = new Date();
@@ -244,8 +242,8 @@ function ListaSorteio({ onReiniciarLista }) {
             if (sorteioSalvo && sorteioSalvo.length > 0) {
                 const sorteioId = sorteioSalvo[0].id;
                 
-                // Prepara os dados dos participantes para inserção no histórico
-                const participantesHistorico = participantes.map((participante, index) => ({
+                // ✅ PRESERVA: Histórico completo usando todos os participantes
+                const participantesHistorico = todosParticipantes.map((participante, index) => ({
                     sorteio_id: sorteioId,
                     nome_twitch: participante.nome_twitch,
                     streamer_escolhido: participante.streamer_escolhido,
@@ -274,8 +272,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
     // 🔄 **Função para resetar a lista após o sorteio**
     const resetarLista = async () => {
-        // Limpar os participantes do estado
-        setParticipantes([]);
+        // ✅ PRESERVA: Lógica original de limpeza
         setListaCongelada(false);
         setSorteioRealizado(false);
         
@@ -307,8 +304,8 @@ function ListaSorteio({ onReiniciarLista }) {
         // Exibe mensagem informando que a lista foi resetada
         mostrarFeedback(t('listaSorteio.listaResetada'), "sucesso");
         
-        // Força uma atualização dos dados
-        fetchParticipantes();
+        // ✅ MELHORIA: Atualização via hook otimizado
+        refreshParticipantes();
         fetchUltimoVencedor();
         verificarListaCongelada();
         setUltimaAtualizacao(Date.now());
@@ -361,8 +358,8 @@ function ListaSorteio({ onReiniciarLista }) {
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(60);
 
-            // Forçar atualização imediata da lista
-            await fetchParticipantes();
+            // ✅ MELHORIA: Atualização otimizada via hook
+            refreshParticipantes();
 
             // Mostrar feedback de sucesso
             mostrarFeedback(t('listaSorteio.participanteAdicionado'), "sucesso");
@@ -434,8 +431,8 @@ function ListaSorteio({ onReiniciarLista }) {
                 }
             }
             
-            // Forçar atualização da lista independentemente do método usado
-            await fetchParticipantes();
+            // ✅ MELHORIA: Atualização otimizada via hook
+            refreshParticipantes();
             
         } catch (error) {
             console.error("Erro ao adicionar participantes:", error);
@@ -552,22 +549,12 @@ function ListaSorteio({ onReiniciarLista }) {
         }, 3000);
     };
 
-    // Função para carregar mais participantes ou retrair a lista
-    const alternarMostrarMais = () => {
-        if (paginaAtual * itensPorPagina >= participantes.length) {
-            // Se já estamos mostrando todos, voltar para a primeira página
-            setPaginaAtual(1);
-        } else {
-            // Caso contrário, avançar para a próxima página
-            setPaginaAtual(paginaAtual + 1);
-        }
-    };
-
-    // Calcular quais participantes mostrar na página atual
-    const participantesPaginados = participantes.slice(0, paginaAtual * itensPorPagina);
+    // ✅ RESTAURADO: Sistema de "mostrar mais" como era antes (mas otimizado!)
+    // Participantes são acumulados conforme carrega mais páginas
+    const participantesPaginados = participantes;
     
-    // Verificar se há mais participantes para mostrar
-    const temMaisParticipantes = participantes.length > paginaAtual * itensPorPagina;
+    // ✅ RESTAURADO: Lógica igual ao sistema antigo
+    const temMaisParticipantes = !mostrandoTodos;
 
     // Função para renderizar os participantes com espaços para propaganda
     const renderizarParticipantesComPropaganda = () => {
@@ -789,12 +776,20 @@ function ListaSorteio({ onReiniciarLista }) {
                 </tbody>
             </table>
 
-            {participantes.length > 10 && (
+            {/* ✅ RESTAURADO: Botão "Mostrar Mais" como era antes (mas com performance otimizada!) */}
+            {totalParticipants > 10 && (
                 <button 
                     className={`botao-mostrar-mais ${!temMaisParticipantes ? 'mostrar-menos' : ''}`} 
-                    onClick={alternarMostrarMais}
+                    onClick={temMaisParticipantes ? mostrarMais : mostrarMenos}
+                    disabled={participantesLoading}
                 >
-                    {temMaisParticipantes ? t('listaSorteio.mostrarMais') : t('listaSorteio.mostrarMenos')}
+                    {participantesLoading ? 
+                        'Carregando...' : 
+                        (temMaisParticipantes ? 
+                            t('listaSorteio.mostrarMais') || 'Mostrar Mais' : 
+                            t('listaSorteio.mostrarMenos') || 'Mostrar Menos'
+                        )
+                    }
                 </button>
             )}
 

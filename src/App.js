@@ -1,12 +1,50 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useTranslation } from 'react-i18next'; // Importar hook de tradução
 import Header from "./components/Header";
 import Timer from "./components/Timer";
 import ListaSorteio from "./components/ListaSorteio";
-import Ganhadores from "./pages/Ganhadores/Ganhadores"; // Caminho corrigido
-import RelatorioAnuncios from "./pages/RelatorioAnuncios"; // Nova página de relatórios
 import Anuncio from "./components/Anuncio"; // Importando o componente de anúncio
+
+// ✅ MELHORIA: Lazy loading de páginas não críticas
+// ✅ PRESERVA: Componentes principais carregados normalmente para não afetar métricas
+const Ganhadores = lazy(() => import("./pages/Ganhadores/Ganhadores"));
+const RelatorioAnuncios = lazy(() => import("./pages/RelatorioAnuncios"));
+
+// Componente de loading personalizado
+const LoadingComponent = ({ text = "Carregando..." }) => (
+    <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '200px',
+        color: 'white',
+        fontSize: '18px',
+        backgroundColor: '#0a0a0a'
+    }}>
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+        }}>
+            <div style={{
+                width: '20px',
+                height: '20px',
+                border: '2px solid #6441a5',
+                borderTop: '2px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+            }}></div>
+            {text}
+        </div>
+        <style jsx>{`
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `}</style>
+    </div>
+);
 
 function App() {
     const { t } = useTranslation(); // Hook de tradução
@@ -114,11 +152,18 @@ function App() {
                                 </>
                             } />
 
-                            {/* Rota para a página de Ganhadores */}
-                            <Route path="/ganhadores" element={<Ganhadores />} />
+                            {/* ✅ MELHORIA: Rotas com lazy loading e fallback */}
+                            <Route path="/ganhadores" element={
+                                <Suspense fallback={<LoadingComponent text="Carregando histórico de ganhadores..." />}>
+                                    <Ganhadores />
+                                </Suspense>
+                            } />
                             
-                            {/* Rota para a página de Relatórios de Anúncios */}
-                            <Route path="/relatorio-anuncios" element={<RelatorioAnuncios />} />
+                            <Route path="/relatorio-anuncios" element={
+                                <Suspense fallback={<LoadingComponent text="Carregando relatórios de anúncios..." />}>
+                                    <RelatorioAnuncios />
+                                </Suspense>
+                            } />
                         </Routes>
                     </main>
                 </div>
