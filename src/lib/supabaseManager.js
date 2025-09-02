@@ -27,18 +27,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-// Debug: verificar variáveis disponíveis (APÓS declaração)
-if (typeof window !== 'undefined') {
-  console.log('🔍 [DEBUG] Variáveis disponíveis no frontend:');
-  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configurada' : 'FALTANDO');
-  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configurada' : 'FALTANDO');
-  console.log('URL final usada:', supabaseUrl ? 'OK' : 'VAZIA');
-  console.log('Key final usada:', supabaseAnonKey ? 'OK' : 'VAZIA');
-} else {
-  console.log('🔍 [DEBUG] Variáveis disponíveis no backend:');
-  console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Configurada' : 'FALTANDO');
-  console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Configurada' : 'FALTANDO');
-  console.log('SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'Configurada' : 'FALTANDO');
+// Debug: verificar variáveis disponíveis (SEGURO - apenas em desenvolvimento)
+if (process.env.NODE_ENV === 'development') {
+  if (typeof window !== 'undefined') {
+    console.log('🔍 [DEBUG] Configuração Supabase frontend verificada');
+    console.log('URL configurada:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('Key configurada:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  } else {
+    console.log('🔍 [DEBUG] Configuração Supabase backend verificada');
+    console.log('URL configurada:', !!process.env.SUPABASE_URL);
+    console.log('Key configurada:', !!process.env.SUPABASE_ANON_KEY);
+    console.log('Service Key configurada:', !!process.env.SUPABASE_SERVICE_KEY);
+  }
 }
 
 // Verificar se estamos no browser ou servidor
@@ -214,6 +214,23 @@ export function getSupabaseServerlessClient() {
 // ===================================================================
 // UTILITÁRIOS E DIAGNÓSTICOS
 // ===================================================================
+
+// Proteção contra manipulação via console em produção
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  // Remover referências globais potencialmente perigosas
+  Object.defineProperty(window, 'supabase', {
+    get: () => undefined,
+    set: () => false,
+    configurable: false
+  });
+  
+  // Remover funções de debug em produção
+  setTimeout(() => {
+    delete window.adTrackerDiagnostico;
+    delete window.limparLogsAdTracker;
+    delete window.verEventosAdTracker;
+  }, 1000);
+}
 
 /**
  * Testa a conexão com o Supabase
