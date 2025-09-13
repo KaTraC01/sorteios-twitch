@@ -19,12 +19,9 @@ import logger from '../utils/logger';
 // CONFIGURAÇÃO DE VARIÁVEIS DE AMBIENTE
 // ===================================================================
 
-// FALLBACK TEMPORÁRIO - usar apenas se variáveis não chegarem
-const FALLBACK_SUPABASE_URL = 'https://nsqiytflqwlyqhdmueki.supabase.co';
-const FALLBACK_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTc5MDQsImV4cCI6MjA1NTQ5MzkwNH0.IyrTn7Hrz-ktNM6iC1Chk8Z-kWK9rhmWljb0n2XLpjo';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || FALLBACK_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
+// ✅ SEGURANÇA: Credenciais apenas via variáveis de ambiente
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 // Debug: verificar variáveis disponíveis (SEGURO - apenas em desenvolvimento)
@@ -44,15 +41,15 @@ if (process.env.NODE_ENV === 'development') {
 // Verificar se estamos no browser ou servidor
 const isBrowser = typeof window !== 'undefined';
 
-// Validação de configuração
-if (!supabaseUrl && !isBrowser) {
-  const error = 'ERRO CRÍTICO: URL do Supabase não configurada (backend)';
+// ✅ SEGURANÇA: Validação rigorosa de configuração
+if (!supabaseUrl) {
+  const error = 'ERRO CRÍTICO: SUPABASE_URL não configurada. Configure as variáveis de ambiente.';
   logger.error(error);
   throw new Error(error);
 }
 
-if (!supabaseAnonKey && !isBrowser) {
-  const error = 'ERRO CRÍTICO: Chave anônima do Supabase não configurada (backend)';
+if (!supabaseAnonKey) {
+  const error = 'ERRO CRÍTICO: SUPABASE_ANON_KEY não configurada. Configure as variáveis de ambiente.';
   logger.error(error);
   throw new Error(error);
 }
@@ -70,55 +67,7 @@ let serviceClient = null;
  * Pool: Conexões anônimas limitadas
  */
 export function getSupabaseClient() {
-  // Se não temos URL/Key, retornar um cliente mock no frontend
-  if (!supabaseUrl || !supabaseAnonKey) {
-    if (isBrowser) {
-      console.warn('⚠️ Supabase não configurado no frontend. Usando cliente mock.');
-      // Retornar objeto mock que não quebrará a aplicação
-      return {
-        from: (table) => ({
-          select: (columns) => Promise.resolve({ 
-            data: [], 
-            error: { message: 'Supabase não configurado no frontend' } 
-          }),
-          insert: (data) => Promise.resolve({ 
-            data: null, 
-            error: { message: 'Supabase não configurado no frontend' } 
-          }),
-          update: (data) => Promise.resolve({ 
-            data: null, 
-            error: { message: 'Supabase não configurado no frontend' } 
-          }),
-          delete: () => Promise.resolve({ 
-            data: null, 
-            error: { message: 'Supabase não configurado no frontend' } 
-          }),
-          rpc: (name, params) => Promise.resolve({ 
-            data: null, 
-            error: { message: 'Supabase não configurado no frontend' } 
-          })
-        }),
-        channel: (name) => ({
-          on: (event, callback) => ({ unsubscribe: () => {} }),
-          subscribe: () => 'SUBSCRIBED',
-          unsubscribe: () => 'UNSUBSCRIBED'
-        }),
-        realtime: {
-          channel: (name) => ({
-            on: () => ({}),
-            subscribe: () => ({}),
-            unsubscribe: () => ({})
-          })
-        },
-        auth: {
-          getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-          signIn: () => Promise.resolve({ error: { message: 'Supabase não configurado no frontend' } }),
-          signOut: () => Promise.resolve({ error: { message: 'Supabase não configurado no frontend' } })
-        }
-      };
-    }
-    throw new Error('Supabase não configurado no backend');
-  }
+  // ✅ SEGURANÇA: Validação foi movida para o topo do arquivo
   
   if (!anonClient) {
     if (!isBrowser) {
@@ -215,21 +164,46 @@ export function getSupabaseServerlessClient() {
 // UTILITÁRIOS E DIAGNÓSTICOS
 // ===================================================================
 
-// Proteção contra manipulação via console em produção
+// ✅ SEGURANÇA: Proteção rigorosa contra manipulação via console em produção
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  // Remover referências globais potencialmente perigosas
+  // Bloquear acesso global ao Supabase
   Object.defineProperty(window, 'supabase', {
     get: () => undefined,
     set: () => false,
-    configurable: false
+    configurable: false,
+    enumerable: false
   });
   
-  // Remover funções de debug em produção
-  setTimeout(() => {
-    delete window.adTrackerDiagnostico;
-    delete window.limparLogsAdTracker;
-    delete window.verEventosAdTracker;
-  }, 1000);
+  // Lista completa de funções debug a remover
+  const debugFunctions = [
+    'adTrackerDiagnostico',
+    'limparLogsAdTracker', 
+    'verEventosAdTracker',
+    'getConnectionStatus',
+    'testSupabaseConnection',
+    'resetConnections'
+  ];
+  
+  // Remover TODAS as funções de debug imediatamente
+  debugFunctions.forEach(func => {
+    if (window[func]) {
+      delete window[func];
+    }
+    // Prevenir redefinição
+    Object.defineProperty(window, func, {
+      get: () => undefined,
+      set: () => false,
+      configurable: false,
+      enumerable: false
+    });
+  });
+  
+  // Bloquear console.log em produção (opcional)
+  if (process.env.REACT_APP_BLOCK_CONSOLE === 'true') {
+    console.log = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+  }
 }
 
 /**
