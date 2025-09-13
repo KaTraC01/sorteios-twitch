@@ -41,23 +41,33 @@ if (process.env.NODE_ENV === 'development') {
 // Verificar se estamos no browser ou servidor
 const isBrowser = typeof window !== 'undefined';
 
-// ✅ SEGURANÇA: Validação com fallback controlado para produção
-// Fallback temporário apenas para manter o site funcionando durante configuração
-const TEMP_SUPABASE_URL = 'https://nsqiytflqwlyqhdmueki.supabase.co';
-const TEMP_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTc5MDQsImV4cCI6MjA1NTQ5MzkwNH0.IyrTn7Hrz-ktNM6iC1Chk8Z-kWK9rhmWljb0n2XLpjo';
+// ✅ SEGURANÇA ENTERPRISE: Validação rigorosa sem fallback vulnerável
+// REMOVIDO: Credenciais hardcoded removidas por questões de segurança
 
-// Usar fallback apenas se variáveis não estiverem configuradas
-const finalSupabaseUrl = supabaseUrl || TEMP_SUPABASE_URL;
-const finalSupabaseAnonKey = supabaseAnonKey || TEMP_SUPABASE_ANON_KEY;
-
-// Log de segurança para monitoramento
-if (!supabaseUrl || !supabaseAnonKey) {
-  const message = 'AVISO: Usando configuração de fallback. Configure variáveis de ambiente na Vercel.';
-  logger.warn(message);
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('⚠️', message);
+// Validação rigorosa das variáveis de ambiente
+if (!supabaseUrl) {
+  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_URL não configurada. Configure as variáveis de ambiente na Vercel.';
+  logger.error(error);
+  if (typeof window === 'undefined') {
+    throw new Error(error);
+  } else {
+    console.error('🚨', error);
   }
 }
+
+if (!supabaseAnonKey) {
+  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_ANON_KEY não configurada. Configure as variáveis de ambiente na Vercel.';
+  logger.error(error);
+  if (typeof window === 'undefined') {
+    throw new Error(error);
+  } else {
+    console.error('🚨', error);
+  }
+}
+
+// Usar apenas variáveis de ambiente válidas
+const finalSupabaseUrl = supabaseUrl;
+const finalSupabaseAnonKey = supabaseAnonKey;
 
 // ===================================================================
 // SINGLETON CLIENTS - OTIMIZAÇÃO DE POOL DE CONEXÕES
