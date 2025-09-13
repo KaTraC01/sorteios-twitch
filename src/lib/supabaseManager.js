@@ -14,6 +14,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import logger from '../utils/logger';
+import { exibirDiagnostico } from '../utils/envDiagnostic';
 
 // ===================================================================
 // CONFIGURAÇÃO DE VARIÁVEIS DE AMBIENTE
@@ -48,20 +49,28 @@ const isBrowser = typeof window !== 'undefined';
 if (!supabaseUrl) {
   const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_URL não configurada. Configure as variáveis de ambiente na Vercel.';
   logger.error(error);
-  if (typeof window === 'undefined') {
-    throw new Error(error);
-  } else {
+  
+  // Exibir diagnóstico detalhado no browser
+  if (typeof window !== 'undefined') {
     console.error('🚨', error);
+    console.log('🔍 Executando diagnóstico de configuração...');
+    exibirDiagnostico();
+  } else {
+    throw new Error(error);
   }
 }
 
 if (!supabaseAnonKey) {
   const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_ANON_KEY não configurada. Configure as variáveis de ambiente na Vercel.';
   logger.error(error);
-  if (typeof window === 'undefined') {
-    throw new Error(error);
-  } else {
+  
+  // Exibir diagnóstico detalhado no browser
+  if (typeof window !== 'undefined') {
     console.error('🚨', error);
+    console.log('🔍 Executando diagnóstico de configuração...');
+    exibirDiagnostico();
+  } else {
+    throw new Error(error);
   }
 }
 
