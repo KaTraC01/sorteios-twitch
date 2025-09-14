@@ -1,319 +1,216 @@
 /**
- * SUPABASE CONNECTION MANAGER
- * ===========================
+ * SUPABASE MANAGER - CONFIGURAÇÃO LIMPA E SEGURA
+ * ==============================================
  * 
- * Gerenciador centralizado de conexões com Supabase
- * Implementa padrão Singleton para otimizar o pool de conexões
+ * Sistema de conexão otimizado com Supabase
  * 
- * ANTES: 46 instâncias de createClient espalhadas pelo projeto
- * DEPOIS: 2 instâncias controladas (anônima + serviço)
+ * ✅ SEGURANÇA: Apenas variáveis de ambiente da Vercel
+ * ✅ PERFORMANCE: Padrão Singleton
+ * ✅ COMPATIBILIDADE: Frontend e Backend
  * 
- * @author Sistema de Otimização
- * @date $(new Date().toISOString())
+ * @author Sistema de Otimização v2.0
+ * @date 2025-01-13
  */
 
 import { createClient } from '@supabase/supabase-js';
 import logger from '../utils/logger';
-import { exibirDiagnostico } from '../utils/envDiagnostic';
 
 // ===================================================================
-// CONFIGURAÇÃO DE VARIÁVEIS DE AMBIENTE
+// CONFIGURAÇÃO LIMPA - APENAS VERCEL ENVIRONMENT VARIABLES
 // ===================================================================
 
-// ✅ SEGURANÇA: Credenciais apenas via variáveis de ambiente
+// Obter credenciais (prioritário: NEXT_PUBLIC para frontend)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-// Debug: verificar variáveis disponíveis (SEGURO - apenas em desenvolvimento)
-if (process.env.NODE_ENV === 'development') {
-  if (typeof window !== 'undefined') {
-    console.log('🔍 [DEBUG] Configuração Supabase frontend verificada');
-    console.log('URL configurada:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('Key configurada:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  } else {
-    console.log('🔍 [DEBUG] Configuração Supabase backend verificada');
-    console.log('URL configurada:', !!process.env.SUPABASE_URL);
-    console.log('Key configurada:', !!process.env.SUPABASE_ANON_KEY);
-    console.log('Service Key configurada:', !!process.env.SUPABASE_SERVICE_KEY);
-  }
-}
-
-// Verificar se estamos no browser ou servidor
+// Verificar ambiente
 const isBrowser = typeof window !== 'undefined';
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-// ✅ SEGURANÇA ENTERPRISE: Validação rigorosa sem fallback vulnerável
-// REMOVIDO: Credenciais hardcoded removidas por questões de segurança
+// ===================================================================
+// VALIDAÇÃO RIGOROSA (SEM FALLBACKS INSEGUROS)
+// ===================================================================
 
-// Validação rigorosa das variáveis de ambiente
 if (!supabaseUrl) {
-  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_URL não configurada. Configure as variáveis de ambiente na Vercel.';
+  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_URL não configurada na Vercel.';
   logger.error(error);
   
-  // Exibir diagnóstico detalhado no browser
-  if (typeof window !== 'undefined') {
-    console.error('🚨', error);
-    console.log('🔍 Executando diagnóstico de configuração...');
-    exibirDiagnostico();
+  if (isBrowser) {
+    console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
+    console.error('💡 Configure na Vercel: NEXT_PUBLIC_SUPABASE_URL');
+    console.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
   } else {
     throw new Error(error);
   }
 }
 
 if (!supabaseAnonKey) {
-  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_ANON_KEY não configurada. Configure as variáveis de ambiente na Vercel.';
+  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_ANON_KEY não configurada na Vercel.';
   logger.error(error);
   
-  // Exibir diagnóstico detalhado no browser
-  if (typeof window !== 'undefined') {
-    console.error('🚨', error);
-    console.log('🔍 Executando diagnóstico de configuração...');
-    exibirDiagnostico();
+  if (isBrowser) {
+    console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
+    console.error('💡 Configure na Vercel: NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    console.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
   } else {
     throw new Error(error);
   }
 }
 
-// Usar apenas variáveis de ambiente válidas
-const finalSupabaseUrl = supabaseUrl;
-const finalSupabaseAnonKey = supabaseAnonKey;
-
 // ===================================================================
-// SINGLETON CLIENTS - OTIMIZAÇÃO DE POOL DE CONEXÕES
+// SISTEMA DE CONEXÃO - PADRÃO SINGLETON
 // ===================================================================
 
-let anonClient = null;
-let serviceClient = null;
+let supabaseClient = null;
+let supabaseServiceClient = null;
 
 /**
- * Cliente Supabase para operações anônimas (frontend)
- * Usado por: componentes React, páginas públicas
- * Pool: Conexões anônimas limitadas
+ * Obter cliente Supabase anônimo (frontend/público)
+ * @returns {Object} Cliente Supabase
  */
 export function getSupabaseClient() {
-  // ✅ SEGURANÇA: Validação foi movida para o topo do arquivo
-  
-  if (!anonClient) {
-    if (!isBrowser) {
-      logger.debug('Inicializando cliente Supabase anônimo (singleton)');
-    }
-    
-    anonClient = createClient(finalSupabaseUrl, finalSupabaseAnonKey, {
-      auth: {
-        autoRefreshToken: isBrowser,
-        persistSession: isBrowser,
-        detectSessionInUrl: isBrowser
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10
+  if (!supabaseClient && supabaseUrl && supabaseAnonKey) {
+    try {
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: isBrowser,
+          autoRefreshToken: isBrowser,
+        },
+        global: {
+          headers: {
+            'x-client-info': 'sorteio-system/1.0'
+          }
         }
+      });
+      
+      if (isDevelopment) {
+        logger.info('✅ Cliente Supabase anônimo inicializado');
       }
-    });
-    
-    if (!isBrowser) {
-      logger.info('Cliente Supabase anônimo inicializado com sucesso');
+    } catch (error) {
+      logger.error('❌ Erro ao inicializar cliente Supabase:', error);
+      throw error;
     }
   }
   
-  return anonClient;
+  return supabaseClient;
 }
 
 /**
- * Cliente Supabase para operações de serviço (backend)
- * Usado por: APIs, cron jobs, operações administrativas
- * Pool: Conexões privilegiadas
+ * Obter cliente Supabase com privilégios de serviço (backend/admin)
+ * @returns {Object} Cliente Supabase Service
  */
 export function getSupabaseServiceClient() {
-  if (!serviceClient) {
-    if (!supabaseServiceKey) {
-      const error = 'ERRO: Chave de serviço do Supabase não configurada para operações administrativas';
-      logger.error(error);
-      throw new Error(error);
-    }
-    
-    logger.debug('Inicializando cliente Supabase de serviço (singleton)');
-    
-    serviceClient = createClient(finalSupabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 50 // Maior throughput para operações administrativas
+  if (!isBrowser && supabaseServiceKey && supabaseUrl) {
+    if (!supabaseServiceClient) {
+      try {
+        supabaseServiceClient = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: {
+            persistSession: false,
+          },
+          global: {
+            headers: {
+              'x-client-info': 'sorteio-system-service/1.0'
+            }
+          }
+        });
+        
+        if (isDevelopment) {
+          logger.info('✅ Cliente Supabase Service inicializado');
         }
+      } catch (error) {
+        logger.error('❌ Erro ao inicializar cliente Supabase Service:', error);
+        throw error;
       }
-    });
-    
-    logger.info('Cliente Supabase de serviço inicializado com sucesso');
+    }
+    return supabaseServiceClient;
   }
   
-  return serviceClient;
+  // No frontend ou sem service key, retornar cliente anônimo
+  return getSupabaseClient();
 }
 
+// ===================================================================
+// FUNÇÕES DE DIAGNÓSTICO E STATUS
+// ===================================================================
+
 /**
- * Cliente otimizado para funções serverless e cron jobs
- * Configuração específica para reduzir overhead de conexão
+ * Verificar status da conexão
+ * @returns {Object} Status da conexão
  */
-export function getSupabaseServerlessClient() {
-  // Para serverless, sempre criar uma nova instância otimizada
-  // Não usar singleton pois o contexto é efêmero
+export function getConnectionStatus() {
+  const status = {
+    configured: !!supabaseUrl && !!supabaseAnonKey,
+    url: supabaseUrl ? '✅ Configurada' : '❌ Ausente',
+    anonKey: supabaseAnonKey ? '✅ Configurada' : '❌ Ausente',
+    serviceKey: supabaseServiceKey ? '✅ Configurada' : '❌ Ausente',
+    environment: isBrowser ? 'Frontend' : 'Backend',
+    clientInitialized: !!supabaseClient,
+    serviceClientInitialized: !!supabaseServiceClient
+  };
   
-  if (!supabaseServiceKey) {
-    const error = 'ERRO: Chave de serviço necessária para operações serverless';
-    logger.error(error);
-    throw new Error(error);
+  if (isDevelopment) {
+    console.log('🔍 Status da Conexão Supabase:', status);
   }
   
-  logger.debug('Criando cliente Supabase serverless otimizado');
-  
-  return createClient(finalSupabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 100 // Alta performance para operações batch
-      }
-    },
-    db: {
-      schema: 'public'
-    }
-  });
-}
-
-// ===================================================================
-// UTILITÁRIOS E DIAGNÓSTICOS
-// ===================================================================
-
-// ✅ SEGURANÇA: Proteção rigorosa contra manipulação via console em produção
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  // Bloquear acesso global ao Supabase
-  Object.defineProperty(window, 'supabase', {
-    get: () => undefined,
-    set: () => false,
-    configurable: false,
-    enumerable: false
-  });
-  
-  // Lista completa de funções debug a remover
-  const debugFunctions = [
-    'adTrackerDiagnostico',
-    'limparLogsAdTracker', 
-    'verEventosAdTracker',
-    'getConnectionStatus',
-    'testSupabaseConnection',
-    'resetConnections'
-  ];
-  
-  // Remover TODAS as funções de debug imediatamente
-  debugFunctions.forEach(func => {
-    if (window[func]) {
-      delete window[func];
-    }
-    // Prevenir redefinição
-    Object.defineProperty(window, func, {
-      get: () => undefined,
-      set: () => false,
-      configurable: false,
-      enumerable: false
-    });
-  });
-  
-  // Bloquear console.log em produção (opcional)
-  if (process.env.REACT_APP_BLOCK_CONSOLE === 'true') {
-    console.log = () => {};
-    console.warn = () => {};
-    console.error = () => {};
-  }
+  return status;
 }
 
 /**
- * Testa a conexão com o Supabase
- * Função mantida para compatibilidade com código existente
+ * Testar conexão com Supabase
+ * @returns {Promise<boolean>} Sucesso da conexão
  */
 export async function testSupabaseConnection() {
   try {
     const client = getSupabaseClient();
-    const { data, error } = await client.from('configuracoes').select('*').limit(1);
+    
+    // Teste simples de conectividade
+    const { data, error } = await client
+      .from('configuracoes')
+      .select('*')
+      .limit(1);
     
     if (error) {
-      logger.error('TESTE CONEXÃO: Erro ao conectar', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      logger.error('❌ Erro no teste de conexão:', error);
+      return false;
     }
     
-    logger.info('TESTE CONEXÃO: Conexão bem-sucedida');
-    return {
-      success: true,
-      data
-    };
-  } catch (err) {
-    logger.critical('TESTE CONEXÃO: Erro crítico', err);
-    return {
-      success: false,
-      error: err.message
-    };
+    logger.info('✅ Conexão com Supabase funcionando');
+    return true;
+  } catch (error) {
+    logger.error('❌ Falha no teste de conexão:', error);
+    return false;
   }
 }
 
-/**
- * Função de diagnóstico para verificar status dos clientes
- */
-export function getConnectionStatus() {
-  return {
-    anonClientInitialized: anonClient !== null,
-    serviceClientInitialized: serviceClient !== null,
-    environment: {
-      hasUrl: !!finalSupabaseUrl,
-      hasAnonKey: !!finalSupabaseAnonKey,
-      hasServiceKey: !!supabaseServiceKey,
-      usingFallback: !supabaseUrl || !supabaseAnonKey
-    }
-  };
-}
-
-/**
- * Função para resetar conexões (útil para testes)
- * ATENÇÃO: Use apenas em desenvolvimento
- */
-export function resetConnections() {
-  if (process.env.NODE_ENV === 'production') {
-    logger.warn('Reset de conexões ignorado em produção');
-    return;
-  }
-  
-  logger.debug('Resetando conexões Supabase');
-  anonClient = null;
-  serviceClient = null;
-}
-
 // ===================================================================
-// EXPORTAÇÕES PARA COMPATIBILIDADE COM CÓDIGO EXISTENTE
+// EXPORTAÇÕES PRINCIPAIS
 // ===================================================================
 
-// Exportação padrão para compatibilidade
+// Cliente padrão (anônimo)
 export const supabase = getSupabaseClient();
 
-// Função de sanitização mantida para compatibilidade
-export function sanitizarEntrada(entrada) {
-  if (typeof entrada !== 'string') {
-    return entrada;
+// Função para reset (útil em testes)
+export function resetConnections() {
+  supabaseClient = null;
+  supabaseServiceClient = null;
+  if (isDevelopment) {
+    logger.info('🔄 Conexões Supabase resetadas');
   }
-  
-  return entrada
-    .trim()
-    .replace(/[<>]/g, '') // Remove tags HTML básicas
-    .substring(0, 255); // Limita tamanho
 }
 
 // ===================================================================
-// LOG DE INICIALIZAÇÃO
+// EXPOSIÇÃO GLOBAL PARA DIAGNÓSTICO (APENAS DESENVOLVIMENTO)
 // ===================================================================
 
-logger.info('Supabase Manager carregado - Pool de conexões otimizado');
-logger.debug(`Configuração: URL=${!!supabaseUrl}, AnonKey=${!!supabaseAnonKey}, ServiceKey=${!!supabaseServiceKey}`);
+if (isBrowser && isDevelopment && typeof window !== 'undefined') {
+  window.supabaseManager = {
+    getStatus: getConnectionStatus,
+    testConnection: testSupabaseConnection,
+    reset: resetConnections
+  };
+  
+  console.log('🔧 SupabaseManager disponível em window.supabaseManager');
+}
+
+export default supabase;
