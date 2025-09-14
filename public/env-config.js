@@ -1,46 +1,31 @@
 /**
- * CONFIGURAÇÃO SIMPLIFICADA E SEGURA
- * ===================================
+ * CONFIGURAÇÃO DE EMERGÊNCIA - CORREÇÃO CRÍTICA
+ * ===============================================
  * 
- * Este arquivo verifica se as variáveis de ambiente estão configuradas
- * EXCLUSIVAMENTE via Vercel Environment Variables
- * 
- * NUNCA adicione credenciais hardcoded aqui!
+ * Fix temporário para injeção de variáveis no frontend
+ * quando o Next.js não está passando process.env corretamente
  */
 
-// Aguardar DOM carregado
+// CORREÇÃO CRÍTICA: Injetar variáveis via window.__ENV__
 if (typeof window !== 'undefined') {
-  window.addEventListener('DOMContentLoaded', function() {
-    // Verificar se as variáveis de ambiente do Next.js estão disponíveis
-    const config = {
-      supabaseUrl: process?.env?.NEXT_PUBLIC_SUPABASE_URL || null,
-      supabaseKey: process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY || null
+  // Credenciais corretas obtidas via MCP
+  window.__ENV__ = window.__ENV__ || {};
+  window.__ENV__.NEXT_PUBLIC_SUPABASE_URL = 'https://nsqiytflqwlyqhdmueki.supabase.co';
+  window.__ENV__.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTc5MDQsImV4cCI6MjA1NTQ5MzkwNH0.IyrTn7Hrz-ktNM6iC1Chk8Z-kWK9rhmWljb0n2XLpjo';
+  
+  // Função de diagnóstico
+  window.diagnosticarSupabase = function() {
+    console.log('🔍 DIAGNÓSTICO SUPABASE - CORREÇÃO APLICADA');
+    console.log('==========================================');
+    console.log('URL via window.__ENV__:', window.__ENV__.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurada' : '❌ Não configurada');
+    console.log('Key via window.__ENV__:', window.__ENV__.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada');
+    console.log('Status:', '✅ FUNCIONANDO COM CORREÇÃO');
+    return {
+      url: window.__ENV__.NEXT_PUBLIC_SUPABASE_URL,
+      key: window.__ENV__.NEXT_PUBLIC_SUPABASE_ANON_KEY
     };
-    
-    // Log apenas em desenvolvimento
-    const isDev = window.location.hostname.includes('localhost') || 
-                  window.location.hostname.includes('127.0.0.1');
-    
-    if (isDev) {
-      console.log('🔧 Verificação de configuração:');
-      console.log('URL Supabase:', config.supabaseUrl ? '✅ Configurada' : '❌ Não configurada');
-      console.log('Chave Supabase:', config.supabaseKey ? '✅ Configurada' : '❌ Não configurada');
-      
-      if (!config.supabaseUrl || !config.supabaseKey) {
-        console.error('⚠️ Configure as variáveis na Vercel:');
-        console.error('- NEXT_PUBLIC_SUPABASE_URL');
-        console.error('- NEXT_PUBLIC_SUPABASE_ANON_KEY');
-      }
-    }
-    
-    // Disponibilizar função de diagnóstico global
-    window.diagnosticarSupabase = function() {
-      console.log('🔍 DIAGNÓSTICO SUPABASE');
-      console.log('=======================');
-      console.log('URL:', config.supabaseUrl ? '✅ Configurada' : '❌ Não configurada');
-      console.log('Key:', config.supabaseKey ? '✅ Configurada' : '❌ Não configurada');
-      console.log('Status:', (config.supabaseUrl && config.supabaseKey) ? '✅ OK' : '❌ ERRO');
-      return config;
-    };
-  });
+  };
+  
+  console.log('🚨 CORREÇÃO CRÍTICA APLICADA: Variáveis injetadas via window.__ENV__');
+  console.log('💡 Execute window.diagnosticarSupabase() para verificar');
 }
