@@ -10,10 +10,27 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Método não permitido' });
     }
 
-    // Verificar senha de acesso (opcional - para segurança)
+    // Verificar autenticação robusta (dupla validação)
+    const authHeader = req.headers.authorization;
     const { senha } = req.body;
-    if (!senha || senha !== process.env.ADMIN_PASSWORD) {
-      return res.status(403).json({ error: 'Acesso não autorizado' });
+    
+    let autorizado = false;
+    
+    // Método 1: Bearer token
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      if (token === process.env.API_SECRET_KEY) {
+        autorizado = true;
+      }
+    }
+    
+    // Método 2: Senha admin (fallback)
+    if (!autorizado && senha && senha === process.env.ADMIN_PASSWORD) {
+      autorizado = true;
+    }
+    
+    if (!autorizado) {
+      return res.status(403).json({ error: 'Acesso não autorizado - Token ou senha requeridos' });
     }
 
     // Registrar início da execução

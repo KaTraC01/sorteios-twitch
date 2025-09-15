@@ -9,10 +9,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido. Use POST.' });
   }
 
-  // Verificar autenticação básica (pode implementar um método mais seguro se necessário)
+  // Verificar autenticação robusta
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Não autorizado' });
+    return res.status(401).json({ error: 'Não autorizado - Token requerido' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (!token || token !== process.env.API_SECRET_KEY) {
+    return res.status(401).json({ error: 'Token inválido' });
   }
 
   try {
