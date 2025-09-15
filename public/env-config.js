@@ -1,31 +1,39 @@
 /**
- * CONFIGURAÇÃO DE EMERGÊNCIA - CORREÇÃO CRÍTICA
- * ===============================================
+ * CONFIGURAÇÃO DE DIAGNÓSTICO - AMBIENTE DE PRODUÇÃO
+ * ==================================================
  * 
- * Fix temporário para injeção de variáveis no frontend
- * quando o Next.js não está passando process.env corretamente
+ * Script de diagnóstico para verificar configuração de variáveis de ambiente
+ * SEM hardcode de credenciais (removido por motivos de segurança)
  */
 
-// CORREÇÃO CRÍTICA: Injetar variáveis via window.__ENV__
 if (typeof window !== 'undefined') {
-  // Credenciais corretas obtidas via MCP
-  window.__ENV__ = window.__ENV__ || {};
-  window.__ENV__.NEXT_PUBLIC_SUPABASE_URL = 'https://nsqiytflqwlyqhdmueki.supabase.co';
-  window.__ENV__.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zcWl5dGZscXdseXFoZG11ZWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTc5MDQsImV4cCI6MjA1NTQ5MzkwNH0.IyrTn7Hrz-ktNM6iC1Chk8Z-kWK9rhmWljb0n2XLpjo';
-  
-  // Função de diagnóstico
+  // Função de diagnóstico (SEM credenciais hardcoded)
   window.diagnosticarSupabase = function() {
-    console.log('🔍 DIAGNÓSTICO SUPABASE - CORREÇÃO APLICADA');
+    console.log('🔍 DIAGNÓSTICO SUPABASE - AMBIENTE PRODUÇÃO');
     console.log('==========================================');
-    console.log('URL via window.__ENV__:', window.__ENV__.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurada' : '❌ Não configurada');
-    console.log('Key via window.__ENV__:', window.__ENV__.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada');
-    console.log('Status:', '✅ FUNCIONANDO COM CORREÇÃO');
+    
+    // Verificar process.env
+    const processUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_URL;
+    const processKey = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    console.log('URL via process.env:', processUrl ? '✅ Configurada' : '❌ Não configurada');
+    console.log('Key via process.env:', processKey ? '✅ Configurada' : '❌ Não configurada');
+    
+    if (!processUrl || !processKey) {
+      console.error('❌ ERRO: Variáveis de ambiente não configuradas na Vercel!');
+      console.log('📋 AÇÃO NECESSÁRIA: Configurar no Vercel Dashboard:');
+      console.log('   - NEXT_PUBLIC_SUPABASE_URL');
+      console.log('   - NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    } else {
+      console.log('✅ Status: Variáveis configuradas corretamente');
+    }
+    
     return {
-      url: window.__ENV__.NEXT_PUBLIC_SUPABASE_URL,
-      key: window.__ENV__.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      processEnvConfigured: !!(processUrl && processKey),
+      nextSteps: !processUrl || !processKey ? 'Configure as variáveis na Vercel' : 'Configuração OK'
     };
   };
   
-  console.log('🚨 CORREÇÃO CRÍTICA APLICADA: Variáveis injetadas via window.__ENV__');
+  console.log('🔧 Script de diagnóstico carregado (sem hardcode)');
   console.log('💡 Execute window.diagnosticarSupabase() para verificar');
 }

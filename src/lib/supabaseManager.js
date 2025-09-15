@@ -19,14 +19,9 @@ import logger from '../utils/logger';
 // CONFIGURAÇÃO LIMPA - APENAS VERCEL ENVIRONMENT VARIABLES
 // ===================================================================
 
-// Obter credenciais (com fallback para window.__ENV__ se process.env falhar)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                   process.env.SUPABASE_URL ||
-                   (typeof window !== 'undefined' && window.__ENV__?.NEXT_PUBLIC_SUPABASE_URL);
-
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
-                       process.env.SUPABASE_ANON_KEY ||
-                       (typeof window !== 'undefined' && window.__ENV__?.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // Obter credenciais do ambiente (SEM fallbacks inseguros)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
