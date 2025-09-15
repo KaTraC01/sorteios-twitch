@@ -20,22 +20,22 @@ export function diagnosticarConfiguracao() {
     if (isBrowser) {
         // Diagnóstico Frontend
         diagnosticos.frontend = {
-            supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-            supabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            supabaseUrl: !!(process.env.REACT_APP_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL),
+            supabaseAnonKey: !!(process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
             nodeEnv: process.env.NODE_ENV,
-            urlValue: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configurada' : 'NÃO CONFIGURADA',
-            keyValue: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configurada' : 'NÃO CONFIGURADA'
+            urlValue: (process.env.REACT_APP_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) ? 'Configurada' : 'NÃO CONFIGURADA',
+            keyValue: (process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) ? 'Configurada' : 'NÃO CONFIGURADA'
         };
 
-        // Identificar problemas
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            diagnosticos.problemas.push('NEXT_PUBLIC_SUPABASE_URL não configurada');
-            diagnosticos.solucoes.push('Configure NEXT_PUBLIC_SUPABASE_URL na Vercel');
+        // Identificar problemas (CORRIGIDO PARA CREATE REACT APP)
+        if (!(process.env.REACT_APP_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)) {
+            diagnosticos.problemas.push('REACT_APP_SUPABASE_URL não configurada');
+            diagnosticos.solucoes.push('Configure REACT_APP_SUPABASE_URL na Vercel');
         }
 
-        if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-            diagnosticos.problemas.push('NEXT_PUBLIC_SUPABASE_ANON_KEY não configurada');
-            diagnosticos.solucoes.push('Configure NEXT_PUBLIC_SUPABASE_ANON_KEY na Vercel');
+        if (!(process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+            diagnosticos.problemas.push('REACT_APP_SUPABASE_ANON_KEY não configurada');
+            diagnosticos.solucoes.push('Configure REACT_APP_SUPABASE_ANON_KEY na Vercel');
         }
 
     } else {
@@ -59,8 +59,8 @@ export function exibirDiagnostico() {
     
     if (diag.frontend.supabaseUrl !== undefined) {
         console.log('🌐 FRONTEND (Browser):');
-        console.log('  NEXT_PUBLIC_SUPABASE_URL:', diag.frontend.urlValue);
-        console.log('  NEXT_PUBLIC_SUPABASE_ANON_KEY:', diag.frontend.keyValue);
+        console.log('  REACT_APP_SUPABASE_URL:', diag.frontend.urlValue);
+        console.log('  REACT_APP_SUPABASE_ANON_KEY:', diag.frontend.keyValue);
         console.log('  NODE_ENV:', diag.frontend.nodeEnv);
     }
     

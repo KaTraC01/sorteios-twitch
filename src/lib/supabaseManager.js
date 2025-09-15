@@ -19,9 +19,9 @@ import logger from '../utils/logger';
 // CONFIGURAÇÃO LIMPA - APENAS VERCEL ENVIRONMENT VARIABLES
 // ===================================================================
 
-  // Obter credenciais do ambiente (SEM fallbacks inseguros)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  // Obter credenciais do ambiente (CORRIGIDO PARA CREATE REACT APP)
+  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
@@ -34,12 +34,12 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 // ===================================================================
 
 if (!supabaseUrl) {
-  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_URL não configurada na Vercel.';
+  const error = 'ERRO CRÍTICO: REACT_APP_SUPABASE_URL não configurada na Vercel.';
   logger.error(error);
   
   if (isBrowser) {
     console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
-    console.error('💡 Configure na Vercel: NEXT_PUBLIC_SUPABASE_URL');
+    console.error('💡 Configure na Vercel: REACT_APP_SUPABASE_URL');
     console.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
   } else {
     throw new Error(error);
@@ -47,12 +47,12 @@ if (!supabaseUrl) {
 }
 
 if (!supabaseAnonKey) {
-  const error = 'ERRO CRÍTICO: NEXT_PUBLIC_SUPABASE_ANON_KEY não configurada na Vercel.';
+  const error = 'ERRO CRÍTICO: REACT_APP_SUPABASE_ANON_KEY não configurada na Vercel.';
   logger.error(error);
   
   if (isBrowser) {
     console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
-    console.error('💡 Configure na Vercel: NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    console.error('💡 Configure na Vercel: REACT_APP_SUPABASE_ANON_KEY');
     console.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
   } else {
     throw new Error(error);

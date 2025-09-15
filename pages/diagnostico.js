@@ -38,22 +38,22 @@ export default function DiagnosticoPage() {
         
         // Verificar variáveis de ambiente no Frontend
         const variaveisAmbiente = {
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: typeof window !== "undefined" ? window.NEXT_PUBLIC_SUPABASE_ANON_KEY : null,
-          NEXT_PUBLIC_SUPABASE_URL: typeof window !== "undefined" ? window.NEXT_PUBLIC_SUPABASE_URL : null,
+          REACT_APP_SUPABASE_ANON_KEY: typeof window !== "undefined" ? (window.REACT_APP_SUPABASE_ANON_KEY || window.NEXT_PUBLIC_SUPABASE_ANON_KEY) : null,
+          REACT_APP_SUPABASE_URL: typeof window !== "undefined" ? (window.REACT_APP_SUPABASE_URL || window.NEXT_PUBLIC_SUPABASE_URL) : null,
         };
         
         // Verificar se as variáveis essenciais estão definidas
         const verificacoes = {
           // Removida verificação de URL específica por questões de segurança
-          URL_DEFINIDA: !!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_URL,
-          ANON_KEY_DEFINIDA: !!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          URL_DEFINIDA: !!variaveisAmbiente.REACT_APP_SUPABASE_URL,
+          ANON_KEY_DEFINIDA: !!variaveisAmbiente.REACT_APP_SUPABASE_ANON_KEY,
         };
         
-        if (!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_URL) {
+        if (!variaveisAmbiente.REACT_APP_SUPABASE_URL) {
           novosErros.push('URL do Supabase não configurada no frontend');
         }
         
-        if (!variaveisAmbiente.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        if (!variaveisAmbiente.REACT_APP_SUPABASE_ANON_KEY) {
           novosErros.push('Chave anônima do Supabase não configurada no frontend');
         }
         
@@ -439,8 +439,8 @@ export default function DiagnosticoPage() {
           <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', marginBottom: '20px' }}>
             <h3>Variáveis de Ambiente Frontend</h3>
             <div style={{ backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
-              <p>NEXT_PUBLIC_SUPABASE_URL: {dadosDiagnostico.variaveisAmbiente?.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurada' : '❌ Não configurada'}</p>
-              <p>NEXT_PUBLIC_SUPABASE_ANON_KEY: {dadosDiagnostico.variaveisAmbiente?.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada'}</p>
+              <p>REACT_APP_SUPABASE_URL: {dadosDiagnostico.variaveisAmbiente?.REACT_APP_SUPABASE_URL ? '✅ Configurada' : '❌ Não configurada'}</p>
+              <p>REACT_APP_SUPABASE_ANON_KEY: {dadosDiagnostico.variaveisAmbiente?.REACT_APP_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada'}</p>
               
               <h4>Origem das Variáveis</h4>
               <p>URL vem de env-config.js (hardcoded): {dadosDiagnostico.verificacoes?.URL_DEFINIDA ? 'Sim ⚠️' : 'Não ✅'}</p>

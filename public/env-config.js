@@ -12,9 +12,9 @@ if (typeof window !== 'undefined') {
     console.log('🔍 DIAGNÓSTICO SUPABASE - AMBIENTE PRODUÇÃO');
     console.log('==========================================');
     
-    // Verificar process.env
-    const processUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_URL;
-    const processKey = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Verificar process.env (CORRIGIDO PARA CREATE REACT APP)
+    const processUrl = typeof process !== 'undefined' && (process.env?.REACT_APP_SUPABASE_URL || process.env?.NEXT_PUBLIC_SUPABASE_URL);
+    const processKey = typeof process !== 'undefined' && (process.env?.REACT_APP_SUPABASE_ANON_KEY || process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     
     console.log('URL via process.env:', processUrl ? '✅ Configurada' : '❌ Não configurada');
     console.log('Key via process.env:', processKey ? '✅ Configurada' : '❌ Não configurada');
@@ -22,15 +22,15 @@ if (typeof window !== 'undefined') {
     if (!processUrl || !processKey) {
       console.error('❌ ERRO: Variáveis de ambiente não configuradas na Vercel!');
       console.log('📋 AÇÃO NECESSÁRIA: Configurar no Vercel Dashboard:');
-      console.log('   - NEXT_PUBLIC_SUPABASE_URL');
-      console.log('   - NEXT_PUBLIC_SUPABASE_ANON_KEY');
+      console.log('   - REACT_APP_SUPABASE_URL');
+      console.log('   - REACT_APP_SUPABASE_ANON_KEY');
     } else {
       console.log('✅ Status: Variáveis configuradas corretamente');
     }
     
     return {
       processEnvConfigured: !!(processUrl && processKey),
-      nextSteps: !processUrl || !processKey ? 'Configure as variáveis na Vercel' : 'Configuração OK'
+      nextSteps: !processUrl || !processKey ? 'Configure REACT_APP_* na Vercel' : 'Configuração OK'
     };
   };
   
