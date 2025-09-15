@@ -2,6 +2,16 @@
 // Acesse /api/debug-env para ver o status
 
 export default function handler(req, res) {
+  // SEGURANÇA: Endpoint protegido - apenas com autenticação válida
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(404).json({ error: 'Endpoint não encontrado' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  if (token !== process.env.API_SECRET_KEY) {
+    return res.status(404).json({ error: 'Endpoint não encontrado' });
+  }
   // Verificar apenas se as variáveis existem, sem mostrar valores completos
   const diagnostico = {
     variaveisConfiguradas: {

@@ -6,18 +6,48 @@ import { withErrorHandling, successResponse, errorResponse } from "../../src/uti
 
 async function handler(req, res) {
   try {
-    // Este endpoint é apenas para testes em ambiente de desenvolvimento
-    // Por segurança, verificar se estamos em desenvolvimento
+    // SEGURANÇA: Endpoint protegido - apenas desenvolvimento ou com autenticação admin
     const isDev = process.env.NODE_ENV === 'development' || req.headers['x-vercel-env'] === 'development';
-    if (!isDev && !req.query.force) {
-      return errorResponse(
-        res, 
-        403, 
-        'Este endpoint só está disponível em ambiente de desenvolvimento',
-        'Acesso não autorizado em produção',
-        { tip: 'Adicione ?force=true se realmente quiser forçar a execução em produção' }
-      );
+    const isAdmin = req.headers.authorization === `Bearer ${process.env.API_SECRET_KEY}`;
+    
+    if (!isDev && !isAdmin) {
+      // Em produção, retornar 404 para não revelar existência do endpoint
+      return errorResponse(res, 404, 'Endpoint não encontrado');
     }
+    
+    // Rate limiting para endpoints de debug
+    const userIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+    const rateLimitKey = `debug_${userIP}`;
+    
+    try {
+      const { data: rateCheck } = await supabase
+        .from('secure_rate_control')
+        .select('*')
+        .eq('identificador', rateLimitKey)
+        .eq('tipo_operacao', 'debug_endpoint')
+        .gte('timestamp_operacao', new Date(Date.now() - 60000).toISOString()) // últimos 60 segundos
+        .single();
+        
+      if (rateCheck && rateCheck.tentativas_consecutivas >= 5) {
+        return errorResponse(res, 429, 'Rate limit excedido', 'Muitas tentativas. Tente novamente em 1 minuto.');
+      }
+    } catch (error) {
+      // Ignorar erro se não encontrar registro (primeira tentativa)
+    }
+    
+    // Registrar tentativa de acesso
+    await supabase.from('secure_rate_control').upsert({
+      identificador: rateLimitKey,
+      tipo_operacao: 'debug_endpoint',
+      timestamp_operacao: new Date().toISOString(),
+      tentativas_consecutivas: 1,
+      metadados_operacao: { 
+        endpoint: '/api/debug-sorteio',
+        user_agent: req.headers['user-agent'],
+        isDev,
+        isAdmin: !!isAdmin
+      }
+    }, { onConflict: 'identificador,tipo_operacao' });
 
     // Obter informações sobre o sistema
     const diagnostico = {

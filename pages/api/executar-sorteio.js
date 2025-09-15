@@ -1,4 +1,5 @@
 import { getSupabaseServiceClient, sanitizarEntrada } from "../../src/lib/supabaseManager";
+import { checkRateLimit, recordAttempt } from "../../src/middleware/rateLimiting";
 
 // Usar cliente de serviço para operações administrativas
 const supabase = getSupabaseServiceClient();
@@ -8,6 +9,14 @@ async function handler(req, res) {
   // Verificar se é uma chamada GET ou POST (aceita ambos)
   if (req.method !== 'GET' && req.method !== 'POST') {
     return errorResponse(res, 405, 'Método não permitido', 'O método deve ser GET ou POST');
+  }
+
+  // SEGURANÇA: Rate limiting para execução de sorteios
+  const userIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const rateLimitResult = await checkRateLimit(userIP, 'sorteio_request');
+  
+  if (!rateLimitResult.allowed) {
+    return errorResponse(res, 429, 'Rate limit excedido', rateLimitResult.message);
   }
 
   try {

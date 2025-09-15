@@ -185,6 +185,28 @@ export async function testSupabaseConnection() {
 }
 
 // ===================================================================
+// FUNÇÕES DE SANITIZAÇÃO DE DADOS
+// ===================================================================
+
+/**
+ * Sanitizar entrada de dados para prevenir XSS e injection
+ * @param {string} input - Texto a ser sanitizado
+ * @returns {string} Texto sanitizado
+ */
+export function sanitizarEntrada(input) {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+
+  return input
+    .trim()
+    .replace(/[<>]/g, '') // Remove tags HTML básicas
+    .replace(/['"]/g, '') // Remove aspas que podem quebrar SQL
+    .replace(/\x00/g, '') // Remove null bytes
+    .substring(0, 255); // Limitar tamanho
+}
+
+// ===================================================================
 // EXPORTAÇÕES PRINCIPAIS
 // ===================================================================
 

@@ -1,4 +1,5 @@
 import { getSupabaseServiceClient } from '../src/lib/supabaseManager';
+import { checkRateLimit, recordAttempt } from '../src/middleware/rateLimiting';
 
 // Usar cliente de serviço otimizado para inserção em lote
 const supabase = getSupabaseServiceClient();
@@ -12,6 +13,18 @@ export default async function handler(req, res) {
   // Verificar se o método é POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
+  }
+
+  // SEGURANÇA: Rate limiting para inserção de eventos
+  const userIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const rateLimitResult = await checkRateLimit(userIP, 'anuncio_track');
+  
+  if (!rateLimitResult.allowed) {
+    return res.status(429).json({ 
+      error: 'Rate limit excedido', 
+      message: rateLimitResult.message,
+      retryAfter: rateLimitResult.resetTime 
+    });
   }
   
   try {
