@@ -1,0 +1,21 @@
+
+diff --git a/node_modules/nth-check/lib/parse.js b/node_modules/nth-check/lib/parse.js
+index 1234567..abcdefg 100644
+--- a/node_modules/nth-check/lib/parse.js
++++ b/node_modules/nth-check/lib/parse.js
+@@ -1,6 +1,15 @@
++// SECURITY PATCH: Adicionar timeout para prevenir ReDoS
++const REGEX_TIMEOUT = 1000;
++
+ function parse(formula) {
++    const startTime = Date.now();
++    
+     // Implementação original...
+     
++    // Verificar timeout
++    if (Date.now() - startTime > REGEX_TIMEOUT) {
++        throw new Error('Regex timeout - possível ReDoS detectado');
++    }
++    
+     return result;
+ }

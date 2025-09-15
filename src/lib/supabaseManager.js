@@ -14,6 +14,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import logger from '../utils/logger';
+import { SecurityLogger } from '../utils/securityUtils';
 
 // ===================================================================
 // CONFIGURAÇÃO LIMPA - APENAS VERCEL ENVIRONMENT VARIABLES
@@ -36,6 +37,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 if (!supabaseUrl) {
   const error = 'ERRO CRÍTICO: REACT_APP_SUPABASE_URL não configurada na Vercel.';
   logger.error(error);
+  SecurityLogger.log('MISSING_SUPABASE_URL', { error }, 'CRITICAL');
   
   if (isBrowser) {
     console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
@@ -49,6 +51,7 @@ if (!supabaseUrl) {
 if (!supabaseAnonKey) {
   const error = 'ERRO CRÍTICO: REACT_APP_SUPABASE_ANON_KEY não configurada na Vercel.';
   logger.error(error);
+  SecurityLogger.log('MISSING_SUPABASE_ANON_KEY', { error }, 'CRITICAL');
   
   if (isBrowser) {
     console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
