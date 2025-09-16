@@ -58,20 +58,24 @@ const RelatorioAnuncios = () => {
       // Determinar data de início com base no período
       const dataInicio = obterDataInicio(periodoSelecionado);
       
-      // Buscar métricas de resumo diário
+      // Buscar métricas de resumo diário (excluindo demos)
       const { data: dadosResumo, error: erroResumo } = await supabase
         .from('metricas_resumo_diarias')
         .select('*')
-        .gte('data', dataInicio.toISOString().split('T')[0]);
+        .gte('data', dataInicio.toISOString().split('T')[0])
+        .not('anuncio_id', 'like', 'demo_%')
+        .not('tipo_anuncio', 'like', 'demo-%');
         
       if (erroResumo) throw erroResumo;
       setResumoDiario(dadosResumo || []);
       
-      // Buscar eventos detalhados (limitados a 1000)
+      // Buscar eventos detalhados (limitados a 1000, excluindo demos)
       const { data: dadosEventos, error: erroEventos } = await supabase
         .from('eventos_anuncios')
         .select('*')
         .gte('timestamp', dataInicio.toISOString())
+        .not('anuncio_id', 'like', 'demo_%')
+        .not('tipo_anuncio', 'like', 'demo-%')
         .order('timestamp', { ascending: false })
         .limit(1000);
         

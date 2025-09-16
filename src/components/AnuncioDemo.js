@@ -27,6 +27,13 @@ const AnuncioDemo = ({ tipo = 'banner', titulo = '', backgroundColor = '#2563eb'
     </div>
   );
   
+  // Para demos no relatório, não fazer tracking para evitar dados falsos
+  const isRelatorioPage = paginaAtual.includes('relatorio-anuncios');
+  
+  if (isRelatorioPage) {
+    return conteudoAnuncio;
+  }
+  
   return (
     <AdTracker
       anuncioId={anuncioId}
