@@ -798,4 +798,313 @@
   .analise-investimento h3 {
     color: black !important;
   }
+}
+
+/* Estilos para eventos em tempo real */
+.eventos-recentes {
+  margin-top: 40px;
+}
+
+.eventos-recentes h3 {
+  color: #2d3748;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.eventos-container {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.eventos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.evento-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.evento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.evento-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.evento-tipo {
+  background-color: #e2e8f0;
+  color: #475569;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.evento-data {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.evento-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.evento-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.detail-value.impressao {
+  color: #3b82f6;
+}
+
+.detail-value.clique {
+  color: #10b981;
+}
+
+.sem-eventos {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+
+.sem-eventos-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.sem-eventos h4 {
+  margin-bottom: 8px;
+  color: #475569;
+}
+
+/* Estilos para relatório por página */
+.relatorio-por-pagina {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.pagina-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.pagina-header h2 {
+  color: #2d3748;
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+.pagina-subtitle {
+  color: #718096;
+  font-style: italic;
+  margin: 0;
+}
+
+.paginas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.pagina-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.pagina-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.pagina-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.pagina-card-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.pagina-ranking {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pagina-metricas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.pagina-metrica {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f7fafc;
+  border-radius: 8px;
+}
+
+.metrica-icon {
+  font-size: 24px;
+  background-color: white;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+}
+
+.metrica-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pagina-metrica .metrica-numero {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 2px;
+}
+
+.pagina-metrica .metrica-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.pagina-performance {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.performance-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.pagina-performance .performance-bar {
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.pagina-performance .performance-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.performance-text {
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sem-dados-pagina {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.sem-dados-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.sem-dados-pagina h3 {
+  margin-bottom: 12px;
+  color: #475569;
+  font-size: 20px;
+}
+
+.sem-dados-pagina p {
+  color: #64748b;
+  font-size: 16px;
+}
+
+/* Responsividade para eventos e páginas */
+@media (max-width: 768px) {
+  .eventos-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .paginas-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .evento-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .pagina-metricas {
+    grid-template-columns: 1fr;
+  }
+  
+  .pagina-card {
+    padding: 16px;
+  }
 } 

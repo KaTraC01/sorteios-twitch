@@ -388,40 +388,47 @@ const RelatorioAnuncios = () => {
         </div>
         
         <div className="eventos-recentes">
-          <h3>📝 Últimos 20 Eventos (Dados em Tempo Real)</h3>
-          <table className="tabela-metricas">
-            <thead>
-              <tr>
-                <th>Data/Hora</th>
-                <th>Tipo Anúncio</th>
-                <th>ID Anúncio</th>
-                <th>Página</th>
-                <th>Evento</th>
-                <th>Tempo Visível</th>
-                <th>Dispositivo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {metricas.slice(0, 20).map((metrica, index) => (
-                <tr key={index}>
-                  <td>{new Date(metrica.timestamp).toLocaleString('pt-BR')}</td>
-                  <td>{formatarTipoAnuncio(metrica.tipo_anuncio)}</td>
-                  <td>{metrica.anuncio_id}</td>
-                  <td>{metrica.pagina}</td>
-                  <td>{metrica.tipo_evento === 'impressao' ? 'Impressão' : 'Clique'}</td>
-                  <td>{metrica.tempo_exposto ? `${metrica.tempo_exposto.toFixed(1)}s` : 'N/A'}</td>
-                  <td>{metrica.dispositivo || 'Desconhecido'}</td>
-                </tr>
-              ))}
-              {metricas.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="sem-dados">
-                    Nenhum evento registrado no período selecionado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <h3>📝 Últimos Eventos (Dados em Tempo Real)</h3>
+          <div className="eventos-container">
+            {metricas.length > 0 ? (
+              <div className="eventos-grid">
+                {metricas.slice(0, 12).map((metrica, index) => (
+                  <div key={index} className="evento-card">
+                    <div className="evento-header">
+                      <span className="evento-tipo">{formatarTipoAnuncio(metrica.tipo_anuncio)}</span>
+                      <span className="evento-data">{new Date(metrica.timestamp).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <div className="evento-details">
+                      <div className="evento-detail">
+                        <span className="detail-label">Evento:</span>
+                        <span className={`detail-value ${metrica.tipo_evento === 'impressao' ? 'impressao' : 'clique'}`}>
+                          {metrica.tipo_evento === 'impressao' ? '👁️ Impressão' : '👆 Clique'}
+                        </span>
+                      </div>
+                      <div className="evento-detail">
+                        <span className="detail-label">Página:</span>
+                        <span className="detail-value">{metrica.pagina}</span>
+                      </div>
+                      <div className="evento-detail">
+                        <span className="detail-label">Tempo:</span>
+                        <span className="detail-value">{metrica.tempo_exposto ? `${metrica.tempo_exposto.toFixed(1)}s` : 'N/A'}</span>
+                      </div>
+                      <div className="evento-detail">
+                        <span className="detail-label">Horário:</span>
+                        <span className="detail-value">{new Date(metrica.timestamp).toLocaleTimeString('pt-BR')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="sem-eventos">
+                <div className="sem-eventos-icon">📊</div>
+                <h4>Nenhum evento registrado</h4>
+                <p>Não há eventos de anúncios no período selecionado.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -489,37 +496,74 @@ const RelatorioAnuncios = () => {
     
     return (
       <div className="relatorio-por-pagina">
-        <h2>Desempenho por Página - {periodoSelecionado === '7d' ? 'Últimos 7 dias' : periodoSelecionado === '30d' ? 'Últimos 30 dias' : periodoSelecionado === '90d' ? 'Últimos 90 dias' : 'Último ano'}</h2>
+        <div className="pagina-header">
+          <h2>📱 Performance por Página</h2>
+          <p className="pagina-subtitle">Análise detalhada do desempenho dos anúncios em cada página do site</p>
+        </div>
         
-        <table className="tabela-metricas">
-          <thead>
-            <tr>
-              <th>Página</th>
-              <th>Impressões</th>
-              <th>Cliques</th>
-              <th>CTR</th>
-              <th>Tempo Médio</th>
-            </tr>
-          </thead>
-          <tbody>
+        {metricasPorPagina.length > 0 ? (
+          <div className="paginas-grid">
             {metricasPorPagina.map((metrica, index) => (
-              <tr key={index}>
-                <td>{metrica.pagina}</td>
-                <td>{metrica.impressoes.toLocaleString()}</td>
-                <td>{metrica.cliques.toLocaleString()}</td>
-                <td>{metrica.ctr.toFixed(2)}%</td>
-                <td>{metrica.tempoMedio.toFixed(1)}s</td>
-              </tr>
+              <div key={index} className="pagina-card">
+                <div className="pagina-card-header">
+                  <h3>{metrica.pagina}</h3>
+                  <div className="pagina-ranking">#{index + 1}</div>
+                </div>
+                
+                <div className="pagina-metricas">
+                  <div className="pagina-metrica impressoes">
+                    <div className="metrica-icon">👁️</div>
+                    <div className="metrica-info">
+                      <span className="metrica-numero">{metrica.impressoes.toLocaleString()}</span>
+                      <span className="metrica-label">Impressões</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pagina-metrica cliques">
+                    <div className="metrica-icon">👆</div>
+                    <div className="metrica-info">
+                      <span className="metrica-numero">{metrica.cliques.toLocaleString()}</span>
+                      <span className="metrica-label">Cliques</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pagina-metrica ctr">
+                    <div className="metrica-icon">🎯</div>
+                    <div className="metrica-info">
+                      <span className="metrica-numero">{metrica.ctr.toFixed(2)}%</span>
+                      <span className="metrica-label">CTR</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pagina-metrica tempo">
+                    <div className="metrica-icon">⏱️</div>
+                    <div className="metrica-info">
+                      <span className="metrica-numero">{metrica.tempoMedio.toFixed(1)}s</span>
+                      <span className="metrica-label">Tempo Médio</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pagina-performance">
+                  <div className="performance-label">Performance CTR</div>
+                  <div className="performance-bar">
+                    <div 
+                      className="performance-fill" 
+                      style={{ width: `${Math.min((metrica.ctr / Math.max(...metricasPorPagina.map(m => m.ctr))) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <div className="performance-text">{metrica.ctr > 1 ? 'Excelente' : metrica.ctr > 0.5 ? 'Bom' : 'Regular'}</div>
+                </div>
+              </div>
             ))}
-            {metricasPorPagina.length === 0 && (
-              <tr>
-                <td colSpan="5" className="sem-dados">
-                  Nenhum dado disponível para o período selecionado.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          <div className="sem-dados-pagina">
+            <div className="sem-dados-icon">📊</div>
+            <h3>Nenhum dado disponível</h3>
+            <p>Não há dados de páginas para o período selecionado.</p>
+          </div>
+        )}
       </div>
     );
   };
@@ -556,19 +600,13 @@ const RelatorioAnuncios = () => {
             className={tipoRelatorio === 'impressoes' ? 'ativo' : ''} 
             onClick={() => setTipoRelatorio('impressoes')}
           >
-            Visão Geral
-          </button>
-          <button 
-            className={tipoRelatorio === 'por-anuncio' ? 'ativo' : ''} 
-            onClick={() => setTipoRelatorio('por-anuncio')}
-          >
-            Por Tipo de Anúncio
+            📊 Dashboard Principal
           </button>
           <button 
             className={tipoRelatorio === 'por-pagina' ? 'ativo' : ''} 
             onClick={() => setTipoRelatorio('por-pagina')}
           >
-            Por Página
+            📱 Performance por Página
           </button>
         </div>
       </div>
@@ -579,7 +617,6 @@ const RelatorioAnuncios = () => {
       ) : (
           <>
             {tipoRelatorio === 'impressoes' && renderizarRelatorioImpressoes()}
-            {tipoRelatorio === 'por-anuncio' && renderizarRelatorioPorAnuncio()}
             {tipoRelatorio === 'por-pagina' && renderizarRelatorioPorPagina()}
           </>
         )}
