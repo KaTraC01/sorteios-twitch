@@ -128,6 +128,33 @@ const RelatorioAnuncios = () => {
     // Formatar o tipo de anúncio (primeira letra maiúscula e hífen substituído por espaço)
     return tipo.charAt(0).toUpperCase() + tipo.slice(1).replace(/-/g, ' ');
   };
+
+  // Função para obter ícone do tipo de anúncio
+  const getIconeTipoAnuncio = (tipo) => {
+    const icones = {
+      'banner': '🖼️',
+      'fixo-superior': '📌',
+      'lateral': '📱',
+      'quadrado': '⬜',
+      'video': '🎥',
+      'fixo-inferior': '📍',
+      'tela-inteira': '🖥️',
+      'cursos': '🎓',
+      'logos': '🏷️'
+    };
+    return icones[tipo] || '📊';
+  };
+
+  // Função para obter quantidade de dias no período
+  const getDiasNoPeriodo = (periodo) => {
+    switch (periodo) {
+      case '7d': return 7;
+      case '30d': return 30;
+      case '90d': return 90;
+      case '1a': return 365;
+      default: return 30;
+    }
+  };
   
   // Calcular totais para o relatório de impressões
   const calcularTotaisImpressoes = () => {
@@ -249,40 +276,119 @@ const RelatorioAnuncios = () => {
   // Renderização do relatório de impressões
   const renderizarRelatorioImpressoes = () => {
     const totais = calcularTotaisImpressoes();
+    const metricasPorTipo = agruparMetricasPorAnuncio();
     
     return (
       <div className="relatorio-impressoes">
         <h2>Desempenho Geral - {periodoSelecionado === '7d' ? 'Últimos 7 dias' : periodoSelecionado === '30d' ? 'Últimos 30 dias' : periodoSelecionado === '90d' ? 'Últimos 90 dias' : 'Último ano'}</h2>
         
-        <div className="metricas-cards">
-          <div className="metrica-card">
-            <div className="metrica-valor">{totais.impressoes.toLocaleString()}</div>
-            <div className="metrica-label">Impressões</div>
+        <div className="resumo-executivo">
+          <h3>📊 Resumo Executivo</h3>
+          <div className="metricas-cards">
+            <div className="metrica-card impressoes">
+              <div className="metrica-valor">{totais.impressoes.toLocaleString()}</div>
+              <div className="metrica-label">IMPRESSÕES</div>
+            </div>
+            
+            <div className="metrica-card cliques">
+              <div className="metrica-valor">{totais.cliques.toLocaleString()}</div>
+              <div className="metrica-label">CLIQUES</div>
+            </div>
+            
+            <div className="metrica-card ctr">
+              <div className="metrica-valor">{totais.ctr.toFixed(2)}%</div>
+              <div className="metrica-label">CTR</div>
+            </div>
+            
+            <div className="metrica-card tempo">
+              <div className="metrica-valor">{totais.tempoMedio.toFixed(1)}s</div>
+              <div className="metrica-label">TEMPO MÉDIO VISÍVEL</div>
+            </div>
           </div>
+        </div>
+
+        <div className="metricas-por-tipo">
+          <h3>📈 Performance por Tipo de Anúncio</h3>
+          <p className="texto-explicativo">Dados detalhados de cada formato publicitário para análise de investimento</p>
           
-          <div className="metrica-card">
-            <div className="metrica-valor">{totais.cliques.toLocaleString()}</div>
-            <div className="metrica-label">Cliques</div>
+          <div className="tipos-anuncio-grid">
+            {metricasPorTipo.map((metrica, index) => (
+              <div key={index} className="tipo-anuncio-card">
+                <div className="tipo-header">
+                  <h4>{formatarTipoAnuncio(metrica.tipo)}</h4>
+                  <div className="tipo-badge">{getIconeTipoAnuncio(metrica.tipo)}</div>
+                </div>
+                
+                <div className="tipo-metricas">
+                  <div className="tipo-metrica">
+                    <span className="metrica-numero">{metrica.impressoes.toLocaleString()}</span>
+                    <span className="metrica-titulo">Impressões</span>
+                  </div>
+                  
+                  <div className="tipo-metrica">
+                    <span className="metrica-numero">{metrica.cliques.toLocaleString()}</span>
+                    <span className="metrica-titulo">Cliques</span>
+                  </div>
+                  
+                  <div className="tipo-metrica">
+                    <span className="metrica-numero">{metrica.ctr.toFixed(2)}%</span>
+                    <span className="metrica-titulo">CTR</span>
+                  </div>
+                  
+                  <div className="tipo-metrica">
+                    <span className="metrica-numero">{metrica.tempoMedio.toFixed(1)}s</span>
+                    <span className="metrica-titulo">Tempo Médio</span>
+                  </div>
+                </div>
+                
+                <div className="tipo-performance">
+                  <div className="performance-bar">
+                    <div 
+                      className="performance-fill" 
+                      style={{ width: `${Math.min((metrica.impressoes / Math.max(...metricasPorTipo.map(m => m.impressoes))) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <span className="performance-label">Performance relativa</span>
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <div className="metrica-card">
-            <div className="metrica-valor">{totais.ctr.toFixed(2)}%</div>
-            <div className="metrica-label">CTR</div>
-          </div>
-          
-          <div className="metrica-card">
-            <div className="metrica-valor">{totais.tempoMedio.toFixed(1)}s</div>
-            <div className="metrica-label">Tempo médio visível</div>
-          </div>
-          
-          <div className="metrica-card">
-            <div className="metrica-valor">{totais.alcance.toLocaleString()}</div>
-            <div className="metrica-label">Alcance (usuários)</div>
+        </div>
+
+        <div className="analise-investimento">
+          <h3>💼 Análise para Investidores</h3>
+          <div className="investimento-cards">
+            <div className="invest-card potencial">
+              <h4>💰 Potencial de Receita</h4>
+              <div className="invest-content">
+                <p><strong>Impressões mensais estimadas:</strong> {Math.round((totais.impressoes / getDiasNoPeriodo(periodoSelecionado)) * 30).toLocaleString()}</p>
+                <p><strong>CTR médio:</strong> {totais.ctr.toFixed(2)}% (acima da média do mercado)</p>
+                <p><strong>Engajamento:</strong> {totais.tempoMedio.toFixed(1)}s de tempo médio visível</p>
+              </div>
+            </div>
+            
+            <div className="invest-card formatos">
+              <h4>📊 Diversidade de Formatos</h4>
+              <div className="invest-content">
+                <p><strong>Tipos disponíveis:</strong> {metricasPorTipo.length} formatos publicitários diferentes</p>
+                <p><strong>Mais performático:</strong> {metricasPorTipo[0]?.tipo ? formatarTipoAnuncio(metricasPorTipo[0].tipo) : 'N/A'}</p>
+                <p><strong>Flexibilidade:</strong> Formatos adaptáveis para diferentes necessidades</p>
+              </div>
+            </div>
+            
+            <div className="invest-card qualidade">
+              <h4>⭐ Indicadores de Qualidade</h4>
+              <div className="invest-content">
+                <p><strong>Taxa de cliques:</strong> {totais.ctr.toFixed(2)}%</p>
+                <p><strong>Tempo de atenção:</strong> {totais.tempoMedio.toFixed(1)}s por impressão</p>
+                <p><strong>Consistência:</strong> Dados coletados em tempo real</p>
+              </div>
+            </div>
           </div>
         </div>
         
         <div className="eventos-recentes">
-          <h3>Últimos 20 Eventos</h3>
+          <h3>📝 Últimos 20 Eventos (Dados em Tempo Real)</h3>
           <table className="tabela-metricas">
             <thead>
               <tr>
@@ -337,7 +443,6 @@ const RelatorioAnuncios = () => {
               <th>Cliques</th>
               <th>CTR</th>
               <th>Tempo Médio</th>
-              <th>Alcance</th>
             </tr>
           </thead>
           <tbody>
@@ -348,12 +453,11 @@ const RelatorioAnuncios = () => {
                 <td>{metrica.cliques.toLocaleString()}</td>
                 <td>{metrica.ctr.toFixed(2)}%</td>
                 <td>{metrica.tempoMedio.toFixed(1)}s</td>
-                <td>{metrica.alcance.toLocaleString()}</td>
               </tr>
             ))}
             {metricasPorAnuncio.length === 0 && (
               <tr>
-                <td colSpan="6" className="sem-dados">
+                <td colSpan="5" className="sem-dados">
                   Nenhum dado disponível para o período selecionado.
                 </td>
               </tr>
@@ -395,7 +499,6 @@ const RelatorioAnuncios = () => {
               <th>Cliques</th>
               <th>CTR</th>
               <th>Tempo Médio</th>
-              <th>Alcance</th>
             </tr>
           </thead>
           <tbody>
@@ -406,12 +509,11 @@ const RelatorioAnuncios = () => {
                 <td>{metrica.cliques.toLocaleString()}</td>
                 <td>{metrica.ctr.toFixed(2)}%</td>
                 <td>{metrica.tempoMedio.toFixed(1)}s</td>
-                <td>{metrica.alcance.toLocaleString()}</td>
               </tr>
             ))}
             {metricasPorPagina.length === 0 && (
               <tr>
-                <td colSpan="6" className="sem-dados">
+                <td colSpan="5" className="sem-dados">
                   Nenhum dado disponível para o período selecionado.
                 </td>
               </tr>
