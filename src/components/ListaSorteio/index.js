@@ -14,7 +14,7 @@ const sanitizarEntrada = (texto) => {
   if (!texto) return "";
   let sanitizado = texto
     // Remove apenas caracteres realmente perigosos, mas permite letras e números de qualquer idioma
-    .replace(/[<>'"\\/\{\}\[\];]/g, '') // Remove caracteres potencialmente perigosos
+    .replace(/[<>'"\\/\{\}\[\];\(\)]/g, '') // Remove caracteres potencialmente perigosos incluindo parênteses
     .replace(/--/g, '_')                      // Remove possíveis injeções SQL
     .replace(/script/gi, '')                  // Remove tentativas de XSS
     .trim();                                  // Remove espaços extras

@@ -203,10 +203,11 @@ export function sanitizarEntrada(input) {
 
   return input
     .trim()
-    .replace(/[<>]/g, '') // Remove tags HTML básicas
-    .replace(/['"]/g, '') // Remove aspas que podem quebrar SQL
+    .replace(/[<>'"\\/\{\}\[\];\(\)]/g, '') // Remove caracteres potencialmente perigosos incluindo parênteses
+    .replace(/--/g, '_') // Remove possíveis injeções SQL
+    .replace(/script/gi, '') // Remove tentativas de XSS
     .replace(/\x00/g, '') // Remove null bytes
-    .substring(0, 255); // Limitar tamanho
+    .substring(0, 25); // Limitar tamanho para usernames Twitch (máximo 25 caracteres)
 }
 
 // ===================================================================
