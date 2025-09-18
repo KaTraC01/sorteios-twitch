@@ -5,7 +5,7 @@
       "imagem": "/anuncios/banner/banner1.png",
       "titulo": "Banner Fixo da Tabela",
       "descricao": "Este banner aparece sempre no topo da tabela",
-      "urlDestino": "https://exemplo.com/oferta",
+      "urlDestino": "https://www.twitch.tv",
       "posicao": "na-tabela",
       "ativo": true
     },
@@ -14,7 +14,7 @@
       "imagem": "/anuncios/banner/banner1.png",
       "titulo": "Oferta Especial",
       "descricao": "Desconto de 20%",
-      "urlDestino": "https://exemplo.com/oferta",
+      "urlDestino": "https://www.twitch.tv",
       "ativo": true
     },
     {
@@ -22,7 +22,7 @@
       "imagem": "/anuncios/banner/banner2.jpg",
       "titulo": "Nova Coleção",
       "descricao": "Produtos exclusivos",
-      "urlDestino": "https://exemplo.com/colecao",
+      "urlDestino": "https://www.twitch.tv",
       "ativo": true
     }
   ],
@@ -32,7 +32,7 @@
       "imagem": "/anuncios/banner/banner1.png",
       "titulo": "Anúncio Fixo Superior",
       "descricao": "Este anúncio aparece sempre no topo da página",
-      "urlDestino": "https://exemplo.com/oferta-especial",
+      "urlDestino": "https://www.twitch.tv",
       "ativo": true
     }
   ],
@@ -42,7 +42,7 @@
       "imagem": "/anuncios/lateral/lateral1.jpg",
       "titulo": "Produto Especial",
       "descricao": "Desconto imperdível",
-      "urlDestino": "https://exemplo.com/produto",
+      "urlDestino": "https://www.twitch.tv",
       "posicao": "esquerda",
       "ativo": true
     },
@@ -51,7 +51,7 @@
       "imagem": "/anuncios/lateral/lateral2.jpg",
       "titulo": "Oferta Limitada",
       "descricao": "Últimas unidades",
-      "urlDestino": "https://exemplo.com/oferta-limitada",
+      "urlDestino": "https://www.twitch.tv",
       "posicao": "direita",
       "ativo": true
     }
@@ -62,7 +62,7 @@
       "imagem": "/anuncios/quadrado/quadrado1.png",
       "titulo": "Curso Online",
       "descricao": "Aprenda novas habilidades",
-      "urlDestino": "https://exemplo.com/curso",
+      "urlDestino": "https://www.twitch.tv",
       "ativo": true
     }
   ],
@@ -72,7 +72,7 @@
       "imagem": "/anuncios/video/video1.png",
       "titulo": "Lançamento Exclusivo",
       "descricao": "Conheça nosso novo produto",
-      "urlDestino": "https://exemplo.com/lancamento",
+      "urlDestino": "https://www.twitch.tv",
       "ativo": true
     }
   ],
@@ -82,7 +82,7 @@
       "imagem": "/anuncios/fixo-inferior/fixo1.jpg",
       "titulo": "PROMOÇÃO",
       "descricao": "Produtos com até 50% de desconto",
-      "urlDestino": "https://exemplo.com/promocao",
+      "urlDestino": "https://www.twitch.tv",
       "ativo": true
     }
   ],
@@ -92,7 +92,7 @@
       "imagem": "/anuncios/tela-inteira/telaInteira1.jpg",
       "titulo": "PROMOÇÃO EXCLUSIVA",
       "descricao": "Para adicionar +10 participações, confira nossa oferta especial",
-      "urlDestino": "https://exemplo.com/promocao-especial",
+      "urlDestino": "https://www.twitch.tv",
       "avisos": "Ao clicar você concorda com os termos de uso.",
       "ativo": true
     }
@@ -104,7 +104,7 @@
       "titulo": "Curso de Programação",
       "subtitulo": "Aprenda a programar do zero",
       "descricao": "Inicie sua carreira como desenvolvedor",
-      "urlDestino": "https://exemplo.com/curso-programacao",
+      "urlDestino": "https://www.twitch.tv",
       "botaoTexto": "MATRICULAR AGORA",
       "corFundo": "#ff5722",
       "corTexto": "#ffffff",
@@ -117,7 +117,7 @@
       "imagem": "/anuncios/logos/logo1.png",
       "titulo": "Empresa Parceira",
       "descricao": "Conheça nosso parceiro oficial",
-      "urlDestino": "https://exemplo.com/parceiro",
+      "urlDestino": "https://www.twitch.tv",
       "tamanho": "pequeno",
       "ativo": true
     },
@@ -126,7 +126,7 @@
       "imagem": "/anuncios/logos/logo2.png",
       "titulo": "Patrocinador",
       "descricao": "Patrocinador oficial",
-      "urlDestino": "https://exemplo.com/patrocinador",
+      "urlDestino": "https://www.twitch.tv",
       "tamanho": "medio",
       "ativo": true
     }
