@@ -543,7 +543,7 @@
     transition: transform 0.3s ease;
     top: 120px;
     height: 600px;
-    width: 160px;
+    width: 300px; /* Largura do anúncio lateral */
     overflow: hidden;
 }
 
