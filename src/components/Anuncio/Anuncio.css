@@ -543,7 +543,7 @@
     transition: transform 0.3s ease;
     top: 120px;
     height: 600px;
-    width: 300px; /* Largura do anúncio lateral */
+    width: 300px; /* Largura do anúncio lateral era 160px*/
     overflow: hidden;
 }
 
@@ -861,7 +861,7 @@
     z-index: 900;
     top: 0;
     bottom: 0;
-    width: 160px;
+    width: 300px; /* Largura do anúncio lateral era 160px*/
     pointer-events: none;
 }
 
