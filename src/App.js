@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Timer from "./components/Timer";
 import ListaSorteio from "./components/ListaSorteio";
 import Anuncio from "./components/Anuncio"; // Importando o componente de anúncio
+import { trackAnuncioEvent } from "./utils/gtm"; // Importar utilitários do GTM
 
 // ✅ MELHORIA: Lazy loading de páginas não críticas
 // ✅ PRESERVA: Componentes principais carregados normalmente para não afetar métricas
@@ -65,6 +66,9 @@ function App() {
 
     // Função para fechar um anúncio lateral
     const fecharAnuncio = (posicao) => {
+        // Track do evento de fechamento de anúncio
+        trackAnuncioEvent('close', posicao);
+        
         setAdsVisible(prev => ({
             ...prev,
             [posicao]: false
@@ -76,6 +80,9 @@ function App() {
                 ...prev,
                 [posicao]: true
             }));
+            
+            // Track do evento de reabertura automática do anúncio
+            trackAnuncioEvent('auto_reopen', posicao);
         }, 30000); // 30 segundos
     };
 
@@ -193,7 +200,10 @@ function App() {
                 )}
                 
                 {!adsVisible.fixoInferior && (
-                    <div className="anuncio-fixo-botao" onClick={() => setAdsVisible(prev => ({ ...prev, fixoInferior: true }))}>
+                    <div className="anuncio-fixo-botao" onClick={() => {
+                        trackAnuncioEvent('manual_reopen', 'fixoInferior');
+                        setAdsVisible(prev => ({ ...prev, fixoInferior: true }));
+                    }}>
                         {t('anuncio.mostrarPublicidade')}
                     </div>
                 )}
