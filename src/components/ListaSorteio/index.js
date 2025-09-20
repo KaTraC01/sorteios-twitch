@@ -317,11 +317,65 @@ function ListaSorteio({ onReiniciarLista }) {
         setNovoParticipante({ ...novoParticipante, [field]: valor });
     };
 
+    // 🔒 **Função para verificar rate limiting no servidor**
+    const verificarLimiteServidor = async (tipoOperacao = 'participante_add_individual') => {
+        try {
+            console.log(`🔍 Verificando rate limit servidor-side: ${tipoOperacao}`);
+            
+            const response = await fetch('/api/verificar-rate-limit', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ tipo: tipoOperacao })
+            });
+            
+            const resultado = await response.json();
+            
+            if (response.ok) {
+                console.log(`✅ Rate limit verificado:`, resultado);
+                return resultado;
+            } else {
+                console.warn(`⚠️ Rate limit bloqueado:`, resultado);
+                return resultado;
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao verificar limite servidor:', error);
+            // Fail-safe: permitir em caso de erro de rede
+            return { 
+                permitido: true, 
+                mensagem: 'Verificação com erro, prosseguindo...', 
+                falha_segura: true 
+            };
+        }
+    };
+
     // ➕ **Função para adicionar participante**
     const adicionarParticipante = async () => {
         // Validações básicas
         if (!novoParticipante.nome || !novoParticipante.streamer) {
             mostrarFeedback(t('listaSorteio.preenchaTodosCampos'), "erro");
+            return;
+        }
+
+        // 🔒 **NOVA VERIFICAÇÃO: Rate limiting servidor-side**
+        const limiteSevidor = await verificarLimiteServidor('participante_add_individual');
+        if (!limiteSevidor.permitido && !limiteSevidor.falha_segura) {
+            const mensagemErro = limiteSevidor.mensagem || 'Aguarde antes de adicionar outro participante';
+            mostrarFeedback(`🔒 ${mensagemErro}`, "erro");
+            
+            // Se há próximo tempo permitido, mostrar contador
+            if (limiteSevidor.proximoPermitido) {
+                const proximoTempo = new Date(limiteSevidor.proximoPermitido);
+                const agora = new Date();
+                const segundosRestantes = Math.ceil((proximoTempo - agora) / 1000);
+                
+                if (segundosRestantes > 0) {
+                    setTempoEspera(segundosRestantes);
+                    localStorage.setItem("tempoExpiracao", proximoTempo.getTime().toString());
+                }
+            }
             return;
         }
 
@@ -353,7 +407,7 @@ function ListaSorteio({ onReiniciarLista }) {
             // Limpar o formulário, mas manter a plataforma selecionada
             setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
             
-            // Definir tempo de espera (60 segundos - 1 minuto)
+            // Definir tempo de espera (60 segundos - 1 minuto) como backup do frontend
             const expiracao = Date.now() + 60000;
             localStorage.setItem("tempoExpiracao", expiracao.toString());
             setTempoEspera(60);
@@ -379,6 +433,26 @@ function ListaSorteio({ onReiniciarLista }) {
 
         if (listaCongelada) {
             mostrarFeedback(t('listaSorteio.listaCongelada'), "erro");
+            return;
+        }
+
+        // 🔒 **NOVA VERIFICAÇÃO: Rate limiting servidor-side para operação em lote**
+        const limiteSevidor = await verificarLimiteServidor('lote');
+        if (!limiteSevidor.permitido && !limiteSevidor.falha_segura) {
+            const mensagemErro = limiteSevidor.mensagem || 'Aguarde antes de adicionar participantes em lote';
+            mostrarFeedback(`🔒 ${mensagemErro}`, "erro");
+            
+            // Se há próximo tempo permitido, mostrar contador
+            if (limiteSevidor.proximoPermitido) {
+                const proximoTempo = new Date(limiteSevidor.proximoPermitido);
+                const agora = new Date();
+                const segundosRestantes = Math.ceil((proximoTempo - agora) / 1000);
+                
+                if (segundosRestantes > 0) {
+                    setTempoEspera(segundosRestantes);
+                    localStorage.setItem("tempoExpiracao", proximoTempo.getTime().toString());
+                }
+            }
             return;
         }
 
@@ -414,7 +488,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 // Limpar o formulário
                 setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
                 
-                // Definir tempo de espera (300 segundos - 5 minutos)
+                // Definir tempo de espera (300 segundos - 5 minutos) como backup do frontend
                 const expiracao = Date.now() + 300000;
                 localStorage.setItem("tempoExpiracao", expiracao.toString());
                 setTempoEspera(300);
