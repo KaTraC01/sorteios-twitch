@@ -470,8 +470,8 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback(t('listaSorteio.adicionandoParticipacoes'), "aviso");
             
-            // Chamar a função RPC do Supabase para adicionar participantes sem números
-            const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
+            // Chamar a função RPC CORRIGIDA do Supabase que usa IP real para rate limiting
+            const { data, error } = await supabase.rpc('inserir_participantes_com_ip_real', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
                 quantidade: 10,
@@ -537,66 +537,14 @@ function ListaSorteio({ onReiniciarLista }) {
         setMostrarAnuncioTelaInteira(false);
     };
 
-    // Método fallback para inserção manual de participantes
+    // Método fallback para inserção manual de participantes - DESABILITADO
+    // Este fallback foi desabilitado porque não respeita o rate limiting por IP
     const inserirParticipantesManualmente = async (nome, streamer, quantidade, plataforma) => {
-        let inseridos = 0;
-        let mensagensErro = [];
+        console.warn("⚠️ Fallback manual desabilitado por segurança - use apenas função RPC com IP");
         
-        try {
-            // Registrar lote no log para que o trigger de rate limit permita
-            await supabase.from("logs").insert([{
-                descricao: `Lote autorizado: ${nome} - iniciando ${quantidade} inserções (fallback)`
-            }]);
-            
-            for (let i = 1; i <= quantidade; i++) {
-                try {
-                    // Inserir o mesmo nome sem numeração
-                    const { error } = await supabase.from("participantes_ativos").insert([
-                        {
-                            nome_twitch: nome,
-                            streamer_escolhido: streamer,
-                            plataforma_premio: plataforma
-                        },
-                    ]);
-                    
-                    if (error) {
-                        mensagensErro.push(`Erro ao inserir ${i}: ${error.message}`);
-                        console.error(`Erro ao inserir participante ${i}:`, error);
-                    } else {
-                        inseridos++;
-                        // Pequena pausa entre inserções para evitar rate limiting
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    }
-                } catch (err) {
-                    mensagensErro.push(`Exceção ao inserir ${i}: ${err.message}`);
-                }
-            }
-            
-            // Registrar conclusão do lote
-            await supabase.from("logs").insert([{
-                descricao: `Conclusão do lote: ${nome} - inseridos ${inseridos}/${quantidade} (fallback)`
-            }]);
-            
-            // Limpar o formulário mas manter a plataforma
-            setNovoParticipante({ nome: "", streamer: "", plataforma });
-            
-            // Definir tempo de espera (300 segundos para o método manual - 5 minutos)
-            const expiracao = Date.now() + 300000;
-            localStorage.setItem("tempoExpiracao", expiracao.toString());
-            setTempoEspera(300);
-            
-            if (inseridos > 0) {
-                mostrarFeedback(t('listaSorteio.participacoesRegistradas', { quantidade: inseridos }), "sucesso");
-            } else {
-                mostrarFeedback(t('listaSorteio.naoFoiPossivelAdicionar'), "erro");
-                console.error("Erros durante inserção manual:", mensagensErro);
-            }
-        } catch (error) {
-            console.error("Erro na inserção manual:", error);
-            mostrarFeedback(t('listaSorteio.erroAdicionarParticipantesManualmente'), "erro");
-        }
+        mostrarFeedback("Erro: Método de inserção não seguro. Tente novamente.", "erro");
         
-        return inseridos;
+        return 0; // Nenhum participante inserido
     };
 
     // Função para mostrar feedback
