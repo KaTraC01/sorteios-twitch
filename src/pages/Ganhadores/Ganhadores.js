@@ -230,6 +230,22 @@ function Ganhadores() {
                 </div>
             )}
 
+            {/* Botão Instagram */}
+            <a 
+                href="https://www.instagram.com/subgg_official" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="instagram-btn"
+                aria-label="Abrir Instagram do SubGG em nova aba"
+            >
+                <svg className="instagram-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5A3.5 3.5 0 0 0 12 15.5Z" fill="currentColor"/>
+                    <path d="M16.5 6.5H19.5C20.6 6.5 21.5 7.4 21.5 8.5V19.5C21.5 20.6 20.6 21.5 19.5 21.5H4.5C3.4 21.5 2.5 20.6 2.5 19.5V8.5C2.5 7.4 3.4 6.5 4.5 6.5H7.5L8.5 4.5H15.5L16.5 6.5Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                    <path d="M12 17.5C14.4853 17.5 16.5 15.4853 16.5 13C16.5 10.5147 14.4853 8.5 12 8.5C9.51472 8.5 7.5 10.5147 7.5 13C7.5 15.4853 9.51472 17.5 12 17.5Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                </svg>
+                Instagram
+            </a>
+
             {/* Botão "Fale Conosco" */}
             <button className="fale-conosco" onClick={() => setEmailVisivel(!emailVisivel)}>
                 {emailVisivel ? "contact@subgg.com" : t('ganhadores.faleConosco')}

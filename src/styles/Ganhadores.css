@@ -36,6 +36,48 @@
     box-shadow: 0 5px 15px rgba(18, 66, 62, 0.4);
 }
 
+/* Botão Instagram */
+.instagram-btn {
+    background: linear-gradient(135deg, #E4405F, #F56040); /* Gradiente vermelho→rosa do Instagram */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.instagram-btn:hover {
+    background: linear-gradient(135deg, #C13584, #E1306C); /* Versão mais escura do gradiente */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(225, 48, 108, 0.4);
+    text-decoration: none;
+    color: white;
+}
+
+.instagram-btn:focus {
+    outline: 2px solid #E4405F;
+    outline-offset: 2px;
+}
+
+.instagram-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(225, 48, 108, 0.3);
+}
+
+.instagram-icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
 .historico-tabela {
     width: 100%;
     min-width: 600px;
@@ -186,7 +228,8 @@
     }
     
     .fale-conosco,
-    .como-participar-btn {
+    .como-participar-btn,
+    .instagram-btn {
         width: 100%;
         max-width: 300px;
     }
