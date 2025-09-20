@@ -48,10 +48,13 @@
     font-size: 14px;
     transition: all 0.3s ease;
     text-decoration: none;
-    display: inline-flex;
+    display: flex; /* Alterado de inline-flex para flex */
     align-items: center;
     justify-content: center;
     gap: 8px;
+    width: fit-content; /* Manter largura do conteúdo */
+    margin-left: auto; /* Centralizar horizontalmente */
+    margin-right: auto; /* Centralizar horizontalmente */
 }
 
 .instagram-btn:hover {
