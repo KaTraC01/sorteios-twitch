@@ -1,4 +1,5 @@
-import './utils/emergencySecurityPatch'; // 🔒 PROTEÇÃO CRÍTICA: Deve ser a PRIMEIRA importação
+import './utils/consoleProtection'; // 🔒 PROTEÇÃO CRÍTICA: Deve ser a PRIMEIRA importação
+import './utils/supabaseProtection'; // 🔒 PROTEÇÃO ESPECÍFICA SUPABASE
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";

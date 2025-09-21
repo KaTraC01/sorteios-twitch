@@ -141,73 +141,7 @@ function sanitizeObject(obj) {
   return sanitized;
 }
 
-/**
- * Substituir console SEMPRE (não apenas em produção) para proteger informações sensíveis
- */
-if (typeof window !== 'undefined') {
-  // Salvar métodos originais
-  const originalMethods = {
-    log: console.log,
-    info: console.info,
-    debug: console.debug,
-    warn: console.warn,
-    error: console.error,
-    table: console.table
-  };
-  
-  // Função para filtrar argumentos sensíveis
-  const filterSensitiveArgs = (args) => {
-    return args.map(arg => {
-      if (containsSensitiveInfo(arg)) {
-        return sanitizeContent(arg);
-      }
-      return arg;
-    });
-  };
-  
-  // Sobrescrever métodos do console
-  console.log = (...args) => {
-    if (isProduction) return; // Silenciar completamente em produção
-    const filteredArgs = filterSensitiveArgs(args);
-    originalMethods.log.apply(console, filteredArgs);
-  };
-  
-  console.info = (...args) => {
-    if (isProduction) return; // Silenciar completamente em produção
-    const filteredArgs = filterSensitiveArgs(args);
-    originalMethods.info.apply(console, filteredArgs);
-  };
-  
-  console.debug = (...args) => {
-    if (isProduction) return; // Silenciar completamente em produção
-    const filteredArgs = filterSensitiveArgs(args);
-    originalMethods.debug.apply(console, filteredArgs);
-  };
-  
-  console.warn = (...args) => {
-    const filteredArgs = filterSensitiveArgs(args);
-    if (isProduction) {
-      originalMethods.warn('Sistema: Operação com aviso');
-    } else {
-      originalMethods.warn.apply(console, filteredArgs);
-    }
-  };
-  
-  console.error = (...args) => {
-    // Manter erros mas filtrar informações sensíveis
-    const filteredArgs = filterSensitiveArgs(args);
-    originalMethods.error.apply(console, filteredArgs);
-  };
-  
-  console.table = (data) => {
-    if (isProduction) return; // Silenciar completamente em produção
-    if (containsSensitiveInfo(data)) {
-      const sanitized = sanitizeContent(data);
-      originalMethods.table(sanitized);
-    } else {
-      originalMethods.table(data);
-    }
-  };
-}
+// Proteção de console delegada para consoleProtection.js
+// Este logger agora funciona apenas como interface para desenvolvimento
 
 export default logger;
