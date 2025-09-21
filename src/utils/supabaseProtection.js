@@ -15,10 +15,43 @@ if (typeof window !== 'undefined') {
   window.fetch = async function(...args) {
     const [url, options] = args;
     
-    // Se é uma requisição para Supabase, não logar detalhes
-    if (url && String(url).includes('supabase')) {
-      // Executar a requisição normalmente mas sem logs
-      return originalFetch.apply(this, args);
+    // Se é uma requisição para Supabase, interceptar e bloquear logs
+    if (url && (String(url).includes('supabase') || String(url).includes('nsqiytflqwlyqhdmueki'))) {
+      // Bloquear qualquer log que contenha a URL
+      const originalConsoleLog = console.log;
+      const originalConsoleError = console.error;
+      const originalConsoleWarn = console.warn;
+      
+      console.log = (...args) => {
+        if (args.some(arg => String(arg).includes(url))) return;
+        originalConsoleLog.apply(console, args);
+      };
+      
+      console.error = (...args) => {
+        if (args.some(arg => String(arg).includes(url))) {
+          originalConsoleError('🔒 Erro de requisição (URL bloqueada por segurança)');
+          return;
+        }
+        originalConsoleError.apply(console, args);
+      };
+      
+      console.warn = (...args) => {
+        if (args.some(arg => String(arg).includes(url))) {
+          originalConsoleWarn('🔒 Aviso de requisição (URL bloqueada por segurança)');
+          return;
+        }
+        originalConsoleWarn.apply(console, args);
+      };
+      
+      // Executar a requisição
+      const result = await originalFetch.apply(this, args);
+      
+      // Restaurar console
+      console.log = originalConsoleLog;
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      
+      return result;
     }
     
     return originalFetch.apply(this, args);

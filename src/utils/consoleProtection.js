@@ -14,7 +14,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Palavras críticas que devem ser bloqueadas
 const CRITICAL_KEYWORDS = [
   'key', 'token', 'secret', 'password', 'authorization', 'bearer',
-  'supabase', 'anon', 'service_role', 'api_key', 'jwt', 'eyJ'
+  'supabase', 'anon', 'service_role', 'api_key', 'jwt', 'eyJ',
+  // URLs completas do Supabase
+  '.supabase.co', 'nsqiytflqwlyqhdmueki', 'rest/v1'
 ];
 
 /**

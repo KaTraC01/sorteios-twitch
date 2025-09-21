@@ -111,20 +111,9 @@ function ListaSorteio({ onReiniciarLista }) {
         }
     };
 
-    // 🔒 **Função para verificar se a lista está congelada**
-    const verificarListaCongelada = async () => {
-        const { data, error } = await supabase
-            .from("configuracoes")
-            .select("*")
-            .eq("chave", "lista_congelada")
-            .single();
-
-        if (error) {
-            logger.error("Erro ao verificar estado da lista:", error);
-        } else if (data) {
-            setListaCongelada(data.valor === "true");
-        }
-    };
+    // 🗑️ **CÓDIGO LEGADO REMOVIDO: verificarListaCongelada**
+    // Esta funcionalidade foi desativada do projeto
+    // A lista não é mais congelada automaticamente
 
     // ✅ PRESERVA: Carrega dados iniciais e configura realtime otimizado
     useEffect(() => {
@@ -136,7 +125,7 @@ function ListaSorteio({ onReiniciarLista }) {
         
         // Carregar dados iniciais (participantes já são carregados pelo hook)
         fetchUltimoVencedor();
-        verificarListaCongelada();
+        // verificarListaCongelada(); // 🗑️ REMOVIDO: Funcionalidade desativada
         
         // ✅ MELHORIA: Realtime adicional para sorteios e configurações
         const sessionId = Math.random().toString(36).substring(2, 15);
@@ -151,7 +140,8 @@ function ListaSorteio({ onReiniciarLista }) {
             .on('postgres_changes', 
                 { event: 'UPDATE', schema: 'public', table: 'configuracoes' }, 
                 (payload) => {
-                    verificarListaCongelada();
+                    // verificarListaCongelada(); // 🗑️ REMOVIDO: Funcionalidade desativada
+                    logger.dev("Configuração atualizada (ignorando lista congelada):", payload);
                 }
             )
             .subscribe();
@@ -308,7 +298,7 @@ function ListaSorteio({ onReiniciarLista }) {
         // ✅ MELHORIA: Atualização via hook otimizado
         refreshParticipantes();
         fetchUltimoVencedor();
-        verificarListaCongelada();
+        // verificarListaCongelada(); // 🗑️ REMOVIDO: Funcionalidade desativada
         setUltimaAtualizacao(Date.now());
     };
 
