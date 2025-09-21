@@ -101,7 +101,7 @@ if (typeof window !== 'undefined') {
       return {
         log: (...args) => args.some(isCriticalContent) ? null : (isProduction ? null : console.log(...args)),
         info: (...args) => args.some(isCriticalContent) ? null : (isProduction ? null : console.info(...args)),
-        warn: (...args) => args.some(isCriticalContent) ? null : console.warn(isProduction ? 'Sistema: Aviso' : ...args),
+        warn: (...args) => args.some(isCriticalContent) ? null : console.warn(isProduction ? 'Sistema: Aviso' : args.join(' ')),
         error: (...args) => args.some(isCriticalContent) ? console.error('Erro do sistema (detalhes omitidos)') : console.error(...args),
         debug: (...args) => args.some(isCriticalContent) ? null : (isProduction ? null : console.debug(...args)),
         table: (data) => isCriticalContent(data) ? null : (isProduction ? null : console.table(data))
