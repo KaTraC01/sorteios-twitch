@@ -1,8 +1,15 @@
+/**
+ * BACKUP DO ARQUIVO ORIGINAL api/cron/route.js
+ * Data do backup: 2025-01-15
+ * 
+ * Este backup foi criado antes da integração das funcionalidades
+ * de cleanup-security.js no cron principal.
+ */
+
 import fetch from 'node-fetch';
 import logger from '../../lib/logger';
 import { errorResponse, successResponse, withErrorHandling } from '../../lib/apiResponse';
 import { getSupabaseServiceClient } from '../../src/lib/supabaseManager';
-import { cleanupOldRecords } from '../../src/middleware/rateLimiting';
 
 async function handler(req, res) {
   // Identificação única para esta execução do cron
@@ -203,204 +210,11 @@ async function handler(req, res) {
       // Não falhar o cron por erro de métricas, continuar...
     }
     
-    // ============================================================================
-    // SEÇÃO DE LIMPEZA DE SEGURANÇA - EXECUTAR AOS DOMINGOS
-    // ============================================================================
-    let resultadosLimpezaSeguranca = {
-      executada: false,
-      operacoes: []
-    };
-    
-    // Verificar se é domingo (0 = domingo)
-    const agora = new Date();
-    const isDomingo = agora.getDay() === 0;
-    
-    if (isDomingo) {
-      logger.cron(`[${cronRunId}] 🧹 DOMINGO DETECTADO - Iniciando limpeza de segurança...`);
-      
-      try {
-        const supabase = getSupabaseServiceClient();
-        resultadosLimpezaSeguranca.executada = true;
-
-        // 1. Limpeza de logs antigos (manter apenas 30 dias)
-        logger.cron(`[${cronRunId}] 📜 Limpando logs antigos (>30 dias)...`);
-        try {
-          const cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-          const { data: deletedLogs, error: logsError } = await supabase
-            .from('logs')
-            .delete()
-            .lt('data_hora', cutoffDate.toISOString())
-            .select('id');
-
-          const logsResult = {
-            operation: 'cleanup_old_logs',
-            status: logsError ? 'error' : 'success',
-            records_affected: deletedLogs?.length || 0,
-            error: logsError?.message
-          };
-          
-          resultadosLimpezaSeguranca.operacoes.push(logsResult);
-          
-          if (logsError) {
-            logger.cron(`[${cronRunId}] ❌ Erro na limpeza de logs: ${logsError.message}`);
-          } else {
-            logger.cron(`[${cronRunId}] ✅ Logs limpos: ${deletedLogs?.length || 0} registros removidos`);
-          }
-        } catch (error) {
-          resultadosLimpezaSeguranca.operacoes.push({
-            operation: 'cleanup_old_logs',
-            status: 'error',
-            error: error.message
-          });
-          logger.cron(`[${cronRunId}] ❌ Erro crítico na limpeza de logs: ${error.message}`);
-        }
-
-        // 2. Limpeza de registros de rate limiting antigos (manter apenas 7 dias)
-        logger.cron(`[${cronRunId}] 🛡️ Limpando registros de rate limiting (>7 dias)...`);
-        try {
-          const rateLimitCleanup = await cleanupOldRecords(7);
-          const rateLimitResult = {
-            operation: 'cleanup_rate_limiting',
-            status: rateLimitCleanup ? 'success' : 'error'
-          };
-          
-          resultadosLimpezaSeguranca.operacoes.push(rateLimitResult);
-          
-          if (rateLimitCleanup) {
-            logger.cron(`[${cronRunId}] ✅ Rate limiting limpo com sucesso`);
-          } else {
-            logger.cron(`[${cronRunId}] ❌ Falha na limpeza de rate limiting`);
-          }
-        } catch (error) {
-          resultadosLimpezaSeguranca.operacoes.push({
-            operation: 'cleanup_rate_limiting',
-            status: 'error',
-            error: error.message
-          });
-          logger.cron(`[${cronRunId}] ❌ Erro crítico na limpeza de rate limiting: ${error.message}`);
-        }
-
-        // 3. Limpeza de eventos de anúncios antigos processados (manter apenas 90 dias)
-        logger.cron(`[${cronRunId}] 📊 Limpando eventos de anúncios processados (>90 dias)...`);
-        try {
-          const eventsCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-          const { data: deletedEvents, error: eventsError } = await supabase
-            .from('eventos_anuncios')
-            .delete()
-            .and('processado.eq.true,timestamp.lt.' + eventsCutoff.toISOString())
-            .select('id');
-
-          const eventsResult = {
-            operation: 'cleanup_processed_events',
-            status: eventsError ? 'error' : 'success',
-            records_affected: deletedEvents?.length || 0,
-            error: eventsError?.message
-          };
-          
-          resultadosLimpezaSeguranca.operacoes.push(eventsResult);
-          
-          if (eventsError) {
-            logger.cron(`[${cronRunId}] ❌ Erro na limpeza de eventos: ${eventsError.message}`);
-          } else {
-            logger.cron(`[${cronRunId}] ✅ Eventos limpos: ${deletedEvents?.length || 0} registros removidos`);
-          }
-        } catch (error) {
-          resultadosLimpezaSeguranca.operacoes.push({
-            operation: 'cleanup_processed_events',
-            status: 'error',
-            error: error.message
-          });
-          logger.cron(`[${cronRunId}] ❌ Erro crítico na limpeza de eventos: ${error.message}`);
-        }
-
-        // 4. Limpeza de atividades suspeitas antigas (manter apenas 180 dias)
-        logger.cron(`[${cronRunId}] 🚨 Limpando atividades suspeitas (>180 dias)...`);
-        try {
-          const suspiciousCutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
-          const { data: deletedSuspicious, error: suspiciousError } = await supabase
-            .from('atividades_suspeitas')
-            .delete()
-            .lt('data_hora', suspiciousCutoff.toISOString())
-            .select('id');
-
-          const suspiciousResult = {
-            operation: 'cleanup_suspicious_activities',
-            status: suspiciousError ? 'error' : 'success',
-            records_affected: deletedSuspicious?.length || 0,
-            error: suspiciousError?.message
-          };
-          
-          resultadosLimpezaSeguranca.operacoes.push(suspiciousResult);
-          
-          if (suspiciousError) {
-            logger.cron(`[${cronRunId}] ❌ Erro na limpeza de atividades suspeitas: ${suspiciousError.message}`);
-          } else {
-            logger.cron(`[${cronRunId}] ✅ Atividades suspeitas limpas: ${deletedSuspicious?.length || 0} registros removidos`);
-          }
-        } catch (error) {
-          resultadosLimpezaSeguranca.operacoes.push({
-            operation: 'cleanup_suspicious_activities',
-            status: 'error',
-            error: error.message
-          });
-          logger.cron(`[${cronRunId}] ❌ Erro crítico na limpeza de atividades suspeitas: ${error.message}`);
-        }
-
-        // 5. Otimização de índices (VACUUM ANALYZE)
-        logger.cron(`[${cronRunId}] ⚡ Otimizando tabelas do banco...`);
-        try {
-          // Nota: VACUUM não pode ser executado em transação, então fazemos apenas ANALYZE
-          await supabase.rpc('analyze_tables_security');
-          resultadosLimpezaSeguranca.operacoes.push({
-            operation: 'optimize_tables',
-            status: 'success'
-          });
-          logger.cron(`[${cronRunId}] ✅ Otimização de tabelas concluída`);
-        } catch (error) {
-          resultadosLimpezaSeguranca.operacoes.push({
-            operation: 'optimize_tables',
-            status: 'warning',
-            error: 'ANALYZE function not available'
-          });
-          logger.cron(`[${cronRunId}] ⚠️ Otimização de tabelas não disponível: ${error.message}`);
-        }
-
-        // Registrar limpeza nos logs
-        try {
-          const successCount = resultadosLimpezaSeguranca.operacoes.filter(op => op.status === 'success').length;
-          const errorCount = resultadosLimpezaSeguranca.operacoes.filter(op => op.status === 'error').length;
-          
-          await supabase.from('logs').insert([{
-            descricao: `Limpeza automática de segurança integrada executada - ${resultadosLimpezaSeguranca.operacoes.length} operações (${successCount} sucessos, ${errorCount} erros)`
-          }]);
-          
-          logger.cron(`[${cronRunId}] 📝 Log de limpeza registrado no banco`);
-        } catch (logError) {
-          logger.cron(`[${cronRunId}] ⚠️ Erro ao registrar log de limpeza: ${logError.message}`);
-        }
-
-        logger.cron(`[${cronRunId}] 🧹 LIMPEZA DE SEGURANÇA CONCLUÍDA!`);
-        
-      } catch (errorLimpezaSeguranca) {
-        logger.cron(`[${cronRunId}] ❌ ERRO na limpeza de segurança: ${errorLimpezaSeguranca.message}`);
-        resultadosLimpezaSeguranca.operacoes.push({
-          operation: 'security_cleanup_general',
-          status: 'error',
-          error: errorLimpezaSeguranca.message
-        });
-        // Não falhar o cron por erro de limpeza, continuar...
-      }
-      
-    } else {
-      logger.cron(`[${cronRunId}] ℹ️ Limpeza de segurança agendada apenas para domingos (hoje: ${agora.toLocaleDateString('pt-BR', { weekday: 'long' })})`);
-    }
-    
     // Processo concluído
     logger.cron(`[${cronRunId}] ===== FIM CRON JOB [SUCESSO] =====`);
-    return successResponse(res, 'Sorteio, métricas e limpeza de segurança processados com sucesso', {
+    return successResponse(res, 'Sorteio e métricas processados com sucesso', {
       sorteio: resultadoSorteio,
-      metricas: 'Processadas com sucesso',
-      limpeza_seguranca: resultadosLimpezaSeguranca
+      metricas: 'Processadas com sucesso'
     });
 
   } catch (error) {
@@ -438,4 +252,4 @@ async function handler(req, res) {
 }
 
 // Exportar o handler com o middleware de tratamento de erros
-export default withErrorHandling(handler); 
+export default withErrorHandling(handler);
