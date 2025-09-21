@@ -317,39 +317,7 @@ function ListaSorteio({ onReiniciarLista }) {
         setNovoParticipante({ ...novoParticipante, [field]: valor });
     };
 
-    // 🔒 **Função para verificar rate limiting no servidor**
-    const verificarLimiteServidor = async (tipoOperacao = 'participante_add_individual') => {
-        try {
-            console.log(`🔍 Verificando rate limit servidor-side: ${tipoOperacao}`);
-            
-            const response = await fetch('/api/verificar-rate-limit', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({ tipo: tipoOperacao })
-            });
-            
-            const resultado = await response.json();
-            
-            if (response.ok) {
-                console.log(`✅ Rate limit verificado:`, resultado);
-                return resultado;
-            } else {
-                console.warn(`⚠️ Rate limit bloqueado:`, resultado);
-                return resultado;
-            }
-            
-        } catch (error) {
-            console.error('❌ Erro ao verificar limite servidor:', error);
-            // Fail-safe: permitir em caso de erro de rede
-            return { 
-                permitido: true, 
-                mensagem: 'Verificação com erro, prosseguindo...', 
-                falha_segura: true 
-            };
-        }
-    };
+    // Função de verificação de rate limiting removida para restaurar funcionamento
 
     // ➕ **Função para adicionar participante**
     const adicionarParticipante = async () => {
@@ -359,25 +327,7 @@ function ListaSorteio({ onReiniciarLista }) {
             return;
         }
 
-        // 🔒 **NOVA VERIFICAÇÃO: Rate limiting servidor-side**
-        const limiteSevidor = await verificarLimiteServidor('participante_add_individual');
-        if (!limiteSevidor.permitido && !limiteSevidor.falha_segura) {
-            const mensagemErro = limiteSevidor.mensagem || 'Aguarde antes de adicionar outro participante';
-            mostrarFeedback(`🔒 ${mensagemErro}`, "erro");
-            
-            // Se há próximo tempo permitido, mostrar contador
-            if (limiteSevidor.proximoPermitido) {
-                const proximoTempo = new Date(limiteSevidor.proximoPermitido);
-                const agora = new Date();
-                const segundosRestantes = Math.ceil((proximoTempo - agora) / 1000);
-                
-                if (segundosRestantes > 0) {
-                    setTempoEspera(segundosRestantes);
-                    localStorage.setItem("tempoExpiracao", proximoTempo.getTime().toString());
-                }
-            }
-            return;
-        }
+        // Verificação de rate limiting removida para restaurar funcionamento
 
         // Sanitizar entradas
         const nomeSanitizado = sanitizarEntrada(novoParticipante.nome);
@@ -436,25 +386,7 @@ function ListaSorteio({ onReiniciarLista }) {
             return;
         }
 
-        // 🔒 **NOVA VERIFICAÇÃO: Rate limiting servidor-side para operação em lote**
-        const limiteSevidor = await verificarLimiteServidor('lote');
-        if (!limiteSevidor.permitido && !limiteSevidor.falha_segura) {
-            const mensagemErro = limiteSevidor.mensagem || 'Aguarde antes de adicionar participantes em lote';
-            mostrarFeedback(`🔒 ${mensagemErro}`, "erro");
-            
-            // Se há próximo tempo permitido, mostrar contador
-            if (limiteSevidor.proximoPermitido) {
-                const proximoTempo = new Date(limiteSevidor.proximoPermitido);
-                const agora = new Date();
-                const segundosRestantes = Math.ceil((proximoTempo - agora) / 1000);
-                
-                if (segundosRestantes > 0) {
-                    setTempoEspera(segundosRestantes);
-                    localStorage.setItem("tempoExpiracao", proximoTempo.getTime().toString());
-                }
-            }
-            return;
-        }
+        // Verificação de rate limiting para lote removida
 
         if (tempoEspera > 0) {
             mostrarFeedback(t('listaSorteio.aguarde', { segundos: tempoEspera }), "aviso");
