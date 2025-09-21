@@ -470,8 +470,8 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback(t('listaSorteio.adicionandoParticipacoes'), "aviso");
             
-            // Chamar a função RPC com lógica de bypass da função original (mas usando IP)
-            const { data, error } = await supabase.rpc('inserir_participantes_com_ip_bypass', {
+            // Usar a função original melhorada (agora com proteção por IP)
+            const { data, error } = await supabase.rpc('inserir_participantes_sem_numero', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
                 quantidade: 10,
@@ -480,9 +480,9 @@ function ListaSorteio({ onReiniciarLista }) {
             
             if (error) {
                 console.error("Erro ao adicionar participantes em lote:", error);
-                // FALLBACK: Se a RPC falhar, inserir manualmente os participantes
-                mostrarFeedback(t('listaSorteio.metodoAlternativo'), "aviso");
-                await inserirParticipantesManualmente(nomeSanitizado, streamerSanitizado, 10, plataformaSelecionada);
+                // ERRO: Função melhorada falhou - verificar logs no Supabase
+                mostrarFeedback(`Erro: ${error.message}`, "erro");
+                return; // Não usar fallback manual por segurança
             } else {
                 // Processamento normal se a RPC funcionou
                 // Limpar o formulário
