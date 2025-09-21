@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next'; // Importar hook de tradução
 import { getSupabaseClient } from "../../lib/supabaseManager"; // Importando gerenciador otimizado
 import { usePaginatedParticipants } from "../../hooks/usePaginatedParticipants"; // Hook de paginação otimizada
+import { logger } from "../../utils/productionLogger"; // Logger seguro para produção
 
 // Usar cliente otimizado para operações de frontend
 const supabase = getSupabaseClient();
@@ -75,7 +76,7 @@ function ListaSorteio({ onReiniciarLista }) {
 
     // ✅ MANTÉM: Função compatível para casos especiais (agora usa hook)
     const fetchParticipantes = async () => {
-        console.log("🔄 Atualizando participantes via hook otimizado...");
+        logger.dev("🔄 Atualizando participantes via hook otimizado...");
         refreshParticipantes();
     };
 
@@ -88,7 +89,7 @@ function ListaSorteio({ onReiniciarLista }) {
             .limit(1);
 
         if (error) {
-            console.error("Erro ao buscar último vencedor:", error);
+            logger.error("Erro ao buscar último vencedor:", error);
         } else if (data && data.length > 0) {
             const vencedor = data[0];
             setUltimoVencedor({
@@ -119,7 +120,7 @@ function ListaSorteio({ onReiniciarLista }) {
             .single();
 
         if (error) {
-            console.error("Erro ao verificar estado da lista:", error);
+            logger.error("Erro ao verificar estado da lista:", error);
         } else if (data) {
             setListaCongelada(data.valor === "true");
         }
@@ -234,7 +235,7 @@ function ListaSorteio({ onReiniciarLista }) {
             ]).select();
 
             if (erroSorteio) {
-                console.error("Erro ao salvar o sorteio:", erroSorteio);
+                logger.error("Erro ao salvar o sorteio:", erroSorteio);
                 return;
             }
 
@@ -257,7 +258,7 @@ function ListaSorteio({ onReiniciarLista }) {
                     .insert(participantesHistorico);
                     
                 if (erroHistorico) {
-                    console.error("Erro ao salvar histórico de participantes:", erroHistorico);
+                    logger.error("Erro ao salvar histórico de participantes:", erroHistorico);
                 } else {
                     // console.log("Histórico de participantes salvo com sucesso!");
                 }
@@ -266,7 +267,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 await resetarLista();
             }
         } catch (err) {
-            console.error("Erro durante o processo de sorteio:", err);
+            logger.error("Erro durante o processo de sorteio:", err);
         }
     };
 
@@ -282,7 +283,7 @@ function ListaSorteio({ onReiniciarLista }) {
         const { error } = await supabase.from("participantes_ativos").delete().neq("id", "");
 
         if (error) {
-            console.error("Erro ao limpar a lista:", error);
+            logger.error("Erro ao limpar a lista:", error);
         } else {
             // console.log("Lista resetada com sucesso!");
             // Atualizar a configuração para indicar que a lista não está mais congelada
@@ -335,7 +336,7 @@ function ListaSorteio({ onReiniciarLista }) {
         const plataformaSelecionada = novoParticipante.plataforma;
 
         try {
-            console.log("Adicionando participante:", nomeSanitizado, streamerSanitizado, plataformaSelecionada);
+            logger.dev("Adicionando participante:", nomeSanitizado, streamerSanitizado, plataformaSelecionada);
             
             // Inserir no Supabase
             const { data, error } = await supabase.from("participantes_ativos").insert([
@@ -347,12 +348,12 @@ function ListaSorteio({ onReiniciarLista }) {
             ]).select();
 
             if (error) {
-                console.error("Erro detalhado ao adicionar participante:", error);
+                logger.error("Erro detalhado ao adicionar participante:", error);
                 mostrarFeedback(`${t('listaSorteio.erroDetalhado')}: ${error.message}`, "erro");
                 return;
             }
 
-            console.log("Participante adicionado com sucesso:", data);
+            logger.success("Participante adicionado com sucesso", data);
             
             // Limpar o formulário, mas manter a plataforma selecionada
             setNovoParticipante({ nome: "", streamer: "", plataforma: plataformaSelecionada });
@@ -369,7 +370,7 @@ function ListaSorteio({ onReiniciarLista }) {
             mostrarFeedback(t('listaSorteio.participanteAdicionado'), "sucesso");
 
         } catch (error) {
-            console.error("Erro ao adicionar participante:", error);
+            logger.error("Erro ao adicionar participante:", error);
             mostrarFeedback(`${t('listaSorteio.erro')}: ${error.message}`, "erro");
         }
     };
@@ -411,7 +412,7 @@ function ListaSorteio({ onReiniciarLista }) {
             });
             
             if (error) {
-                console.error("Erro ao adicionar participantes em lote:", error);
+                logger.error("Erro ao adicionar participantes em lote:", error);
                 // ERRO: Função melhorada falhou - verificar logs no Supabase
                 mostrarFeedback(`Erro: ${error.message}`, "erro");
                 return; // Não usar fallback manual por segurança
@@ -441,7 +442,7 @@ function ListaSorteio({ onReiniciarLista }) {
             refreshParticipantes();
             
         } catch (error) {
-            console.error("Erro ao adicionar participantes:", error);
+            logger.error("Erro ao adicionar participantes:", error);
             mostrarFeedback(`${t('listaSorteio.erro')}: ${error.message}`, "erro");
         }
 
@@ -460,7 +461,7 @@ function ListaSorteio({ onReiniciarLista }) {
                 detalhes: `Usuário adicionou 10 participações - Nome: ${nomeSanitizado}`
             }]);
         } catch (error) {
-            console.error("Erro ao registrar métrica de anúncio:", error);
+            logger.error("Erro ao registrar métrica de anúncio:", error);
         }
     };
 
@@ -472,7 +473,7 @@ function ListaSorteio({ onReiniciarLista }) {
     // Método fallback para inserção manual de participantes - DESABILITADO
     // Este fallback foi desabilitado porque não respeita o rate limiting por IP
     const inserirParticipantesManualmente = async (nome, streamer, quantidade, plataforma) => {
-        console.warn("⚠️ Fallback manual desabilitado por segurança - use apenas função RPC com IP");
+        logger.dev("⚠️ Fallback manual desabilitado por segurança - use apenas função RPC com IP");
         
         mostrarFeedback("Erro: Método de inserção não seguro. Tente novamente.", "erro");
         
@@ -645,11 +646,11 @@ function ListaSorteio({ onReiniciarLista }) {
             
             {/* Script para verificar se o AdTracker está registrando este anúncio */}
             {useEffect(() => {
-                console.log("Anúncio 'cursos' acima do botão 'Como Participar' montado com pageId: lista-sorteio_antes_participar");
+                logger.dev("Anúncio 'cursos' acima do botão 'Como Participar' montado com pageId: lista-sorteio_antes_participar");
                 
                 // Verificar no console se o AdTracker está inicializando este anúncio
                 return () => {
-                    console.log("Anúncio 'cursos' acima do botão 'Como Participar' desmontado");
+                    logger.dev("Anúncio 'cursos' acima do botão 'Como Participar' desmontado");
                 };
             }, [])}
 

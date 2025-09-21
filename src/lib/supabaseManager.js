@@ -13,8 +13,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import logger from '../utils/logger';
-// SecurityLogger removido para restaurar funcionamento
+import { logger } from '../utils/productionLogger'; // Logger seguro para produção
 
 // ===================================================================
 // CONFIGURAÇÃO LIMPA - APENAS VERCEL ENVIRONMENT VARIABLES
@@ -40,9 +39,9 @@ if (!supabaseUrl) {
   // SecurityLogger removido
   
   if (isBrowser) {
-    console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
-    console.error('💡 Configure na Vercel: REACT_APP_SUPABASE_URL');
-    console.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
+    logger.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
+    logger.error('💡 Configure na Vercel: REACT_APP_SUPABASE_URL');
+    logger.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
   } else {
     throw new Error(error);
   }
@@ -54,9 +53,9 @@ if (!supabaseAnonKey) {
   // SecurityLogger removido
   
   if (isBrowser) {
-    console.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
-    console.error('💡 Configure na Vercel: REACT_APP_SUPABASE_ANON_KEY');
-    console.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
+    logger.error('🚨 CONFIGURAÇÃO AUSENTE:', error);
+    logger.error('💡 Configure na Vercel: REACT_APP_SUPABASE_ANON_KEY');
+    logger.error('📖 Veja: GUIA_CONFIGURACAO_VERCEL.md');
   } else {
     throw new Error(error);
   }
@@ -154,7 +153,7 @@ export function getConnectionStatus() {
   };
   
   if (isDevelopment) {
-    console.log('🔍 Status da Conexão Supabase:', status);
+    logger.dev('🔍 Status da Conexão Supabase:', status);
   }
   
   return status;
@@ -237,7 +236,7 @@ if (isBrowser && isDevelopment && typeof window !== 'undefined') {
     reset: resetConnections
   };
   
-  console.log('🔧 SupabaseManager disponível em window.supabaseManager');
+  logger.dev('🔧 SupabaseManager disponível em window.supabaseManager');
 }
 
 export default supabase;

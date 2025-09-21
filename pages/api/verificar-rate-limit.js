@@ -99,7 +99,7 @@ export default async function handler(req, res) {
     // ✅ PROTEÇÃO ANTI-DDoS: Rate limiting do próprio endpoint
     const endpointRateLimit = checkEndpointRateLimit(ip);
     if (!endpointRateLimit.allowed) {
-        console.warn(`🚫 Rate limit do endpoint excedido - IP: ${ip}`);
+        // Log de IP removido para produção - informação sensível
         return res.status(429).json({
             error: 'Rate limit excedido',
             message: endpointRateLimit.reason,
@@ -132,7 +132,7 @@ export default async function handler(req, res) {
             });
         }
         
-        console.log(`🔍 Verificação solicitada - IP: ${ip}, Tipo: ${tipo}`);
+        // Log removido para produção - informação sensível de IP
         
         // Simular verificação básica (sem conexão com banco por enquanto)
         // Em uma implementação real, aqui verificaríamos o banco de dados
@@ -151,7 +151,7 @@ export default async function handler(req, res) {
             }
         };
         
-        console.log(`✅ Rate limit - ${tipo}: ${resultado.mensagem} (Restam ${endpointRateLimit.remaining} verificações)`);
+        // Log detalhado removido para produção
         
         // Responder sempre com status 200 se permitido
         return res.status(200).json(resultado);
