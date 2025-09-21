@@ -470,8 +470,8 @@ function ListaSorteio({ onReiniciarLista }) {
             // Mostrar feedback inicial
             mostrarFeedback(t('listaSorteio.adicionandoParticipacoes'), "aviso");
             
-            // Chamar a função RPC CORRIGIDA do Supabase que usa IP real para rate limiting
-            const { data, error } = await supabase.rpc('inserir_participantes_com_ip_real', {
+            // Chamar a função RPC CORRIGIDA do Supabase que usa IP real e insere 10 participantes
+            const { data, error } = await supabase.rpc('inserir_participantes_com_ip_real_corrigido', {
                 nome: nomeSanitizado,
                 streamer: streamerSanitizado,
                 quantidade: 10,
