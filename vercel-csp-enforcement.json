@@ -11,8 +11,8 @@
       "source": "/(.*)",
       "headers": [
         {
-          "key": "Content-Security-Policy-Report-Only",
-          "value": "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: https://*.supabase.co; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; form-action 'self'; frame-src https://www.googletagmanager.com; upgrade-insecure-requests; report-uri /api/csp-report"
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: https://*.supabase.co; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; form-action 'self'; frame-src https://www.googletagmanager.com; upgrade-insecure-requests"
         },
         {
           "key": "X-Content-Type-Options",
@@ -25,6 +25,14 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+        },
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "unsafe-none"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
         }
       ]
     },
@@ -70,4 +78,4 @@
   "crons": [
     { "path": "/api/cron/route", "schedule": "0 0 * * *" }
   ]
-} 
+}
