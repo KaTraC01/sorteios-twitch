@@ -9,9 +9,9 @@
  * @date 2025-01-15
  */
 
-import { getSupabaseServiceClient } from '../src/lib/supabaseManager';
-import { cleanupOldRecords } from '../src/middleware/rateLimiting';
-import { withErrorHandling, successResponse, errorResponse } from '../lib/apiResponse';
+const { getSupabaseServiceClient } = require('../src/lib/supabaseManager');
+const { cleanupOldRecords } = require('../src/middleware/rateLimiting');
+const { withErrorHandling, successResponse, errorResponse } = require('../lib/apiResponse');
 
 const supabase = getSupabaseServiceClient();
 
@@ -156,4 +156,4 @@ async function handler(req, res) {
   }
 }
 
-export default withErrorHandling(handler);
+module.exports = withErrorHandling(handler);

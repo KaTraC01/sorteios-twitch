@@ -1,5 +1,5 @@
-import { getSupabaseServiceClient } from '../src/lib/supabaseManager';
-import { checkRateLimit, recordAttempt } from '../src/middleware/rateLimiting';
+const { getSupabaseServiceClient } = require('../src/lib/supabaseManager');
+const { checkRateLimit, recordAttempt } = require('../src/middleware/rateLimiting');
 
 // Usar cliente de serviço otimizado para inserção em lote
 const supabase = getSupabaseServiceClient();
@@ -9,7 +9,7 @@ const supabase = getSupabaseServiceClient();
  * Esta função recebe um payload otimizado com dados comuns separados
  * e eventos com nomes de campos abreviados para reduzir o tamanho do payload
  */
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Verificar se o método é POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
@@ -109,4 +109,6 @@ export default async function handler(req, res) {
     console.error('Erro ao processar eventos otimizados:', error);
     return res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
-} 
+}
+
+module.exports = handler; 

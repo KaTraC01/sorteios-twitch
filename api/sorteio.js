@@ -1,9 +1,9 @@
 // Função serverless para realizar o sorteio automaticamente
 // Esta função será executada por um cron job da Vercel
 
-import { getSupabaseServiceClient, sanitizarEntrada } from '../src/lib/supabaseManager';
-import logger from '../lib/logger';
-import { errorResponse, successResponse, withErrorHandling } from '../lib/apiResponse';
+const { getSupabaseServiceClient, sanitizarEntrada } = require('../src/lib/supabaseManager');
+const logger = require('../lib/logger');
+const { errorResponse, successResponse, withErrorHandling } = require('../lib/apiResponse');
 
 // Usar cliente de serviço otimizado para sorteio automático
 const supabase = getSupabaseServiceClient();
@@ -229,4 +229,4 @@ async function resetarLista() {
 }
 
 // Exportar o handler com o middleware de tratamento de erros
-export default withErrorHandling(handler); 
+module.exports = withErrorHandling(handler); 

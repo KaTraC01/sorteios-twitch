@@ -1,7 +1,7 @@
 // Endpoint para diagnosticar problemas com o cron job
 // Acesse: https://seu-site.vercel.app/api/diagnostico-cron
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   try {
     // Cabeçalho para facilitar leitura nos logs
     console.log("===== DIAGNÓSTICO CRON JOB =====");
@@ -103,4 +103,6 @@ export default async function handler(req, res) {
     console.error("Erro no diagnóstico:", error);
     return res.status(500).json({ erro: error.message });
   }
-} 
+}
+
+module.exports = handler; 
