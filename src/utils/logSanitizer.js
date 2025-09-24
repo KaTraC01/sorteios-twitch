@@ -69,7 +69,7 @@ const REPLACEMENTS = {
  * @param {string} text - Texto a ser sanitizado
  * @returns {string} Texto sanitizado
  */
-export function sanitizeLogMessage(text) {
+function sanitizeLogMessage(text) {
   if (!text || typeof text !== 'string') {
     return text;
   }
@@ -109,7 +109,7 @@ export function sanitizeLogMessage(text) {
  * @param {number} depth - Profundidade atual (para evitar recursão infinita)
  * @returns {any} Objeto sanitizado
  */
-export function sanitizeLogObject(obj, depth = 0) {
+function sanitizeLogObject(obj, depth = 0) {
   if (depth > 5) return '[TOO_DEEP]'; // Evitar recursão infinita
   
   if (obj === null || obj === undefined) {
@@ -152,7 +152,7 @@ export function sanitizeLogObject(obj, depth = 0) {
  * @param {Function} originalLogger - Função de log original
  * @returns {Function} Função de log sanitizada
  */
-export function createSanitizedLogger(originalLogger) {
+function createSanitizedLogger(originalLogger) {
   return (...args) => {
     const sanitizedArgs = args.map(arg => sanitizeLogObject(arg));
     return originalLogger(...sanitizedArgs);
@@ -165,7 +165,7 @@ export function createSanitizedLogger(originalLogger) {
  * @param {Object} data - Dados adicionais (opcional)
  * @returns {Object} Dados sanitizados
  */
-export function sanitizeForDatabase(description, data = null) {
+function sanitizeForDatabase(description, data = null) {
   return {
     description: sanitizeLogMessage(description),
     data: data ? sanitizeLogObject(data) : null,
@@ -178,7 +178,7 @@ export function sanitizeForDatabase(description, data = null) {
  * @param {string} text - Texto a verificar
  * @returns {boolean} True se contém dados sensíveis
  */
-export function containsSensitiveData(text) {
+function containsSensitiveData(text) {
   if (!text || typeof text !== 'string') {
     return false;
   }
@@ -186,7 +186,7 @@ export function containsSensitiveData(text) {
   return SENSITIVE_PATTERNS.some(pattern => pattern.test(text));
 }
 
-export default {
+module.exports = {
   sanitizeLogMessage,
   sanitizeLogObject,
   createSanitizedLogger,

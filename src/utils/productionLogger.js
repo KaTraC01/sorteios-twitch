@@ -14,7 +14,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 /**
  * Logger seguro para produção
  */
-export const logger = {
+const logger = {
   // Logs críticos - sempre mostrar
   error: (...args) => {
     console.error(...args);
@@ -144,4 +144,5 @@ function sanitizeObject(obj) {
 // Proteção de console delegada para consoleProtection.js
 // Este logger agora funciona apenas como interface para desenvolvimento
 
-export default logger;
+module.exports = { logger };
+module.exports.default = logger;

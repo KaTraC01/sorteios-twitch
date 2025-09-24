@@ -1,8 +1,8 @@
-import fetch from 'node-fetch';
-import logger from '../../lib/logger';
-import { errorResponse, successResponse, withErrorHandling } from '../../lib/apiResponse';
-import { getSupabaseServiceClient } from '../../src/lib/supabaseManager';
-import { cleanupOldRecords } from '../../src/middleware/rateLimiting';
+const fetch = require('node-fetch');
+const logger = require('../../lib/logger');
+const { errorResponse, successResponse, withErrorHandling } = require('../../lib/apiResponse');
+const { getSupabaseServiceClient } = require('../../src/lib/supabaseManager');
+const { cleanupOldRecords } = require('../../src/middleware/rateLimiting');
 
 async function handler(req, res) {
   // Identificação única para esta execução do cron
@@ -438,4 +438,4 @@ async function handler(req, res) {
 }
 
 // Exportar o handler com o middleware de tratamento de erros
-export default withErrorHandling(handler); 
+module.exports = withErrorHandling(handler); 

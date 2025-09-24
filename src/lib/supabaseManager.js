@@ -12,8 +12,8 @@
  * @date 2025-01-13
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { logger } from '../utils/productionLogger'; // Logger seguro para produção
+const { createClient } = require('@supabase/supabase-js');
+const { logger } = require('../utils/productionLogger'); // Logger seguro para produção
 
 // ===================================================================
 // CONFIGURAÇÃO LIMPA - APENAS VERCEL ENVIRONMENT VARIABLES
@@ -72,7 +72,7 @@ let supabaseServiceClient = null;
  * Obter cliente Supabase anônimo (frontend/público)
  * @returns {Object} Cliente Supabase
  */
-export function getSupabaseClient() {
+function getSupabaseClient() {
   if (!supabaseClient && supabaseUrl && supabaseAnonKey) {
     try {
       supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -103,7 +103,7 @@ export function getSupabaseClient() {
  * Obter cliente Supabase com privilégios de serviço (backend/admin)
  * @returns {Object} Cliente Supabase Service
  */
-export function getSupabaseServiceClient() {
+function getSupabaseServiceClient() {
   if (!isBrowser && supabaseServiceKey && supabaseUrl) {
     if (!supabaseServiceClient) {
       try {
@@ -141,7 +141,7 @@ export function getSupabaseServiceClient() {
  * Verificar status da conexão
  * @returns {Object} Status da conexão
  */
-export function getConnectionStatus() {
+function getConnectionStatus() {
   const status = {
     configured: !!supabaseUrl && !!supabaseAnonKey,
     url: supabaseUrl ? '✅ Configurada' : '❌ Ausente',
@@ -163,7 +163,7 @@ export function getConnectionStatus() {
  * Testar conexão com Supabase
  * @returns {Promise<boolean>} Sucesso da conexão
  */
-export async function testSupabaseConnection() {
+async function testSupabaseConnection() {
   try {
     const client = getSupabaseClient();
     
@@ -195,7 +195,7 @@ export async function testSupabaseConnection() {
  * @param {string} input - Texto a ser sanitizado
  * @returns {string} Texto sanitizado
  */
-export function sanitizarEntrada(input) {
+function sanitizarEntrada(input) {
   if (!input || typeof input !== 'string') {
     return '';
   }
@@ -214,10 +214,10 @@ export function sanitizarEntrada(input) {
 // ===================================================================
 
 // Cliente padrão (anônimo)
-export const supabase = getSupabaseClient();
+const supabase = getSupabaseClient();
 
 // Função para reset (útil em testes)
-export function resetConnections() {
+function resetConnections() {
   supabaseClient = null;
   supabaseServiceClient = null;
   if (isDevelopment) {
@@ -239,4 +239,14 @@ if (isBrowser && isDevelopment && typeof window !== 'undefined') {
   logger.dev('🔧 SupabaseManager disponível em window.supabaseManager');
 }
 
-export default supabase;
+module.exports = {
+  getSupabaseClient,
+  getSupabaseServiceClient,
+  getConnectionStatus,
+  testSupabaseConnection,
+  sanitizarEntrada,
+  resetConnections,
+  supabase
+};
+
+module.exports.default = supabase;

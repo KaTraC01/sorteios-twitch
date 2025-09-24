@@ -9,7 +9,7 @@
  * @date 2025-01-15
  */
 
-import { getSupabaseServiceClient } from '../lib/supabaseManager';
+const { getSupabaseServiceClient } = require('../lib/supabaseManager');
 
 const supabase = getSupabaseServiceClient();
 
@@ -48,7 +48,7 @@ function getUserIdentifier(req) {
  * @param {Object} customLimits - Limites personalizados (opcional)
  * @returns {Promise<Object>} Resultado da verificação
  */
-export async function checkRateLimit(identifier, operationType, customLimits = null) {
+async function checkRateLimit(identifier, operationType, customLimits = null) {
   try {
     const limits = customLimits || RATE_LIMITS[operationType] || RATE_LIMITS.api_call;
     const windowStart = new Date(Date.now() - limits.windowMs);
@@ -101,7 +101,7 @@ export async function checkRateLimit(identifier, operationType, customLimits = n
  * @param {Object} metadata - Metadados adicionais
  * @returns {Promise<boolean>} Sucesso do registro
  */
-export async function recordAttempt(identifier, operationType, metadata = {}) {
+async function recordAttempt(identifier, operationType, metadata = {}) {
   try {
     const { error } = await supabase
       .from('secure_rate_control')
@@ -134,7 +134,7 @@ export async function recordAttempt(identifier, operationType, metadata = {}) {
  * @param {Object} customLimits - Limites personalizados
  * @returns {Function} Middleware function
  */
-export function createRateLimitMiddleware(operationType = 'api_call', customLimits = null) {
+function createRateLimitMiddleware(operationType = 'api_call', customLimits = null) {
   return async (req, res, next) => {
     try {
       const identifier = getUserIdentifier(req);
@@ -180,7 +180,7 @@ export function createRateLimitMiddleware(operationType = 'api_call', customLimi
  * @param {number} daysToKeep - Dias para manter registros
  * @returns {Promise<boolean>} Sucesso da limpeza
  */
-export async function cleanupOldRecords(daysToKeep = 7) {
+async function cleanupOldRecords(daysToKeep = 7) {
   try {
     const cutoffDate = new Date(Date.now() - (daysToKeep * 24 * 60 * 60 * 1000));
     
@@ -201,7 +201,7 @@ export async function cleanupOldRecords(daysToKeep = 7) {
   }
 }
 
-export default {
+module.exports = {
   checkRateLimit,
   recordAttempt,
   createRateLimitMiddleware,
