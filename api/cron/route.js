@@ -212,7 +212,6 @@ async function handler(req, res) {
     };
     
     // Verificar se é domingo (0 = domingo)
-    const agora = new Date();
     const isDomingo = agora.getDay() === 0;
     
     if (isDomingo) {
