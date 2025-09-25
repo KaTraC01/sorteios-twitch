@@ -191,9 +191,21 @@ async function handler(req, res) {
       
       if (erroLimpeza) {
         logger.cron(`[${cronRunId}] ❌ Erro na limpeza: ${erroLimpeza.message}`);
-      } else if (resultadosLimpeza && resultadosLimpeza.length > 0) {
-        const limpeza = resultadosLimpeza[0];
-        logger.cron(`[${cronRunId}] ✅ Limpeza: ${limpeza.registros_removidos} registros removidos, ${limpeza.tamanho_liberado} liberados`);
+      } else if (resultadosLimpeza) {
+        // A função retorna um formato específico que precisa ser parseado
+        const resultadoString = resultadosLimpeza.toString();
+        const matches = resultadoString.match(/\((\d+),"([^"]+)",([^)]+)\)/);
+        
+        if (matches) {
+          const registrosRemovidos = matches[1];
+          const tamanhoLiberado = matches[2];
+          const dataCorte = matches[3];
+          logger.cron(`[${cronRunId}] ✅ Limpeza: ${registrosRemovidos} registros removidos, ${tamanhoLiberado} liberados (data corte: ${dataCorte})`);
+        } else {
+          logger.cron(`[${cronRunId}] ✅ Limpeza executada, resultado: ${resultadoString}`);
+        }
+      } else {
+        logger.cron(`[${cronRunId}] ✅ Limpeza executada sem retorno de dados`);
       }
       
       logger.cron(`[${cronRunId}] 🎉 Processamento de métricas concluído com sucesso!`);
