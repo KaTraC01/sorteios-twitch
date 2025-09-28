@@ -77,7 +77,8 @@ async function handler(req, res) {
       const { data: deletedEvents, error: eventsError } = await supabase
         .from('eventos_anuncios')
         .delete()
-        .and('processado.eq.true,timestamp.lt.' + eventsCutoff.toISOString())
+        .eq('processado', true)
+        .lt('timestamp', eventsCutoff.toISOString())
         .select('id');
 
       results.operations.push({

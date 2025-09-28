@@ -161,3 +161,4 @@ Para garantir que a produção comece "do zero":
 ---
 
 *Este relatório documenta a limpeza completa e segura do banco de dados, mantendo todas as funcionalidades essenciais do sistema de sorteios intactas.*
+
