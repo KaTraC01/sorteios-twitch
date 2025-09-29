@@ -11,10 +11,10 @@
     "welcome": "Welcome to the giveaway site! 🚀"
   },
   "listaSorteio": {
-    "adicionarParticipante": "Add Participant",
-    "adicionar10Participantes": "+10",
+    "adicionarParticipante": "1 Ticket",
+    "adicionar10Participantes": "10 Tickets",
     "resetarLista": "Reset List",
-    "nome": "Name",
+    "nome": "Nickname",
     "streamer": "Streamer",
     "plataforma": "Platform",
     "participantes": "Giveaway Participants",

@@ -11,10 +11,10 @@
     "welcome": "Bem-vindo ao site de sorteios! 🚀"
   },
   "listaSorteio": {
-    "adicionarParticipante": "Adicionar Participante",
-    "adicionar10Participantes": "10 tickets",
+    "adicionarParticipante": "1 Ticket",
+    "adicionar10Participantes": "10 Tickets",
     "resetarLista": "Resetar Lista",
-    "nome": "Nome",
+    "nome": "Nickname",
     "streamer": "Streamer",
     "plataforma": "Plataforma",
     "participantes": "Participantes do Sorteio",
